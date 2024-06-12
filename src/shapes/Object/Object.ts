@@ -138,6 +138,9 @@ export class FabricObject<
   declare minScaleLimit: number;
 
   declare opacity: number;
+  declare __PMWTESTPROPERTY: string;
+  declare __PMWID: string;
+  declare bindedObjectPmwId: string;
 
   declare paintFirst: 'fill' | 'stroke';
   declare fill: string | TFiller | null;
