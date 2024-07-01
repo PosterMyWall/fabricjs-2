@@ -1,0 +1,2 @@
+import{version as t}from"../package.json.min.mjs";const o=t;function e(){}const n=Math.PI/2,r=2*Math.PI,c=Math.PI/180,a=Object.freeze([1,0,0,1,0,0]),m=16,f=2,h=.4477152502,i="center",p="left",s="top",j="bottom",I="right",M="none",P=/\r?\n/;export{f as ALIASING_LIMIT,j as BOTTOM,i as CENTER,m as DEFAULT_SVG_FONT_SIZE,p as LEFT,M as NONE,c as PiBy180,I as RIGHT,s as TOP,o as VERSION,n as halfPI,a as iMatrix,h as kRect,e as noop,P as reNewline,r as twoMathPi};
+//# sourceMappingURL=constants.min.mjs.map

@@ -7,7 +7,6 @@ change-output.md
 before_commit
 /coverage/
 .idea/
-**/dist/
 /cli_output/
 e2e/test-report/
 e2e/test-results/
