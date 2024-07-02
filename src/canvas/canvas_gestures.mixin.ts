@@ -25,14 +25,28 @@ Object.assign(Canvas.prototype, {
    * @param {Event} self Event proxy object by Event.js
    */
   __onTransformGesture: function (e, self) {
-    if (
-      this.isDrawingMode ||
-      !e.touches ||
-      e.touches.length !== 2 ||
-      'gesture' !== self.gesture
-    ) {
+    // *PMW* modified code start
+    // PMW commented condition to make zoom/two-finger pan work while drawing mode is on
+    // if (
+    //   this.isDrawingMode ||
+    //   !e.touches ||
+    //   e.touches.length !== 2 ||
+    //   'gesture' !== self.gesture
+    // ) {
+    //   return;
+    // }
+
+    if (!e.touches || e.touches.length !== 2 || 'gesture' !== self.gesture) {
       return;
     }
+
+    this.fire('before:touch:gesture', {
+      e: e, self: self
+    });
+    if (this.isDrawingMode || fabric.isCanvasTwoFingerPanning) {
+      return;
+    }
+    // *PMW* added code end
 
     const target = this.findTarget(e);
     if ('undefined' !== typeof target) {

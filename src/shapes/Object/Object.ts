@@ -10,6 +10,7 @@ import {
 } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import { AnimatableObject } from './AnimatableObject';
+import type { XY } from '../../Point';
 import { Point } from '../../Point';
 import { Shadow } from '../../Shadow';
 import type {
@@ -55,6 +56,7 @@ import type { SerializedObjectProps } from './types/SerializedObjectProps';
 import type { ObjectProps } from './types/ObjectProps';
 import { getDevicePixelRatio, getEnv } from '../../env';
 import { log } from '../../util/internals/console';
+import { degreesToRadians } from '../../util/misc/radiansDegreesConversion';
 
 export type TCachedFabricObject<T extends FabricObject = FabricObject> = T &
   Required<
@@ -99,6 +101,12 @@ type toDataURLOptions = ObjectToCanvasElementOptions & {
   quality?: number;
 };
 
+interface GetCornerPointsResponse {
+ tl: Point,
+ tr: Point,
+ bl: Point,
+ br: Point,
+}
 /**
  * Root object class from which all 2d shape classes inherit from
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
@@ -1442,6 +1450,33 @@ export class FabricObject<
     // since render has settled it is safe to destroy canvas
     canvas.destroy();
     return canvasEl;
+  }
+
+  public getCornerPoints(center: XY): GetCornerPointsResponse {
+    const angle = this.angle;
+      let width = this.getScaledWidth();
+    const height = this.getScaledHeight();
+      const x = center.x;
+      const y = center.y;
+      const theta = degreesToRadians(angle);
+
+    if (width < 0) {
+      width = Math.abs(width);
+    }
+
+    const sinTh = Math.sin(theta),
+      cosTh = Math.cos(theta),
+      _angle = width > 0 ? Math.atan(height / width) : 0,
+      _hypotenuse = width / Math.cos(_angle) / 2,
+      offsetX = Math.cos(_angle + theta) * _hypotenuse,
+      offsetY = Math.sin(_angle + theta) * _hypotenuse;
+
+    return {
+      tl: new Point(x - offsetX,y - offsetY),
+      tr: new Point(x - offsetX + width * cosTh,y - offsetY + width * sinTh),
+      bl: new Point(x - offsetX - height * sinTh,y - offsetY + height * cosTh),
+      br: new Point(x + offsetX,y + offsetY)
+    };
   }
 
   /**

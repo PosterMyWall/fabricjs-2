@@ -70,6 +70,13 @@ type TSyntheticEventContext = {
   drag: DragEventData;
 };
 
+interface TouchProps {
+  numOfTouches: number;
+  totalDrift: number;
+  x: number;
+  y: number;
+}
+
 export class Canvas extends SelectableCanvas implements CanvasOptions {
   /**
    * Contains the id of the touch event that owns the fabric transform
@@ -79,6 +86,16 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
   declare mainTouchId?: number;
 
   declare enablePointerEvents: boolean;
+
+  /**
+   * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+   */
+  public touchProps: undefined | TouchProps;
+
+  /**
+   * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+   */
+  public allowedTouchDriftDeviance = 5;
 
   /**
    * Holds a reference to a setTimeout timer for event synchronization
@@ -123,6 +140,8 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
         '_onTouchStart',
         '_onMouseMove',
         '_onMouseUp',
+        //*PMW* Added support for drift deviance
+        '_onTouchMove',
         '_onTouchEnd',
         '_onResize',
         // '_onGesture',
@@ -221,10 +240,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this._onMouseMove as EventListener,
       addEventOptions
     );
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     removeListener(
       doc,
       'touchmove',
-      this._onMouseMove as EventListener,
+      this._onTouchMove as EventListener,
       addEventOptions
     );
   }
@@ -611,10 +631,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this._onTouchEnd as EventListener,
       addEventOptions
     );
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     addListener(
       doc,
       'touchmove',
-      this._onMouseMove as EventListener,
+      this._onTouchMove as EventListener,
       addEventOptions
     );
     // Unbind mousedown to prevent double triggers from touch devices
@@ -623,6 +644,25 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       `${eventTypePrefix}down`,
       this._onMouseDown as EventListener
     );
+    //*PMW* added line
+    this.onTouchStartAfter(e);
+  }
+
+  /**
+   * @private
+   * @param {Event} e Event object fired on mousedown
+   */
+  onTouchStartAfter(e: TPointerEvent) {
+    this.fire('after:touchstart', {
+      e: e,
+      target: this.findTarget(e),
+    } as CanvasEvents['after:touchstart']);
+    this.touchProps = {
+      numOfTouches: (e as TouchEvent).touches.length,
+      totalDrift: 0,
+      x: (e as TouchEvent).touches[0].pageX,
+      y: (e as TouchEvent).touches[0].pageY,
+    };
   }
 
   /**
@@ -670,10 +710,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this._onTouchEnd as EventListener,
       addEventOptions
     );
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     removeListener(
       doc,
       'touchmove',
-      this._onMouseMove as EventListener,
+      this._onTouchMove as EventListener,
       addEventOptions
     );
     if (this._willAddMouseDown) {
@@ -736,6 +777,26 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       e.preventDefault &&
       e.preventDefault();
     this.__onMouseMove(e);
+  }
+
+  /**
+   * *PMW* added function. Calculates drift deviance since touch start. If total number of touches is one, and totalDrift is less than allowedTouchDriftDeviance, then we don't skip the onMouseMove call.
+   * @param {Event} e Event object fired on touchmove
+   */
+  _onTouchMove(e: TPointerEvent) {
+    if (this.touchProps && this.touchProps.numOfTouches === 1) {
+      const event = e as TouchEvent;
+      const dx = event.touches[0].pageX - this.touchProps.x;
+      const dy = event.touches[0].pageY - this.touchProps.y;
+      this.touchProps.totalDrift += Math.sqrt(dx * dx + dy * dy);
+      this.touchProps.x = event.touches[0].pageX;
+      this.touchProps.y = event.touches[0].pageY;
+
+      if (this.touchProps.totalDrift < this.allowedTouchDriftDeviance) {
+        return;
+      }
+    }
+    this._onMouseMove(e);
   }
 
   /**

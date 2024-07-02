@@ -21,6 +21,7 @@ import { isTextObject, isSerializableFiller, isFiller } from '../../util/typeAss
 import { stateProperties, cacheProperties, fabricObjectDefaultValues } from './defaultValues.mjs';
 import { getDevicePixelRatio, getEnv } from '../../env/index.mjs';
 import { log } from '../../util/internals/console.mjs';
+import { degreesToRadians } from '../../util/misc/radiansDegreesConversion.mjs';
 
 const _excluded = ["type"],
   _excluded2 = ["extraParam"];
@@ -1089,6 +1090,29 @@ class FabricObject extends AnimatableObject {
     // since render has settled it is safe to destroy canvas
     canvas.destroy();
     return canvasEl;
+  }
+  getCornerPoints(center) {
+    const angle = this.angle;
+    let width = this.getScaledWidth();
+    const height = this.getScaledHeight();
+    const x = center.x;
+    const y = center.y;
+    const theta = degreesToRadians(angle);
+    if (width < 0) {
+      width = Math.abs(width);
+    }
+    const sinTh = Math.sin(theta),
+      cosTh = Math.cos(theta),
+      _angle = width > 0 ? Math.atan(height / width) : 0,
+      _hypotenuse = width / Math.cos(_angle) / 2,
+      offsetX = Math.cos(_angle + theta) * _hypotenuse,
+      offsetY = Math.sin(_angle + theta) * _hypotenuse;
+    return {
+      tl: new Point(x - offsetX, y - offsetY),
+      tr: new Point(x - offsetX + width * cosTh, y - offsetY + width * sinTh),
+      bl: new Point(x - offsetX - height * sinTh, y - offsetY + height * cosTh),
+      br: new Point(x + offsetX, y + offsetY)
+    };
   }
 
   /**

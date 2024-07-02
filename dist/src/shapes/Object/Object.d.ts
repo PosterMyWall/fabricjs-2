@@ -1,5 +1,6 @@
 import type { ObjectEvents } from '../../EventTypeDefs';
 import { AnimatableObject } from './AnimatableObject';
+import type { XY } from '../../Point';
 import { Point } from '../../Point';
 import { Shadow } from '../../Shadow';
 import type { TDegree, TFiller, TSize, TCacheCanvasDimensions, Abortable, TOptions, ImageFormat } from '../../typedefs';
@@ -37,6 +38,12 @@ export type ObjectToCanvasElementOptions = {
 type toDataURLOptions = ObjectToCanvasElementOptions & {
     quality?: number;
 };
+interface GetCornerPointsResponse {
+    tl: Point;
+    tr: Point;
+    bl: Point;
+    br: Point;
+}
 /**
  * Root object class from which all 2d shape classes inherit from
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
@@ -535,6 +542,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @return {HTMLCanvasElement} Returns DOM element <canvas> with the FabricObject
      */
     toCanvasElement(options?: ObjectToCanvasElementOptions): HTMLCanvasElement;
+    getCornerPoints(center: XY): GetCornerPointsResponse;
     /**
      * Converts an object into a data-url-like string
      * @param {Object} options Options object

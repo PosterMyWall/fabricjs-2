@@ -10,6 +10,12 @@ type TSyntheticEventContext = {
     };
     drag: DragEventData;
 };
+interface TouchProps {
+    numOfTouches: number;
+    totalDrift: number;
+    x: number;
+    y: number;
+}
 export declare class Canvas extends SelectableCanvas implements CanvasOptions {
     /**
      * Contains the id of the touch event that owns the fabric transform
@@ -18,6 +24,14 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      */
     mainTouchId?: number;
     enablePointerEvents: boolean;
+    /**
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+     */
+    touchProps: undefined | TouchProps;
+    /**
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+     */
+    allowedTouchDriftDeviance: number;
     /**
      * Holds a reference to a setTimeout timer for event synchronization
      * @type number
@@ -166,6 +180,11 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @private
      * @param {Event} e Event object fired on mousedown
      */
+    onTouchStartAfter(e: TPointerEvent): void;
+    /**
+     * @private
+     * @param {Event} e Event object fired on mousedown
+     */
     _onMouseDown(e: TPointerEvent): void;
     /**
      * @private
@@ -182,6 +201,11 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {Event} e Event object fired on mousemove
      */
     _onMouseMove(e: TPointerEvent): void;
+    /**
+     * *PMW* added function. Calculates drift deviance since touch start. If total number of touches is one, and totalDrift is less than allowedTouchDriftDeviance, then we don't skip the onMouseMove call.
+     * @param {Event} e Event object fired on touchmove
+     */
+    _onTouchMove(e: TPointerEvent): void;
     /**
      * @private
      */

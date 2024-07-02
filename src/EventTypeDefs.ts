@@ -205,6 +205,13 @@ interface DnDEvents {
   'drop:after': DropEventData;
 }
 
+interface CanvasTouchEvents {
+  'after:touchstart': TEvent & { target: FabricObject };
+  'before:touch:gesture': TEvent & { target: FabricObject };
+  'touch:drag': TEvent & { target: FabricObject };
+  'touch:dbltap': TEvent & { target: FabricObject };
+}
+
 interface CanvasDnDEvents extends DnDEvents {
   'drag:enter': DragEventData & InEvent;
   'drag:leave': DragEventData & OutEvent;
@@ -304,6 +311,7 @@ export interface CanvasEvents
   extends StaticCanvasEvents,
     CanvasPointerEvents,
     CanvasDnDEvents,
+    CanvasTouchEvents,
     MiscEvents,
     CanvasModificationEvents,
     CanvasSelectionEvents {

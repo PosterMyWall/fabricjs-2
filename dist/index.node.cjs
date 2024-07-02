@@ -475,7 +475,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0";
+var version = "6.0.0-1";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -8052,6 +8052,29 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     canvas.destroy();
     return canvasEl;
   }
+  getCornerPoints(center) {
+    const angle = this.angle;
+    let width = this.getScaledWidth();
+    const height = this.getScaledHeight();
+    const x = center.x;
+    const y = center.y;
+    const theta = degreesToRadians(angle);
+    if (width < 0) {
+      width = Math.abs(width);
+    }
+    const sinTh = Math.sin(theta),
+      cosTh = Math.cos(theta),
+      _angle = width > 0 ? Math.atan(height / width) : 0,
+      _hypotenuse = width / Math.cos(_angle) / 2,
+      offsetX = Math.cos(_angle + theta) * _hypotenuse,
+      offsetY = Math.sin(_angle + theta) * _hypotenuse;
+    return {
+      tl: new Point(x - offsetX, y - offsetY),
+      tr: new Point(x - offsetX + width * cosTh, y - offsetY + width * sinTh),
+      bl: new Point(x - offsetX - height * sinTh, y - offsetY + height * cosTh),
+      br: new Point(x + offsetX, y + offsetY)
+    };
+  }
 
   /**
    * Converts an object into a data-url-like string
@@ -14368,30 +14391,18 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
      * @private
      */
     /**
-     * Holds a reference to a setTimeout timer for event synchronization
-     * @type number
-     * @private
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
      */
+    _defineProperty(this, "touchProps", void 0);
     /**
-     * Holds a reference to an object on the canvas that is receiving the drag over event.
-     * @type FabricObject
-     * @private
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
      */
-    /**
-     * Holds a reference to an object on the canvas from where the drag operation started
-     * @type FabricObject
-     * @private
-     */
-    /**
-     * Holds a reference to an object on the canvas that is the current drop target
-     * May differ from {@link _draggedoverTarget}
-     * @todo inspect whether {@link _draggedoverTarget} and {@link _dropTarget} should be merged somehow
-     * @type FabricObject
-     * @private
-     */
+    _defineProperty(this, "allowedTouchDriftDeviance", 5);
     _defineProperty(this, "_isClick", void 0);
     _defineProperty(this, "textEditingManager", new TextEditingManager(this));
-    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp', '_onTouchEnd', '_onResize',
+    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp',
+    //*PMW* Added support for drift deviance
+    '_onTouchMove', '_onTouchEnd', '_onResize',
     // '_onGesture',
     // '_onDrag',
     // '_onShake',
@@ -14455,7 +14466,8 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     removeListener(doc, "".concat(eventTypePrefix, "up"), this._onMouseUp);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
     removeListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
-    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
   }
 
   /**
@@ -14828,9 +14840,29 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
       eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(canvasElement);
     addListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    addListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(canvasElement, "".concat(eventTypePrefix, "down"), this._onMouseDown);
+    //*PMW* added line
+    this.onTouchStartAfter(e);
+  }
+
+  /**
+   * @private
+   * @param {Event} e Event object fired on mousedown
+   */
+  onTouchStartAfter(e) {
+    this.fire('after:touchstart', {
+      e: e,
+      target: this.findTarget(e)
+    });
+    this.touchProps = {
+      numOfTouches: e.touches.length,
+      totalDrift: 0,
+      x: e.touches[0].pageX,
+      y: e.touches[0].pageY
+    };
   }
 
   /**
@@ -14863,7 +14895,8 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     const eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(this.upperCanvasEl);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     if (this._willAddMouseDown) {
       clearTimeout(this._willAddMouseDown);
     }
@@ -14903,6 +14936,25 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     // we must not prevent the event's default behavior in order for the window to start dragging
     !activeObject.shouldStartDragging(e)) && e.preventDefault && e.preventDefault();
     this.__onMouseMove(e);
+  }
+
+  /**
+   * *PMW* added function. Calculates drift deviance since touch start. If total number of touches is one, and totalDrift is less than allowedTouchDriftDeviance, then we don't skip the onMouseMove call.
+   * @param {Event} e Event object fired on touchmove
+   */
+  _onTouchMove(e) {
+    if (this.touchProps && this.touchProps.numOfTouches === 1) {
+      const event = e;
+      const dx = event.touches[0].pageX - this.touchProps.x;
+      const dy = event.touches[0].pageY - this.touchProps.y;
+      this.touchProps.totalDrift += Math.sqrt(dx * dx + dy * dy);
+      this.touchProps.x = event.touches[0].pageX;
+      this.touchProps.y = event.touches[0].pageY;
+      if (this.touchProps.totalDrift < this.allowedTouchDriftDeviance) {
+        return;
+      }
+    }
+    this._onMouseMove(e);
   }
 
   /**
