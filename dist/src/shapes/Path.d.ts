@@ -143,6 +143,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         moveCursor: string | null;
         selectionBackgroundColor: string;
         perPixelTargetFind: boolean;
+        targetFindTolerance: number;
         selectable: boolean;
         evented: boolean;
         activeOn: "down" | "up";

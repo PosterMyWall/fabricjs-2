@@ -147,7 +147,7 @@ export class FabricObject<
 
   declare opacity: number;
   declare __PMWTESTPROPERTY: string;
-  declare __PMWID: string;
+  public __PMWID = '';
   declare bindedObjectPmwId: string;
 
   declare paintFirst: 'fill' | 'stroke';
@@ -276,6 +276,21 @@ export class FabricObject<
    * @private
    */
   declare ownCaching?: boolean;
+
+
+  /**
+   * *PMW* new property
+   * PosterMyWall property for the default text of the button.
+   * @default
+   */
+  public pmwBmBtnText= '';
+
+  /**
+   * *PMW* new property
+   * An svg of the icon place in the pmw bottom-middle button
+   * @default
+   */
+  public pmwBmBtnIcon= '';
 
   /**
    * Private. indicates if the object inside a group is on a transformed context or not

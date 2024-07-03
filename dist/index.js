@@ -423,7 +423,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.0.0-pmw-1";
+  var version = "6.0.0-pmw-2";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -4006,10 +4006,20 @@
      */
     _setSVGObjects(markup, reviver) {
       this.forEachObject(fabricObject => {
+        // *PMW*: Attaching pmw id
+        const uid = fabricObject.__PMWID;
         if (fabricObject.excludeFromExport) {
           return;
         }
+        // *PMW*
+        if (uid) {
+          markup.push("<g id=\"".concat(uid, "\">\n"));
+        }
         this._setSVGObject(markup, fabricObject, reviver);
+        // *PMW*
+        if (uid) {
+          markup.push("</g id=\"".concat(uid, "\">\n"));
+        }
       });
     }
 
@@ -7001,6 +7011,7 @@
      */
     constructor(options) {
       super();
+      _defineProperty(this, "__PMWID", '');
       /**
        * Quick access for the _cacheCanvas rendering context
        * This is part of the objectCaching feature
@@ -7010,6 +7021,18 @@
        * @private
        */
       _defineProperty(this, "_cacheContext", null);
+      /**
+       * *PMW* new property
+       * PosterMyWall property for the default text of the button.
+       * @default
+       */
+      _defineProperty(this, "pmwBmBtnText", '');
+      /**
+       * *PMW* new property
+       * An svg of the icon place in the pmw bottom-middle button
+       * @default
+       */
+      _defineProperty(this, "pmwBmBtnIcon", '');
       Object.assign(this, FabricObject.ownDefaults);
       this.setOptions(options);
     }
@@ -8368,6 +8391,12 @@
        * @default true
        */
       _defineProperty(this, "visible", true);
+      /**
+       * *PMW* added to use in cursor styling
+       * Whether the control is disabled or not
+       * @default false
+       */
+      _defineProperty(this, "disabled", false);
       /**
        * Name of the action that the control will likely execute.
        * This is optional. FabricJS uses to identify what the user is doing for some
@@ -13420,7 +13449,8 @@
      * @return {Boolean}
      */
     isTargetTransparent(target, x, y) {
-      const tolerance = this.targetFindTolerance;
+      // *PMW* Using item find tolerance instead of canvas
+      const tolerance = target.targetFindTolerance;
       const ctx = this.pixelFindContext;
       this.clearContext(ctx);
       ctx.save();

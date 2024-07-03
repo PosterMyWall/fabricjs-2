@@ -953,10 +953,20 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    */
   _setSVGObjects(markup, reviver) {
     this.forEachObject(fabricObject => {
+      // *PMW*: Attaching pmw id
+      const uid = fabricObject.__PMWID;
       if (fabricObject.excludeFromExport) {
         return;
       }
+      // *PMW*
+      if (uid) {
+        markup.push("<g id=\"".concat(uid, "\">\n"));
+      }
       this._setSVGObject(markup, fabricObject, reviver);
+      // *PMW*
+      if (uid) {
+        markup.push("</g id=\"".concat(uid, "\">\n"));
+      }
     });
   }
 

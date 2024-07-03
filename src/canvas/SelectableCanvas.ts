@@ -428,7 +428,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    * @return {Boolean}
    */
   isTargetTransparent(target: FabricObject, x: number, y: number): boolean {
-    const tolerance = this.targetFindTolerance;
+    // *PMW* Using item find tolerance instead of canvas
+    const tolerance = target.targetFindTolerance;
     const ctx = this.pixelFindContext;
     this.clearContext(ctx);
     ctx.save();

@@ -188,6 +188,18 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      */
     ownCaching?: boolean;
     /**
+     * *PMW* new property
+     * PosterMyWall property for the default text of the button.
+     * @default
+     */
+    pmwBmBtnText: string;
+    /**
+     * *PMW* new property
+     * An svg of the icon place in the pmw bottom-middle button
+     * @default
+     */
+    pmwBmBtnIcon: string;
+    /**
      * Private. indicates if the object inside a group is on a transformed context or not
      * or is part of a larger cache for many object ( a group for example)
      * @type boolean

@@ -29,6 +29,13 @@ export class Control {
   visible = true;
 
   /**
+   * *PMW* added to use in cursor styling
+   * Whether the control is disabled or not
+   * @default false
+   */
+  disabled = false;
+
+  /**
    * Name of the action that the control will likely execute.
    * This is optional. FabricJS uses to identify what the user is doing for some
    * extra optimizations. If you are writing a custom control and you want to know

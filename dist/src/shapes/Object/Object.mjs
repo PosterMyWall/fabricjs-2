@@ -92,6 +92,7 @@ class FabricObject extends AnimatableObject {
    */
   constructor(options) {
     super();
+    _defineProperty(this, "__PMWID", '');
     /**
      * Quick access for the _cacheCanvas rendering context
      * This is part of the objectCaching feature
@@ -101,6 +102,18 @@ class FabricObject extends AnimatableObject {
      * @private
      */
     _defineProperty(this, "_cacheContext", null);
+    /**
+     * *PMW* new property
+     * PosterMyWall property for the default text of the button.
+     * @default
+     */
+    _defineProperty(this, "pmwBmBtnText", '');
+    /**
+     * *PMW* new property
+     * An svg of the icon place in the pmw bottom-middle button
+     * @default
+     */
+    _defineProperty(this, "pmwBmBtnIcon", '');
     Object.assign(this, FabricObject.ownDefaults);
     this.setOptions(options);
   }
