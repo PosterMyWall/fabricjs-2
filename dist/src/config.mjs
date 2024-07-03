@@ -35,6 +35,16 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
+     * *PMW* added property to disable the drag group selection.
+     * @default
+     */
+    _defineProperty(this, "disableGroupSelector", void 0);
+    /**
+     * *PMW* added variable to mark when canvas is being two-finger panned.
+     * @type Boolean
+     */
+    _defineProperty(this, "isCanvasTwoFingerPanning", void 0);
+    /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number

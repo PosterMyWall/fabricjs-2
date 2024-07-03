@@ -20,6 +20,7 @@ import { isActiveSelection } from '../util/typeAssertions';
 import type { CanvasOptions, TCanvasOptions } from './CanvasOptions';
 import { SelectableCanvas } from './SelectableCanvas';
 import { TextEditingManager } from './TextEditingManager';
+import { config } from '../config';
 
 const addEventOptions = { passive: false } as EventListenerOptions;
 
@@ -931,6 +932,10 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     } else if (!isClick && !(this._activeObject as IText)?.isEditing) {
       this.renderTop();
     }
+
+    if (config.isCanvasTwoFingerPanning) {
+      config.isCanvasTwoFingerPanning = false;
+    }
   }
 
   _basicEventHandler<T extends keyof (CanvasEvents | ObjectEvents)>(
@@ -1043,6 +1048,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e: TPointerEvent) {
+    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
+    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
+      return;
+    }
+
     this._isClick = true;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'down:before');
@@ -1091,6 +1101,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     // target is not already selected ( otherwise we drag )
     if (
       this.selection &&
+      !config.disableGroupSelector &&
       (!target ||
         (!target.selectable &&
           !(target as IText).isEditing &&

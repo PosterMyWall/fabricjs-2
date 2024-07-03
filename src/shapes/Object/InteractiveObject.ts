@@ -19,6 +19,7 @@ import type { FabricObjectProps } from './types/FabricObjectProps';
 import type { TFabricObjectProps, SerializedObjectProps } from './types';
 import { createObjectDefaultControls } from '../../controls/commonControls';
 import { interactiveObjectDefaultValues } from './defaultValues';
+import { config } from '../../config';
 
 export type TOCoord = Point & {
   corner: TCornerPoint;
@@ -436,6 +437,10 @@ export class InteractiveFabricObject<
     ctx: CanvasRenderingContext2D,
     styleOverride: TStyleOverride = {}
   ) {
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
+
     const { hasBorders, hasControls } = this;
     const styleOptions = {
       hasBorders,

@@ -125,6 +125,16 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
+     * *PMW* added property to disable the drag group selection.
+     * @default
+     */
+    _defineProperty(this, "disableGroupSelector", void 0);
+    /**
+     * *PMW* added variable to mark when canvas is being two-finger panned.
+     * @type Boolean
+     */
+    _defineProperty(this, "isCanvasTwoFingerPanning", void 0);
+    /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number
@@ -475,7 +485,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-2";
+var version = "6.0.0-pmw-3";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -9536,6 +9546,9 @@ class InteractiveFabricObject extends FabricObject$1 {
    */
   _renderControls(ctx) {
     let styleOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
     const {
       hasBorders,
       hasControls
@@ -15091,6 +15104,9 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     } else if (!isClick && !((_this$_activeObject = this._activeObject) !== null && _this$_activeObject !== void 0 && _this$_activeObject.isEditing)) {
       this.renderTop();
     }
+    if (config.isCanvasTwoFingerPanning) {
+      config.isCanvasTwoFingerPanning = false;
+    }
   }
   _basicEventHandler(eventType, options) {
     const {
@@ -15197,6 +15213,10 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e) {
+    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
+    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
+      return;
+    }
     this._isClick = true;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'down:before');
@@ -15239,7 +15259,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
-    if (this.selection && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
+    if (this.selection && !config.disableGroupSelector && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,

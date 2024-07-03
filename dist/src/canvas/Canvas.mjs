@@ -8,6 +8,7 @@ import { sendPointToPlane } from '../util/misc/planeChange.mjs';
 import { isActiveSelection } from '../util/typeAssertions.mjs';
 import { SelectableCanvas } from './SelectableCanvas.mjs';
 import { TextEditingManager } from './TextEditingManager.mjs';
+import { config } from '../config.mjs';
 
 const _excluded = ["target", "oldTarget", "fireCanvas", "e"];
 const addEventOptions = {
@@ -738,6 +739,9 @@ class Canvas extends SelectableCanvas {
     } else if (!isClick && !((_this$_activeObject = this._activeObject) !== null && _this$_activeObject !== void 0 && _this$_activeObject.isEditing)) {
       this.renderTop();
     }
+    if (config.isCanvasTwoFingerPanning) {
+      config.isCanvasTwoFingerPanning = false;
+    }
   }
   _basicEventHandler(eventType, options) {
     const {
@@ -844,6 +848,10 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e) {
+    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
+    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
+      return;
+    }
     this._isClick = true;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'down:before');
@@ -886,7 +894,7 @@ class Canvas extends SelectableCanvas {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
-    if (this.selection && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
+    if (this.selection && !config.disableGroupSelector && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,

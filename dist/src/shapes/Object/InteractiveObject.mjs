@@ -6,6 +6,7 @@ import { createTranslateMatrix, createRotateMatrix, multiplyTransformMatrices, q
 import { sizeAfterTransform } from '../../util/misc/objectTransforms.mjs';
 import { createObjectDefaultControls } from '../../controls/commonControls.mjs';
 import { interactiveObjectDefaultValues } from './defaultValues.mjs';
+import { config } from '../../config.mjs';
 
 class InteractiveFabricObject extends FabricObject {
   static getDefaults() {
@@ -247,6 +248,9 @@ class InteractiveFabricObject extends FabricObject {
    */
   _renderControls(ctx) {
     let styleOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
     const {
       hasBorders,
       hasControls
