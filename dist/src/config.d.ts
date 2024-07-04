@@ -32,7 +32,14 @@ declare class BaseConfiguration {
      */
     perfLimitSizeTotal: number;
     /**
+     * *PMW* added property to allow group selection on mobile phones.
+     * @type Boolean
+     * @default
+     */
+    enableGroupSelection: boolean;
+    /**
      * *PMW* added property to disable the drag group selection.
+     * @type Boolean
      * @default
      */
     disableGroupSelector: false;

@@ -35,7 +35,14 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
+     * *PMW* added property to allow group selection on mobile phones.
+     * @type Boolean
+     * @default
+     */
+    _defineProperty(this, "enableGroupSelection", false);
+    /**
      * *PMW* added property to disable the drag group selection.
+     * @type Boolean
      * @default
      */
     _defineProperty(this, "disableGroupSelector", void 0);

@@ -55,17 +55,55 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * Used to allow targeting of object inside groups.
-     * set to true if you want to select an object inside a group.\
-     * **REQUIRES** `subTargetCheck` set to true
-     * This will be not removed but slowly replaced with a method setInteractive
-     * that will take care of enabling subTargetCheck and necessary object events.
-     * There is too much attached to group interactivity to just be evaluated by a
-     * boolean in the code
-     * @default
-     * @deprecated
-     * @type boolean
+     * *PMW property added*
+     * To delete some properties or not
      */
+    _defineProperty(this, "delegateProperties", true);
+    /**
+     * *PMW*
+     * Properties that are delegated to group objects when reading/writing
+     */
+    _defineProperty(this, "delegatedProperties", {
+      fill: true,
+      opacity: true,
+      fontFamily: true,
+      fontWeight: true,
+      fontSize: true,
+      fontStyle: true,
+      lineHeight: true,
+      letterSpacing: true,
+      charSpacing: true,
+      text: true,
+      textDecoration: true,
+      textAlign: true
+    });
+    /**
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
+     */
+    _defineProperty(this, "caterCacheForTextChildren", false);
+    /**
+     * *PMW property added*
+     * Whether to render a rectangle background or a tilted background
+     */
+    _defineProperty(this, "leanBackground", false);
+    /**
+     * *PMW property added*
+     * Leanness of background
+     */
+    _defineProperty(this, "leanBackgroundOffset", 0);
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    _defineProperty(this, "selected", false);
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    _defineProperty(this, "useSelectedFlag", false);
     /**
      * Used internally to optimize performance
      * Once an object is selected, instance is rendered without the selected object.
@@ -78,6 +116,71 @@ class Group extends createCollectionMixin(FabricObject) {
     Object.assign(this, Group.ownDefaults);
     this.setOptions(options);
     this.groupInit(objects, options);
+  }
+
+  /**
+   * *PMW function added*
+   * Called everytime a group object is deselected. The useSelectedFlag is used and only true when the group object is slideshow item. See docs of 'selected' property.
+   */
+  onDeselect(options) {
+    if (this.useSelectedFlag) {
+      this.selected = false;
+    }
+    return super.onDeselect(options);
+  }
+
+  /**
+   * *PMW* function added
+   * Expands cache dimensions to cater to any text children objects present inside the group.
+   * This is to prevent any part of the font rendering outside the selector box getting cut.
+   * @private
+   * @return {Object}.x width of object to be cached
+   * @return {Object}.y height of object to be cached
+   * @return {Object}.width width of canvas
+   * @return {Object}.height height of canvas
+   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
+   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+   */
+  _getCacheCanvasDimensions() {
+    if (this.caterCacheForTextChildren) {
+      const dims = super._getCacheCanvasDimensions();
+      let widthToAdd = 0;
+      let heightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        widthToAdd = maxFontSize * dims.zoomX;
+        heightToAdd = maxFontSize * dims.zoomY;
+      }
+      dims.width += widthToAdd;
+      dims.height += heightToAdd;
+      return dims;
+    }
+    return super._getCacheCanvasDimensions();
+  }
+
+  /**
+   * *PMW funtion added*
+   * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+   * @private
+   */
+  _getMaxExpandedFontSizeFromTextChildren() {
+    const groupObjects = this.getObjects();
+    let maxFontSize = 0;
+    for (const groupObject of groupObjects) {
+      if ('fontSize' in groupObject) {
+        const fontSize = groupObject.fontSize;
+        if (fontSize > maxFontSize) {
+          // @ts-ignore
+          maxFontSize = fontSize * groupObject.cacheExpansionFactor;
+        }
+      } else if (groupObject instanceof Group) {
+        const maxFontSizeInGroup = groupObject._getMaxExpandedFontSizeFromTextChildren();
+        if (maxFontSizeInGroup > maxFontSize) {
+          maxFontSize = maxFontSizeInGroup;
+        }
+      }
+    }
+    return maxFontSize;
   }
 
   /**
@@ -227,7 +330,7 @@ class Group extends createCollectionMixin(FabricObject) {
   _set(key, value) {
     const prev = this[key];
     super._set(key, value);
-    if (key === 'canvas' && prev !== value) {
+    if (this.delegateProperties && this.delegatedProperties[key] || key === 'canvas' && prev !== value) {
       (this._objects || []).forEach(object => {
         object._set(key, value);
       });
@@ -441,8 +544,52 @@ class Group extends createCollectionMixin(FabricObject) {
    */
   render(ctx) {
     this._transformDone = true;
+    //*PMW* for rencering custom backgrounds
+    ctx.save();
+    this.transform(ctx);
+    if (this.isTable()) {
+      this.renderTableCustomBackground(ctx);
+      this.renderTableBorders(ctx);
+    } else {
+      this.renderGroupBackground(ctx);
+    }
+    ctx.restore();
     super.render(ctx);
     this._transformDone = false;
+  }
+  isTable() {
+    return false;
+  }
+
+  /**
+   * *PMW* new function
+   * Renders background color for groups
+   * @param ctx Context to render on
+   */
+  renderGroupBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.restore();
+    }
   }
 
   /**

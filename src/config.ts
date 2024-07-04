@@ -38,7 +38,15 @@ class BaseConfiguration {
   perfLimitSizeTotal = 2097152;
 
   /**
+   * *PMW* added property to allow group selection on mobile phones.
+   * @type Boolean
+   * @default
+   */
+  enableGroupSelection = false;
+
+  /**
    * *PMW* added property to disable the drag group selection.
+   * @type Boolean
    * @default
    */
   disableGroupSelector: false;

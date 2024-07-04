@@ -213,7 +213,7 @@ class FabricText extends StyledText {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY;
+    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
     return dims;
   }
 

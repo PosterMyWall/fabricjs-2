@@ -909,7 +909,8 @@ class Canvas extends SelectableCanvas {
         this.setActiveObject(target, e);
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
-      if (target === this._activeObject && (handle || !grouped)) {
+      // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
+      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
@@ -1186,7 +1187,9 @@ class Canvas extends SelectableCanvas {
     const isAS = isActiveSelection(activeObject);
     if (
     // check if an active object exists on canvas and if the user is pressing the `selectionKey` while canvas supports multi selection.
-    !!activeObject && this._isSelectionKeyPressed(e) && this.selection &&
+    !!activeObject && (
+    // *PMW*
+    config.enableGroupSelection || this._isSelectionKeyPressed(e)) && this.selection &&
     // on top of that the user also has to hit a target that is selectable.
     !!target && target.selectable && (
     // group target and active object only if they are different objects
@@ -1217,6 +1220,11 @@ class Canvas extends SelectableCanvas {
           }
         }
         if (target.group === activeObject) {
+          // *PMW* . Use of custom variable. Preventing unselection of object tapped on, from active selection to enable drag. We have written custom code for unselection of object on mouse up instead of mouse down to enable dragging.
+          if (config.enableGroupSelection) {
+            return;
+          }
+
           // `target` is part of active selection => remove it
           activeObject.remove(target);
           this._hoveredTarget = target;

@@ -94,6 +94,7 @@ interface UniqueTextProps {
   charSpacing: number;
   lineHeight: number;
   fontSize: number;
+  cacheExpansionFactor: number;
   fontWeight: string;
   fontFamily: string;
   fontStyle: string;
@@ -170,6 +171,12 @@ export class FabricText<
    * @default
    */
   declare fontSize: number;
+
+  /**
+   * *PMW*
+   * Property added to expand text cache canvas more than default expansion for fonts which get cut off.
+   */
+   declare cacheExpansionFactor: number;
 
   /**
    * Font weight (e.g. bold, normal, 400, 600, 800)
@@ -597,7 +604,7 @@ export class FabricText<
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY;
+    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
     return dims;
   }
 

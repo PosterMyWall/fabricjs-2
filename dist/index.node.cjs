@@ -125,7 +125,14 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
+     * *PMW* added property to allow group selection on mobile phones.
+     * @type Boolean
+     * @default
+     */
+    _defineProperty(this, "enableGroupSelection", false);
+    /**
      * *PMW* added property to disable the drag group selection.
+     * @type Boolean
      * @default
      */
     _defineProperty(this, "disableGroupSelector", void 0);
@@ -485,7 +492,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-3";
+var version = "6.0.0-pmw-4";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -11452,17 +11459,55 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * Used to allow targeting of object inside groups.
-     * set to true if you want to select an object inside a group.\
-     * **REQUIRES** `subTargetCheck` set to true
-     * This will be not removed but slowly replaced with a method setInteractive
-     * that will take care of enabling subTargetCheck and necessary object events.
-     * There is too much attached to group interactivity to just be evaluated by a
-     * boolean in the code
-     * @default
-     * @deprecated
-     * @type boolean
+     * *PMW property added*
+     * To delete some properties or not
      */
+    _defineProperty(this, "delegateProperties", true);
+    /**
+     * *PMW*
+     * Properties that are delegated to group objects when reading/writing
+     */
+    _defineProperty(this, "delegatedProperties", {
+      fill: true,
+      opacity: true,
+      fontFamily: true,
+      fontWeight: true,
+      fontSize: true,
+      fontStyle: true,
+      lineHeight: true,
+      letterSpacing: true,
+      charSpacing: true,
+      text: true,
+      textDecoration: true,
+      textAlign: true
+    });
+    /**
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
+     */
+    _defineProperty(this, "caterCacheForTextChildren", false);
+    /**
+     * *PMW property added*
+     * Whether to render a rectangle background or a tilted background
+     */
+    _defineProperty(this, "leanBackground", false);
+    /**
+     * *PMW property added*
+     * Leanness of background
+     */
+    _defineProperty(this, "leanBackgroundOffset", 0);
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    _defineProperty(this, "selected", false);
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    _defineProperty(this, "useSelectedFlag", false);
     /**
      * Used internally to optimize performance
      * Once an object is selected, instance is rendered without the selected object.
@@ -11475,6 +11520,71 @@ class Group extends createCollectionMixin(FabricObject) {
     Object.assign(this, Group.ownDefaults);
     this.setOptions(options);
     this.groupInit(objects, options);
+  }
+
+  /**
+   * *PMW function added*
+   * Called everytime a group object is deselected. The useSelectedFlag is used and only true when the group object is slideshow item. See docs of 'selected' property.
+   */
+  onDeselect(options) {
+    if (this.useSelectedFlag) {
+      this.selected = false;
+    }
+    return super.onDeselect(options);
+  }
+
+  /**
+   * *PMW* function added
+   * Expands cache dimensions to cater to any text children objects present inside the group.
+   * This is to prevent any part of the font rendering outside the selector box getting cut.
+   * @private
+   * @return {Object}.x width of object to be cached
+   * @return {Object}.y height of object to be cached
+   * @return {Object}.width width of canvas
+   * @return {Object}.height height of canvas
+   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
+   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+   */
+  _getCacheCanvasDimensions() {
+    if (this.caterCacheForTextChildren) {
+      const dims = super._getCacheCanvasDimensions();
+      let widthToAdd = 0;
+      let heightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        widthToAdd = maxFontSize * dims.zoomX;
+        heightToAdd = maxFontSize * dims.zoomY;
+      }
+      dims.width += widthToAdd;
+      dims.height += heightToAdd;
+      return dims;
+    }
+    return super._getCacheCanvasDimensions();
+  }
+
+  /**
+   * *PMW funtion added*
+   * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+   * @private
+   */
+  _getMaxExpandedFontSizeFromTextChildren() {
+    const groupObjects = this.getObjects();
+    let maxFontSize = 0;
+    for (const groupObject of groupObjects) {
+      if ('fontSize' in groupObject) {
+        const fontSize = groupObject.fontSize;
+        if (fontSize > maxFontSize) {
+          // @ts-ignore
+          maxFontSize = fontSize * groupObject.cacheExpansionFactor;
+        }
+      } else if (groupObject instanceof Group) {
+        const maxFontSizeInGroup = groupObject._getMaxExpandedFontSizeFromTextChildren();
+        if (maxFontSizeInGroup > maxFontSize) {
+          maxFontSize = maxFontSizeInGroup;
+        }
+      }
+    }
+    return maxFontSize;
   }
 
   /**
@@ -11624,7 +11734,7 @@ class Group extends createCollectionMixin(FabricObject) {
   _set(key, value) {
     const prev = this[key];
     super._set(key, value);
-    if (key === 'canvas' && prev !== value) {
+    if (this.delegateProperties && this.delegatedProperties[key] || key === 'canvas' && prev !== value) {
       (this._objects || []).forEach(object => {
         object._set(key, value);
       });
@@ -11838,8 +11948,52 @@ class Group extends createCollectionMixin(FabricObject) {
    */
   render(ctx) {
     this._transformDone = true;
+    //*PMW* for rencering custom backgrounds
+    ctx.save();
+    this.transform(ctx);
+    if (this.isTable()) {
+      this.renderTableCustomBackground(ctx);
+      this.renderTableBorders(ctx);
+    } else {
+      this.renderGroupBackground(ctx);
+    }
+    ctx.restore();
     super.render(ctx);
     this._transformDone = false;
+  }
+  isTable() {
+    return false;
+  }
+
+  /**
+   * *PMW* new function
+   * Renders background color for groups
+   * @param ctx Context to render on
+   */
+  renderGroupBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.restore();
+    }
   }
 
   /**
@@ -13557,7 +13711,9 @@ class SelectableCanvas extends StaticCanvas$1 {
   _shouldClearSelection(e, target) {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
-    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
+    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target &&
+    // *PMW* added code: (&& !fabric.enableGroupSelection)
+    !config.enableGroupSelection && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
   }
 
   /**
@@ -15274,7 +15430,8 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
         this.setActiveObject(target, e);
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
-      if (target === this._activeObject && (handle || !grouped)) {
+      // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
+      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
@@ -15551,7 +15708,9 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     const isAS = isActiveSelection(activeObject);
     if (
     // check if an active object exists on canvas and if the user is pressing the `selectionKey` while canvas supports multi selection.
-    !!activeObject && this._isSelectionKeyPressed(e) && this.selection &&
+    !!activeObject && (
+    // *PMW*
+    config.enableGroupSelection || this._isSelectionKeyPressed(e)) && this.selection &&
     // on top of that the user also has to hit a target that is selectable.
     !!target && target.selectable && (
     // group target and active object only if they are different objects
@@ -15582,6 +15741,11 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
           }
         }
         if (target.group === activeObject) {
+          // *PMW* . Use of custom variable. Preventing unselection of object tapped on, from active selection to enable drag. We have written custom code for unselection of object on mouse up instead of mouse down to enable dragging.
+          if (config.enableGroupSelection) {
+            return;
+          }
+
           // `target` is part of active selection => remove it
           activeObject.remove(target);
           this._hoveredTarget = target;
@@ -18341,6 +18505,331 @@ _defineProperty(Polygon, "type", 'Polygon');
 classRegistry.setClass(Polygon);
 classRegistry.setSVGClass(Polygon);
 
+class Tabs extends Group {
+  static async fromObject(object) {
+    return FabricObject$1._fromObject(_objectSpread2({
+      type: 'tabs'
+    }, object));
+  }
+}
+/**
+ * Type of an object
+ * @type String
+ * @default
+ */
+_defineProperty(Tabs, "type", 'tabs');
+classRegistry.setClass(Tabs);
+classRegistry.setClass(Tabs, 'tabs');
+
+class Table extends Group {
+  constructor() {
+    super(...arguments);
+    /**
+     * Number of table rows
+     * @type {Number}
+     */
+    _defineProperty(this, "rows", 0);
+    /**
+     * Number of table columns
+     * @type {Number}
+     */
+    _defineProperty(this, "columns", 0);
+    /**
+     * Layout style
+     * @type {String}
+     */
+    _defineProperty(this, "layoutType", '');
+    /**
+     * Background color 1 for alternate table background
+     * @type {String}
+     */
+    _defineProperty(this, "alternateBackgroundColor1", null);
+    /**
+     * Background color 2 for alternate table background
+     * @type {String}
+     */
+    _defineProperty(this, "alternateBackgroundColor2", null);
+    /**
+     * Background color for highlighted rows
+     * @type {String}
+     */
+    _defineProperty(this, "highlightedRowsBackgroundColor", null);
+    /**
+     * Array containing indices of highlighted rows
+     * @type {Array}
+     */
+    _defineProperty(this, "highlightedRows", []);
+    /**
+     * 2D array containing table data
+     * @type {Array}
+     */
+    _defineProperty(this, "tableArray", [[]]);
+    /**
+     * Spacing Between rows of table
+     * @type {Number}
+     */
+    _defineProperty(this, "ySpacing", 0);
+    /**
+     * Spacing Between column of table
+     * @type {Number}
+     */
+    _defineProperty(this, "xSpacing", 0);
+    /**
+     * Property used for showing the 'edit content' button
+     * @type {boolean}
+     */
+    _defineProperty(this, "hasButton", true);
+  }
+  /**
+   * Draws the table/schedule border
+   * @param {CanvasRenderingContext2D} ctx context to draw on
+   */
+  renderTableBorders(ctx) {
+    if (!this.stroke || this.strokeWidth === 0) {
+      return;
+    }
+    ctx.save();
+    this._setStrokeStyles(ctx, this);
+    ctx.strokeRect(-(this.width / 2), -(this.height / 2), this.width, this.height);
+
+    // if custom table layout them draw rows and column border too
+    if (this.isTableLayout()) {
+      this.drawColumnBorders(ctx);
+      this.drawRowBorders(ctx);
+    }
+    ctx.restore();
+  }
+  isTable() {
+    return true;
+  }
+
+  /**
+   * This function is responsible for rendering the background of table.
+   * It loops over all the rows in the table and draws the appropriate color rectangle for each row.
+   * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  renderTableCustomBackground(ctx) {
+    if (this.highlightedRows.length == 0 && !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2) || !this.isTableLayout()) {
+      this.renderGroupBackground(ctx);
+      return;
+    }
+    const backgroundData = this.getTableBackGroundData();
+    ctx.save();
+    const objects = this.getObjects();
+    let top = null;
+    let height = null;
+    let renderBackground = false;
+    for (let i = 0; i < backgroundData.length; i++) {
+      renderBackground = false;
+      if (backgroundData[i] != 'none') {
+        if (top == null) {
+          if (i == 0) {
+            top = -this.height / 2;
+          } else {
+            top = objects[i].top - this.ySpacing / 2;
+          }
+        }
+        if (backgroundData[i] != backgroundData[i + 1]) {
+          // set height of rectangle to render
+          height = Math.abs(top - objects[i].top) + this.getHeightOfRow(i) + this.ySpacing / 2;
+          renderBackground = true;
+          switch (backgroundData[i]) {
+            case 'highlight':
+              // @ts-ignore
+              ctx.fillStyle = this.highlightedRowsBackgroundColor;
+              break;
+            case 'color':
+              ctx.fillStyle = this.backgroundColor;
+              break;
+            case 'alternate1':
+              // @ts-ignore
+              ctx.fillStyle = this.alternateBackgroundColor1;
+              break;
+            case 'alternate2':
+              // @ts-ignore
+              ctx.fillStyle = this.alternateBackgroundColor2;
+              break;
+          }
+        } else {
+          renderBackground = false;
+        }
+        if (renderBackground) {
+          var _height;
+          ctx.fillRect(-this.width / 2, top, this.width, (_height = height) !== null && _height !== void 0 ? _height : 0);
+          top = null;
+          height = null;
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Returns an array containing string values corresponding to rows background color.
+   * 'highlight' for selected rows
+   * 'color' for when colored background is selected by user
+   * 'alternate1' for even rows when alternate background is selected
+   * 'alternate2' for odd rows when alternate background is selected
+   * 'none' for transparent background
+   * @returns {Array}
+   */
+  getTableBackGroundData() {
+    const data = [];
+    for (let i = 0; i < this.rows; i++) {
+      if (this.highlightedRows.indexOf(i) != -1) {
+        data.push('highlight');
+      } else if (this.backgroundColor != null) {
+        data.push('color');
+      } else if (this.alternateBackgroundColor1 && this.alternateBackgroundColor2) {
+        if (i % 2 == 0) {
+          data.push('alternate1');
+        } else {
+          data.push('alternate2');
+        }
+      } else {
+        data.push('none');
+      }
+    }
+    return data;
+  }
+
+  /**
+   * Returns the height of an item in a given row with max height,
+   * this value is basically the minimum space in y-axis needed by this row in a table.
+   * @param {Number} row
+   * @returns {Number}
+   */
+  getHeightOfRow(row) {
+    let height = 0,
+      h;
+    for (let i = 0; i < this.columns; i++) {
+      h = this.tableArray[i][row].calcTextHeight();
+      if (h > height) {
+        height = h;
+      }
+    }
+    return height;
+  }
+
+  /**
+   * Returns the width of an item in a given column with max width,
+   * this value is basically the minimum space in x-axis needed by this column in a table.
+   * @param {Number} column column index
+   * @returns {Number} minimum width required by this column
+   */
+  getWidthOfColumn(column) {
+    let width = 0,
+      w;
+    for (let i = 0; i < this.rows; i++) {
+      w = this.tableArray[column][i].calcTextWidth();
+      if (w > width) {
+        width = w;
+      }
+    }
+    return width;
+  }
+
+  /**
+   * renders border for table columns
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawColumnBorders(ctx) {
+    const objects = this.getObjects();
+    let x = this.rows,
+      maxWidth,
+      w,
+      itemIndex;
+    for (let i = 2; i <= this.columns; i++) {
+      maxWidth = 0;
+      // @ts-ignore
+      while (objects[x] && objects[x].column == i) {
+        w = objects[x].width;
+        if (w > maxWidth) {
+          maxWidth = w;
+          itemIndex = x;
+        }
+        x++;
+      }
+      if (itemIndex) {
+        ctx.beginPath();
+        ctx.moveTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2));
+        ctx.lineTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2) + this.height);
+        ctx.stroke();
+      }
+    }
+  }
+
+  /**
+   * renders border for table rows
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawRowBorders(ctx) {
+    const objects = this.getObjects();
+    for (let i = 1; i < this.rows; i++) {
+      const startX = -this.width / 2,
+        startY = objects[i].top - this.ySpacing / 2,
+        endX = startX + this.width,
+        endY = startY;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+  }
+
+  /**
+   * Returns true if design is simple table structure('custom-table' or 'layout-1'), false otherwise
+   * @returns {boolean}
+   */
+  isTableLayout() {
+    return this.layoutType == 'layout-1' || this.layoutType == 'custom-table';
+  }
+}
+/**
+ * Type of an object
+ * @type String
+ * @default
+ */
+_defineProperty(Table, "type", 'table');
+classRegistry.setClass(Table);
+classRegistry.setClass(Table, 'table');
+
+//*PMW* class addded for menu
+class Menu extends Table {
+  /**
+   * Renders vertical borders for table Style Menu Layouts
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawColumnBorders(ctx) {
+    const groups = this.getObjects();
+    let w,
+      maxWidth = 0,
+      left = 0;
+    for (let i = 0; i < groups.length; i++) {
+      // @ts-ignore
+      const items = groups[i].getObjects();
+      w = items[1].width;
+      if (w > maxWidth) {
+        maxWidth = w;
+        left = this.width / 2 - maxWidth;
+      }
+    }
+    ctx.beginPath();
+    ctx.moveTo(left - this.padding * 2, -(this.height / 2));
+    ctx.lineTo(left - this.padding * 2, -(this.height / 2) + this.height);
+    ctx.stroke();
+  }
+
+  /**
+   * Returns true if design is simple table structure('layout-13'), false otherwise
+   * @returns {boolean}
+   */
+  isTableLayout() {
+    return this.layoutType == 'layout-13';
+  }
+}
+
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
 const textDecorationProperties = ['underline', 'overline', 'linethrough'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
@@ -18383,6 +18872,7 @@ const textDefaultValues = {
   pathStartOffset: 0,
   pathSide: LEFT,
   pathAlign: 'baseline',
+  cacheExpansionFactor: 1,
   _fontSizeFraction: 0.222,
   offsets: {
     underline: 0.1,
@@ -19079,7 +19569,7 @@ class FabricText extends StyledText {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY;
+    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
     return dims;
   }
 
@@ -27886,6 +28376,7 @@ exports.Intersection = Intersection;
 exports.LayoutManager = LayoutManager;
 exports.LayoutStrategy = LayoutStrategy;
 exports.Line = Line;
+exports.Menu = Menu;
 exports.Object = FabricObject;
 exports.Observable = Observable;
 exports.Path = Path;
@@ -27900,6 +28391,8 @@ exports.Shadow = Shadow;
 exports.SprayBrush = SprayBrush;
 exports.StaticCanvas = StaticCanvas;
 exports.StaticCanvasDOMManager = StaticCanvasDOMManager;
+exports.Table = Table;
+exports.Tabs = Tabs;
 exports.Text = FabricText;
 exports.Textbox = Textbox;
 exports.Triangle = Triangle;

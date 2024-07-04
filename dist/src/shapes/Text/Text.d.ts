@@ -34,6 +34,7 @@ interface UniqueTextProps {
     charSpacing: number;
     lineHeight: number;
     fontSize: number;
+    cacheExpansionFactor: number;
     fontWeight: string;
     fontFamily: string;
     fontStyle: string;
@@ -92,6 +93,11 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @default
      */
     fontSize: number;
+    /**
+     * *PMW*
+     * Property added to expand text cache canvas more than default expansion for fonts which get cut off.
+     */
+    cacheExpansionFactor: number;
     /**
      * Font weight (e.g. bold, normal, 400, 600, 800)
      * @type {(Number|String)}

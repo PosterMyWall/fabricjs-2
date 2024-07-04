@@ -37,6 +37,7 @@ import type { CanvasOptions } from './CanvasOptions';
 import { canvasDefaults } from './CanvasOptions';
 import { Intersection } from '../Intersection';
 import { isActiveSelection } from '../util/typeAssertions';
+import { config } from '../config';
 
 /**
  * Canvas class
@@ -487,6 +488,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         activeObjects.length > 1 &&
         activeObjects.indexOf(target) === -1 &&
         activeObject !== target &&
+        // *PMW* added code: (&& !fabric.enableGroupSelection)
+        !config.enableGroupSelection &&
         !this._isSelectionKeyPressed(e)) ||
       (target && !target.evented) ||
       (target && !target.selectable && activeObject && activeObject !== target)

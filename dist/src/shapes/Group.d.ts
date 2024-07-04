@@ -1,10 +1,11 @@
-import type { CollectionEvents, ObjectEvents } from '../EventTypeDefs';
-import type { TClassProperties, TSVGReviver, TOptions, Abortable } from '../typedefs';
+import type { CollectionEvents, ObjectEvents, TPointerEvent } from '../EventTypeDefs';
+import type { TClassProperties, TSVGReviver, TOptions, Abortable, TCacheCanvasDimensions } from '../typedefs';
 import { FabricObject } from './Object/FabricObject';
 import type { FabricObjectProps, SerializedObjectProps } from './Object/types';
 import type { ImperativeLayoutOptions, LayoutBeforeEvent, LayoutAfterEvent } from '../LayoutManager/types';
 import { LayoutManager } from '../LayoutManager/LayoutManager';
 import type { SerializedLayoutManager } from '../LayoutManager/LayoutManager';
+import type { Table } from './Table';
 export interface GroupEvents extends ObjectEvents, CollectionEvents {
     'layout:before': LayoutBeforeEvent;
     'layout:after': LayoutAfterEvent;
@@ -34,6 +35,10 @@ declare const Group_base: {
         getObjects(...types: string[]): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
         item(index: number): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>;
         isEmpty(): boolean;
+        /**
+         * *PMW property added*
+         * Whether the PMW added selected flag should be used.
+         */
         size(): number;
         contains(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, deep?: boolean | undefined): boolean;
         complexity(): number;
@@ -54,7 +59,12 @@ declare const Group_base: {
     getDefaults(): Record<string, any>;
     createControls(): {
         controls: Record<string, import("../..").Control>;
-    };
+    }; /**
+     * Constructor
+     *
+     * @param {FabricObject[]} [objects] instance objects
+     * @param {Object} [options] Options object
+     */
     stateProperties: string[];
     cacheProperties: string[];
     type: string;
@@ -78,6 +88,43 @@ export declare class Group extends Group_base implements GroupProps {
      * @type boolean
      */
     subTargetCheck: boolean;
+    /**
+     * *PMW property added*
+     * To delete some properties or not
+     */
+    delegateProperties: boolean;
+    /**
+     * *PMW*
+     * Properties that are delegated to group objects when reading/writing
+     */
+    delegatedProperties: Record<any, any>;
+    /**
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
+     */
+    caterCacheForTextChildren: boolean;
+    /**
+     * *PMW property added*
+     * Whether to render a rectangle background or a tilted background
+     */
+    leanBackground: boolean;
+    /**
+     * *PMW property added*
+     * Leanness of background
+     */
+    leanBackgroundOffset: number;
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    selected: boolean;
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    useSelectedFlag: boolean;
     /**
      * Used to allow targeting of object inside groups.
      * set to true if you want to select an object inside a group.\
@@ -111,6 +158,33 @@ export declare class Group extends Group_base implements GroupProps {
      * @param {Object} [options] Options object
      */
     constructor(objects?: FabricObject[], options?: Partial<GroupProps>);
+    /**
+     * *PMW function added*
+     * Called everytime a group object is deselected. The useSelectedFlag is used and only true when the group object is slideshow item. See docs of 'selected' property.
+     */
+    onDeselect(options?: {
+        e?: TPointerEvent;
+        object?: any;
+    }): boolean;
+    /**
+     * *PMW* function added
+     * Expands cache dimensions to cater to any text children objects present inside the group.
+     * This is to prevent any part of the font rendering outside the selector box getting cut.
+     * @private
+     * @return {Object}.x width of object to be cached
+     * @return {Object}.y height of object to be cached
+     * @return {Object}.width width of canvas
+     * @return {Object}.height height of canvas
+     * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
+     * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+     */
+    _getCacheCanvasDimensions(): TCacheCanvasDimensions;
+    /**
+     * *PMW funtion added*
+     * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+     * @private
+     */
+    _getMaxExpandedFontSizeFromTextChildren(): number;
     /**
      * Shared code between group and active selection
      * Meant to be used by the constructor.
@@ -252,6 +326,13 @@ export declare class Group extends Group_base implements GroupProps {
      * @param {CanvasRenderingContext2D} ctx context to render instance on
      */
     render(ctx: CanvasRenderingContext2D): void;
+    isTable(): this is Table;
+    /**
+     * *PMW* new function
+     * Renders background color for groups
+     * @param ctx Context to render on
+     */
+    renderGroupBackground(ctx: CanvasRenderingContext2D): void;
     /**
      *
      * @private

@@ -17,7 +17,7 @@ import '../util/misc/vectors.mjs';
 import '../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
 import { RIGHT, LEFT, BOTTOM, TOP, CENTER } from '../constants.mjs';
 import { createCanvasElement } from '../util/misc/dom.mjs';
-import '../config.mjs';
+import { config } from '../config.mjs';
 import '../shapes/Group.mjs';
 import '../cache.mjs';
 import '../util/path/regex.mjs';
@@ -370,7 +370,9 @@ class SelectableCanvas extends StaticCanvas {
   _shouldClearSelection(e, target) {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
-    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
+    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target &&
+    // *PMW* added code: (&& !fabric.enableGroupSelection)
+    !config.enableGroupSelection && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
   }
 
   /**

@@ -341,7 +341,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {FabricObject} target target of event to select/deselect
      * @returns true if grouping occurred
      */
-    protected handleMultiSelection(e: TPointerEvent, target?: FabricObject): boolean;
+    protected handleMultiSelection(e: TPointerEvent, target?: FabricObject): boolean | undefined;
     /**
      * ## Handles selection
      * - selects objects that are contained in (and possibly intersecting) the selection bounding box

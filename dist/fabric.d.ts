@@ -61,6 +61,9 @@ export { Path } from './src/shapes/Path';
 export type { SerializedPolylineProps } from './src/shapes/Polyline';
 export { Polyline } from './src/shapes/Polyline';
 export { Polygon } from './src/shapes/Polygon';
+export { Tabs } from './src/shapes/Tabs';
+export { Table } from './src/shapes/Table';
+export { Menu } from './src/shapes/Menu';
 export type { GraphemeBBox, SerializedTextProps, TPathAlign, TPathSide, TextProps, } from './src/shapes/Text/Text';
 export { FabricText, 
 /**

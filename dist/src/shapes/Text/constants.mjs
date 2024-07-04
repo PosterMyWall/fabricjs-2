@@ -42,6 +42,7 @@ const textDefaultValues = {
   pathStartOffset: 0,
   pathSide: LEFT,
   pathAlign: 'baseline',
+  cacheExpansionFactor: 1,
   _fontSizeFraction: 0.222,
   offsets: {
     underline: 0.1,
