@@ -43,6 +43,8 @@ interface UniqueTextProps {
     underline: boolean;
     overline: boolean;
     linethrough: boolean;
+    squigglyline: boolean;
+    squigglylineColor: string;
     textAlign: string;
     direction: CanvasDirection;
     path?: Path;
@@ -128,6 +130,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @default
      */
     linethrough: boolean;
+    squigglyline: boolean;
+    squigglylineColor: string;
     /**
      * Text alignment. Possible values: "left", "center", "right", "justify",
      * "justify-left", "justify-center" or "justify-right".
@@ -240,6 +244,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     offsets: {
         underline: number;
         linethrough: number;
+        squigglyline: number;
         overline: number;
     };
     /**
@@ -628,7 +633,39 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
-    _renderTextDecoration(ctx: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline'): void;
+    _renderTextDecoration(ctx: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline' | 'squigglyline'): void;
+    /**
+     * *PMW*
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     * @param {Object} opts
+     */
+    _renderTextLineDecoration(ctx: CanvasRenderingContext2D, opts: Record<string, any>): void;
+    /**
+     * *PMW*
+     * Draws a background for the object big as its untrasformed dimensions
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     */
+    _renderBackground(ctx: CanvasRenderingContext2D): void;
+    getCharOffset(position: number): {
+        x: number;
+        y: number;
+    };
+    /**
+     * *PMW*
+     * Find new selection index representing start of current word according to current selection index
+     * @param {Number} startFrom Current selection index
+     * @return {Number} selection start index
+     */
+    findSelectedWordLeft(startFrom: number): number;
+    /**
+     * *PMW*
+     * Find new selection index representing end of current word according to current selection index
+     * @param {Number} startFrom Current selection index
+     * @return {Number} selection end index
+     */
+    findSelectedWordRight(startFrom: number): number;
     /**
      * return font declaration string for canvas context
      * @param {Object} [styleObject] object
@@ -689,6 +726,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
         underline: boolean;
         overline: boolean;
         linethrough: boolean;
+        squigglyline: boolean;
         strokeWidth: number;
         fontSize: number;
     }, SerializedTextProps, ObjectEvents>>;

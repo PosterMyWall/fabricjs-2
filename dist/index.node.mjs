@@ -138,7 +138,7 @@ class BaseConfiguration {
      * *PMW* added variable to mark when canvas is being two-finger panned.
      * @type Boolean
      */
-    _defineProperty(this, "isCanvasTwoFingerPanning", void 0);
+    _defineProperty(this, "isCanvasTwoFingerPanning", false);
     /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
@@ -490,7 +490,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-5";
+var version = "6.0.0-pmw-6";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -18803,7 +18803,7 @@ class Menu extends Table {
 }
 
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
-const textDecorationProperties = ['underline', 'overline', 'linethrough'];
+const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
 const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
 const styleProperties = [...fontProperties, ...textDecorationProperties, 'stroke', 'strokeWidth', 'fill', 'deltaY', 'textBackgroundColor'];
@@ -18822,6 +18822,8 @@ const textDefaultValues = {
   underline: false,
   overline: false,
   linethrough: false,
+  squigglyline: false,
+  squigglylineColor: '',
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
@@ -18849,7 +18851,8 @@ const textDefaultValues = {
   offsets: {
     underline: 0.1,
     linethrough: -0.315,
-    overline: -0.88
+    overline: -0.88,
+    squigglyline: 0.1
   },
   _fontSizeMult: 1.13,
   charSpacing: 0,
@@ -19558,6 +19561,7 @@ class FabricText extends StyledText {
     this._renderText(ctx);
     this._renderTextDecoration(ctx, 'overline');
     this._renderTextDecoration(ctx, 'linethrough');
+    this._renderTextDecoration(ctx, 'squigglyline'); // *PMW*
   }
 
   /**
@@ -19925,6 +19929,10 @@ class FabricText extends StyledText {
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       lineHeight = this.getHeightOfLine(i);
       height += i === len - 1 ? lineHeight / this.lineHeight : lineHeight;
+      // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
+      // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
+      // *PMW* preventing height to be smaller than selector size.
+      height += i === len - 1 && this.lineHeight < 1 ? lineHeight / this.lineHeight : lineHeight;
     }
     return height;
   }
@@ -20313,10 +20321,11 @@ class FabricText extends StyledText {
     return width;
   }
   _getWidthOfCharSpacing() {
-    if (this.charSpacing !== 0) {
-      return this.fontSize * this.charSpacing / 1000;
-    }
-    return 0;
+    //*PMW* change char spacing to be applied the same on every size
+    // if (this.charSpacing !== 0) {
+    //   return this.fontSize * this.charSpacing / 1000;
+    // }
+    return this.charSpacing;
   }
 
   /**
@@ -20382,11 +20391,18 @@ class FabricText extends StyledText {
           if (this.direction === 'rtl') {
             drawStart = this.width - drawStart - boxWidth;
           }
-          if (lastDecoration && lastFill) {
-            // bug? verify lastFill is a valid fill here.
-            ctx.fillStyle = lastFill;
-            ctx.fillRect(drawStart, top + offsetY * size + dy, boxWidth, this.fontSize / 15);
-          }
+          // *PMW*
+          const opts = {
+            type: type,
+            boxWidth: boxWidth,
+            decoration: lastDecoration,
+            fill: lastFill,
+            x: drawStart,
+            y: top + offsetY * size + dy,
+            w: boxWidth,
+            h: this.fontSize / 15
+          };
+          this._renderTextLineDecoration(ctx, opts);
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastDecoration = currentDecoration;
@@ -20402,12 +20418,147 @@ class FabricText extends StyledText {
         drawStart = this.width - drawStart - boxWidth;
       }
       ctx.fillStyle = currentFill;
-      currentDecoration && currentFill && ctx.fillRect(drawStart, top + offsetY * size + dy, boxWidth - charSpacing, this.fontSize / 15);
+      // *PMW*
+      const opts = {
+        type: type,
+        boxWidth: boxWidth,
+        decoration: currentDecoration,
+        fill: currentFill,
+        x: drawStart,
+        y: top + offsetY * size + dy,
+        w: boxWidth - charSpacing,
+        h: this.fontSize / 15
+      };
+      this._renderTextLineDecoration(ctx, opts);
       topOffset += heightOfLine;
     }
+
     // if there is text background color no
     // other shadows should be casted
+    // *PMW* need shadow to be applied on text with styles as well,
+    // this._removeShadow(ctx);
+  }
+
+  /**
+   * *PMW*
+   * @private
+   * @param {CanvasRenderingContext2D} ctx Context to render on
+   * @param {Object} opts
+   */
+  _renderTextLineDecoration(ctx, opts) {
+    if (opts.type === 'squigglyline') {
+      const polyPoints = [],
+        scaleX = 0.35,
+        scaleY = 0.45,
+        funct = function (x) {
+          const g = x % 6;
+          if (g <= 3) {
+            return g * 5;
+          }
+          return (6 - g) * 5;
+        };
+      ctx.fillStyle = this.squigglylineColor ? this.squigglylineColor : opts.fill;
+      for (let x = 0; x < opts.boxWidth; x += 0.5) {
+        polyPoints.push({
+          x: x - 10,
+          y: funct(x * scaleX) * scaleY
+        });
+      }
+      for (let j = 0; j < polyPoints.length; j++) {
+        opts.decoration && opts.fill && ctx.fillRect(opts.x + polyPoints[j].x + 8, opts.y + polyPoints[j].y, 2, 2);
+      }
+    } else {
+      // *PMW* use first color of gradient instead of last fill for text styles (underline, linethrough),
+      // Issue is fixed on updated method obj.set('textDecoration', 'underline') can use that one once
+      // it has support for multiple styles at a time and selection styles
+      if (opts.fill && typeof opts.fill !== 'string' && opts.fill.colorStops && opts.fill.colorStops.length) {
+        ctx.fillStyle = opts.fill.colorStops[0].color;
+      } else if (opts.fill && typeof opts.fill !== 'string' && opts.fill.source) {
+        //Use pattern for underline, linethrough on text mask
+        const pattern = ctx.createPattern(opts.fill.source, 'repeat');
+        if (pattern) {
+          ctx.fillStyle = pattern;
+        }
+      }
+      // *PMW*
+      opts.decoration && opts.fill && ctx.fillRect(opts.x, opts.y, opts.w, opts.h);
+    }
+  }
+
+  /**
+   * *PMW*
+   * Draws a background for the object big as its untrasformed dimensions
+   * @private
+   * @param {CanvasRenderingContext2D} ctx Context to render on
+   */
+  _renderBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    const dim = this._getNonTransformedDimensions();
+    let scaleX = this.scaleX,
+      scaleY = this.scaleY;
+    ctx.fillStyle = this.backgroundColor;
+    if (this.group) {
+      scaleX *= this.group.scaleX;
+      scaleY *= this.group.scaleY;
+    }
+    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
+    // if there is background color no other shadows
+    // should be casted
     this._removeShadow(ctx);
+  }
+  getCharOffset(position) {
+    let topOffset = 0,
+      leftOffset = 0;
+    const cursorPosition = this.get2DCursorLocation(position),
+      charIndex = cursorPosition.charIndex,
+      lineIndex = cursorPosition.lineIndex;
+    for (let i = 0; i < lineIndex; i++) {
+      topOffset += this.getHeightOfLine(i);
+    }
+    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
+    const bound = this.__charBounds[lineIndex][charIndex];
+    bound && (leftOffset = bound.left);
+    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
+      leftOffset -= this._getWidthOfCharSpacing();
+    }
+    return {
+      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
+      y: topOffset
+    };
+  }
+
+  /**
+   * *PMW*
+   * Find new selection index representing start of current word according to current selection index
+   * @param {Number} startFrom Current selection index
+   * @return {Number} selection start index
+   */
+  findSelectedWordLeft(startFrom) {
+    let offset = 0,
+      index = startFrom - 1;
+    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index > -1) {
+      offset++;
+      index--;
+    }
+    return startFrom - offset;
+  }
+
+  /**
+   * *PMW*
+   * Find new selection index representing end of current word according to current selection index
+   * @param {Number} startFrom Current selection index
+   * @return {Number} selection end index
+   */
+  findSelectedWordRight(startFrom) {
+    let offset = 0,
+      index = startFrom;
+    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index < this._text.length) {
+      offset++;
+      index++;
+    }
+    return startFrom + offset;
   }
 
   /**
@@ -20560,6 +20711,8 @@ class FabricText extends StyledText {
         underline: textDecoration.includes('underline'),
         overline: textDecoration.includes('overline'),
         linethrough: textDecoration.includes('line-through'),
+        /*PMW*/
+        squigglyline: textDecoration.includes('squiggly-line'),
         // we initialize this as 0
         strokeWidth: 0,
         fontSize

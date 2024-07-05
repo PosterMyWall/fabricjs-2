@@ -1,7 +1,7 @@
 import { reNewline, LEFT } from '../../constants.mjs';
 
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
-const textDecorationProperties = ['underline', 'overline', 'linethrough'];
+const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
 const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
 const styleProperties = [...fontProperties, ...textDecorationProperties, 'stroke', 'strokeWidth', 'fill', 'deltaY', 'textBackgroundColor'];
@@ -20,6 +20,8 @@ const textDefaultValues = {
   underline: false,
   overline: false,
   linethrough: false,
+  squigglyline: false,
+  squigglylineColor: '',
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
@@ -47,7 +49,8 @@ const textDefaultValues = {
   offsets: {
     underline: 0.1,
     linethrough: -0.315,
-    overline: -0.88
+    overline: -0.88,
+    squigglyline: 0.1
   },
   _fontSizeMult: 1.13,
   charSpacing: 0,

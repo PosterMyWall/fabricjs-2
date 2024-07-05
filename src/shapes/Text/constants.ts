@@ -13,6 +13,7 @@ export const textDecorationProperties = [
   'underline',
   'overline',
   'linethrough',
+  'squigglyline',
 ] as const;
 
 export const textLayoutProperties: string[] = [
@@ -47,6 +48,7 @@ export type StylePropertiesType =
   | 'deltaY'
   | 'overline'
   | 'underline'
+  | 'squigglyline'
   | 'linethrough';
 
 export const styleProperties: Readonly<StylePropertiesType[]> = [
@@ -73,6 +75,8 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   underline: false,
   overline: false,
   linethrough: false,
+  squigglyline: false,
+  squigglylineColor: '',
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
@@ -97,6 +101,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
     underline: 0.1,
     linethrough: -0.315,
     overline: -0.88,
+    squigglyline: 0.1,
   },
   _fontSizeMult: 1.13,
   charSpacing: 0,
