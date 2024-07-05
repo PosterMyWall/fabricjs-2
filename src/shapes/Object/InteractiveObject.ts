@@ -19,6 +19,7 @@ import type { FabricObjectProps } from './types/FabricObjectProps';
 import type { TFabricObjectProps, SerializedObjectProps } from './types';
 import { createObjectDefaultControls } from '../../controls/commonControls';
 import { interactiveObjectDefaultValues } from './defaultValues';
+import { SCALE } from '../../constants';
 import { config } from '../../config';
 
 export type TOCoord = Point & {
@@ -184,7 +185,7 @@ export class InteractiveFabricObject<
       if (
         this === (target as unknown as this) &&
         action &&
-        action.startsWith('scale')
+        action.startsWith(SCALE)
       ) {
         return false;
       }
