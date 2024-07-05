@@ -20,7 +20,8 @@ export const isTransparent = (
   // Split image data - for tolerance > 1, pixelDataSize = 4;
   for (let i = 3; i < data.length; i += 4) {
     const alphaChannel = data[i];
-    if (alphaChannel > 0) {
+    //*PMW* changing transparent pixel threshold value
+    if (alphaChannel > 2) {
       return false;
     }
   }

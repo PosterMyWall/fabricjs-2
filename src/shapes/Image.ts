@@ -45,6 +45,7 @@ interface UniqueImageProps {
   cropX: number;
   cropY: number;
   imageSmoothing: boolean;
+  ignoreApplyFilters: boolean;
   filters: BaseFilter<string, Record<string, any>>[];
   resizeFilter?: Resize;
 }
@@ -56,6 +57,7 @@ export const imageDefaultValues: Partial<TClassProperties<FabricImage>> = {
   cropX: 0,
   cropY: 0,
   imageSmoothing: true,
+  ignoreApplyFilters: false,
 };
 
 export interface SerializedImageProps extends SerializedObjectProps {
@@ -162,6 +164,8 @@ export class FabricImage<
    */
   declare imageSmoothing: boolean;
 
+  declare ignoreApplyFilters: boolean;
+
   declare preserveAspectRatio: string;
 
   protected declare src: string;
@@ -185,6 +189,7 @@ export class FabricImage<
       ...FabricImage.ownDefaults,
     };
   }
+
   /**
    * Constructor
    * Image can be initialized with any canvas drawable or a string.
@@ -546,6 +551,11 @@ export class FabricImage<
       sourceHeight =
         (imgElement as HTMLImageElement).naturalHeight || imgElement.height;
 
+    //*PMW* Return here because filters need to be applied on each frame render for videos
+    if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
+      return this;
+    }
+
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -628,7 +638,7 @@ export class FabricImage<
   }
 
   _renderFill(ctx: CanvasRenderingContext2D) {
-    const elementToDraw = this._element;
+    let elementToDraw = this._element;
     if (!elementToDraw) {
       return;
     }
@@ -654,8 +664,72 @@ export class FabricImage<
       maxDestW = Math.min(w, elWidth / scaleX - cropX),
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
 
+    //*PMW* if video apply filter on each frame draw
+    if (this._element.nodeName === 'VIDEO') {
+      elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
+    }
+
     elementToDraw &&
       ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+  }
+
+  /**
+   * *PMW* function added
+   * Applies filter of video element using webgl backend
+   * @param elementToDraw
+   * @return {*|CanvasElement}
+   * @private
+   */
+  _applyVideoFilter(elementToDraw: HTMLVideoElement) {
+    let filters = this.filters || [];
+    filters = filters.filter(function (filter) {
+      return filter;
+    });
+
+    if (filters.length === 0) {
+      this._element = this._originalElement;
+      this._filteredEl = undefined;
+      this._filterScalingX = 1;
+      this._filterScalingY = 1;
+      return this._element;
+    }
+
+    const videoEl = elementToDraw,
+      sourceWidth =  videoEl.width,
+      sourceHeight = videoEl.height;
+
+    if (this._element === videoEl) {
+      // if the element is the same we need to create a new element
+      const canvasEl = createCanvasElement();
+      canvasEl.width = sourceWidth;
+      canvasEl.height = sourceHeight;
+      this._element = canvasEl;
+      this._filteredEl = canvasEl;
+    } else {
+      // clear the existing element to get new filter data
+      (this._element as HTMLCanvasElement).getContext('2d')?.clearRect(0, 0, sourceWidth, sourceHeight);
+    }
+
+    getFilterBackend().applyFilters(
+      filters,
+      this._originalElement,
+      sourceWidth,
+      sourceHeight,
+      this._element as HTMLCanvasElement,
+    );
+
+    if (
+      this._originalElement.width !== this._element.width ||
+      this._originalElement.height !== this._element.height
+    ) {
+      this._filterScalingX = this._element.width / this._originalElement.width;
+      this._filterScalingY =
+        this._element.height / this._originalElement.height;
+    }
+
+    const modifiedElementToDraw = this._element;
+    this._element = videoEl;
+    return modifiedElementToDraw;
   }
 
   /**

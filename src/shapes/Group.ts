@@ -61,12 +61,12 @@ export interface GroupEvents extends ObjectEvents, CollectionEvents {
 export interface GroupOwnProps {
   subTargetCheck: boolean;
   interactive: boolean;
-  delegateProperties: boolean,
-  caterCacheForTextChildren: boolean,
-  leanBackground: boolean,
-  leanBackgroundOffset: number,
-  selected: boolean,
-  useSelectedFlag: boolean,
+  delegateProperties: boolean;
+  caterCacheForTextChildren: boolean;
+  leanBackground: boolean;
+  leanBackgroundOffset: number;
+  selected: boolean;
+  useSelectedFlag: boolean;
 }
 
 export interface SerializedGroupProps
@@ -147,13 +147,13 @@ export class Group
    * *PMW property added*
    * Whether to render a rectangle background or a tilted background
    */
-  declare leanBackground : boolean;
+  declare leanBackground: boolean;
 
   /**
    * *PMW property added*
    * Leanness of background
    */
-  declare leanBackgroundOffset : number;
+  declare leanBackgroundOffset: number;
 
   /**
    * *PMW property added*
@@ -874,6 +874,101 @@ export class Group
     return this._createBaseClipPathSVGMarkup(svgString, {
       reviver,
     });
+  }
+
+  /**
+   * *PMW*
+   * Aligns the items in the group horizontally.
+   * @param {String} type Must be either 'left', 'right' or 'center'
+   */
+  horizontalAlignment(type: 'left' | 'right' | 'center'): void {
+    const groupWidth = this.width,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetX;
+
+    switch (type) {
+      case 'left':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const minX = Math.min(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = minX < tl ? tl - minX : 0;
+          objects[i].set('left', -groupWidth / 2 + padding + offsetX);
+        }
+        break;
+      case 'right':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const maxX = Math.max(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = maxX > tl ? maxX - tl : 0;
+          objects[i].set('left', groupWidth / 2 - offsetX - padding);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: 0,
+            y: objects[i].top,
+          });
+          objects[i].set('left', corners.tl.x);
+        }
+        break;
+      default:
+        return;
+    }
+    this.canvas?.fire('object:modified', { target: this });
+  }
+
+  /**
+   * *PMW* Aligns the items in the group vertically.
+   * @param {String} type Must be either 'top', 'bottom' or 'center'
+   */
+  verticalAlignment(type: 'top' | 'bottom' | 'center') {
+    const groupHeight = this.height,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetY;
+
+    switch (type) {
+      case 'top':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const minY = Math.min(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = minY < tl ? tl - minY : 0;
+          objects[i].set('top', -groupHeight / 2 + padding + offsetY);
+        }
+        break;
+      case 'bottom':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const maxY = Math.max(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = maxY > tl ? maxY - tl : 0;
+          objects[i].set('top', groupHeight / 2 - padding - offsetY);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: objects[i].left,
+            y: 0,
+          });
+          objects[i].set('top', corners.tl.y);
+        }
+        break;
+      default:
+        return;
+    }
+    this.canvas?.fire('object:modified', { target: this });
   }
 
   /**
