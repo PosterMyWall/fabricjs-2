@@ -490,7 +490,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-6";
+var version = "6.0.0-pmw-7";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -18768,7 +18768,7 @@ classRegistry.setClass(Table);
 classRegistry.setClass(Table, 'table');
 
 //*PMW* class addded for menu
-class Menu extends Table {
+class CustomBorderTable extends Table {
   /**
    * Renders vertical borders for table Style Menu Layouts
    * @param {CanvasRenderingContext2D} ctx context to render on
@@ -28476,5 +28476,5 @@ class Canvas extends Canvas$1 {
   }
 }
 
-export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, Intersection, LayoutManager, LayoutStrategy, Line, Menu, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv$1 as getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
+export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv$1 as getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
 //# sourceMappingURL=index.node.mjs.map

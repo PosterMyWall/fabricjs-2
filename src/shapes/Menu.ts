@@ -3,7 +3,7 @@ import { Table } from './Table';
 import { classRegistry } from '../ClassRegistry';
 import { FabricObject } from './Object/Object';
 
-export class Menu extends Table {
+export class CustomBorderTable extends Table {
   /**
    * Renders vertical borders for table Style Menu Layouts
    * @param {CanvasRenderingContext2D} ctx context to render on

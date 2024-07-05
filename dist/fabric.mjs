@@ -32,7 +32,7 @@ export { Polyline } from './src/shapes/Polyline.mjs';
 export { Polygon } from './src/shapes/Polygon.mjs';
 export { Tabs } from './src/shapes/Tabs.mjs';
 export { Table } from './src/shapes/Table.mjs';
-export { Menu } from './src/shapes/Menu.mjs';
+export { CustomBorderTable } from './src/shapes/Menu.mjs';
 export { FabricText, FabricText as Text } from './src/shapes/Text/Text.mjs';
 export { IText } from './src/shapes/IText/IText.mjs';
 export { Textbox } from './src/shapes/Textbox.mjs';

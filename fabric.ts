@@ -85,7 +85,7 @@ export { Polyline } from './src/shapes/Polyline';
 export { Polygon } from './src/shapes/Polygon';
 export { Tabs } from './src/shapes/Tabs';
 export { Table } from './src/shapes/Table';
-export { Menu } from './src/shapes/Menu';
+export { CustomBorderTable } from './src/shapes/Menu';
 export type {
   GraphemeBBox,
   SerializedTextProps,
@@ -164,6 +164,7 @@ export * as util from './src/util';
 export { loadSVGFromString } from './src/parser/loadSVGFromString';
 export { loadSVGFromURL } from './src/parser/loadSVGFromURL';
 export { parseSVGDocument } from './src/parser/parseSVGDocument';
+export type {SVGParsingOutput} from './src/parser/typedefs';
 
 // todo convert tests to jest and stop exporting those.
 export { parseAttributes } from './src/parser/parseAttributes';

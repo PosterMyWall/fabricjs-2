@@ -492,7 +492,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-6";
+var version = "6.0.0-pmw-7";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -18770,7 +18770,7 @@ classRegistry.setClass(Table);
 classRegistry.setClass(Table, 'table');
 
 //*PMW* class addded for menu
-class Menu extends Table {
+class CustomBorderTable extends Table {
   /**
    * Renders vertical borders for table Style Menu Layouts
    * @param {CanvasRenderingContext2D} ctx context to render on
@@ -28489,6 +28489,7 @@ exports.CircleBrush = CircleBrush;
 exports.ClipPathLayout = ClipPathLayout;
 exports.Color = Color;
 exports.Control = Control;
+exports.CustomBorderTable = CustomBorderTable;
 exports.Ellipse = Ellipse;
 exports.FabricImage = FabricImage;
 exports.FabricObject = FabricObject;
@@ -28503,7 +28504,6 @@ exports.Intersection = Intersection;
 exports.LayoutManager = LayoutManager;
 exports.LayoutStrategy = LayoutStrategy;
 exports.Line = Line;
-exports.Menu = Menu;
 exports.Object = FabricObject;
 exports.Observable = Observable;
 exports.Path = Path;
