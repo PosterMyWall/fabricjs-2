@@ -22,6 +22,7 @@ export { SprayBrush } from './src/brushes/SprayBrush.mjs';
 export { PatternBrush } from './src/brushes/PatternBrush.mjs';
 export { FabricObject, FabricObject as Object } from './src/shapes/Object/FabricObject.mjs';
 export { FabricObject as BaseFabricObject } from './src/shapes/Object/Object.mjs';
+export { InteractiveFabricObject } from './src/shapes/Object/InteractiveObject.mjs';
 export { Line } from './src/shapes/Line.mjs';
 export { Circle } from './src/shapes/Circle.mjs';
 export { Triangle } from './src/shapes/Triangle.mjs';

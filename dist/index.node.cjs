@@ -492,7 +492,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.0-pmw-7";
+var version = "6.0.0-pmw-8";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -28500,6 +28500,7 @@ exports.Gradient = Gradient;
 exports.Group = Group;
 exports.IText = IText;
 exports.Image = FabricImage;
+exports.InteractiveFabricObject = InteractiveFabricObject;
 exports.Intersection = Intersection;
 exports.LayoutManager = LayoutManager;
 exports.LayoutStrategy = LayoutStrategy;

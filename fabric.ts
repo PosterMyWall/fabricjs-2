@@ -60,6 +60,7 @@ export {
  * Exported so we can tweak default values
  */
 export { FabricObject as BaseFabricObject } from './src/shapes/Object/Object';
+export { InteractiveFabricObject } from './src/shapes/Object/InteractiveObject';
 
 export type {
   TFabricObjectProps,

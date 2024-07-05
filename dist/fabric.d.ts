@@ -46,6 +46,7 @@ FabricObject as Object, } from './src/shapes/Object/FabricObject';
  * Exported so we can tweak default values
  */
 export { FabricObject as BaseFabricObject } from './src/shapes/Object/Object';
+export { InteractiveFabricObject } from './src/shapes/Object/InteractiveObject';
 export type { TFabricObjectProps, FabricObjectProps, SerializedObjectProps, } from './src/shapes/Object/types';
 export type { SerializedLineProps } from './src/shapes/Line';
 export { Line } from './src/shapes/Line';
