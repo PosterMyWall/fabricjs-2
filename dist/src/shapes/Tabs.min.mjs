@@ -1,0 +1,2 @@
+import{defineProperty as s,objectSpread2 as t}from"../../_virtual/_rollupPluginBabelHelpers.min.mjs";import{Group as e}from"./Group.min.mjs";import{classRegistry as r}from"../ClassRegistry.min.mjs";import{FabricObject as m}from"./Object/Object.min.mjs";class o extends e{static async fromObject(s){return m._fromObject(t({type:"tabs"},s))}}s(o,"type","tabs"),r.setClass(o),r.setClass(o,"tabs");export{o as Tabs};
+//# sourceMappingURL=Tabs.min.mjs.map
