@@ -1,7 +1,7 @@
-import { TOP, LEFT } from '../../constants.mjs';
+import { TOP, LEFT, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y, FILL, STROKE } from '../../constants.mjs';
 
-const stateProperties = [TOP, LEFT, 'scaleX', 'scaleY', 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', 'skewX', 'skewY'];
-const cacheProperties = ['fill', 'stroke', 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
+const stateProperties = [TOP, LEFT, SCALE_X, SCALE_Y, 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', SKEW_X, SKEW_Y];
+const cacheProperties = [FILL, STROKE, 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
 const fabricObjectDefaultValues = {
   // see composeMatrix() to see order of transforms. First defaults listed based on this
   top: 0,
@@ -22,7 +22,7 @@ const fabricObjectDefaultValues = {
   strokeUniform: false,
   padding: 0,
   opacity: 1,
-  paintFirst: 'fill',
+  paintFirst: FILL,
   fill: 'rgb(0,0,0)',
   fillRule: 'nonzero',
   stroke: null,

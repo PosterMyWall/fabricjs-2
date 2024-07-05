@@ -109,7 +109,7 @@ class Blur extends BaseFilter {
    */
   sendUniformData(gl, uniformLocations) {
     const delta = this.chooseRightDelta();
-    gl.uniform2fv(uniformLocations.delta, delta);
+    gl.uniform2fv(uniformLocations.uDelta, delta);
   }
   isNeutralState() {
     return this.blur === 0;

@@ -22,16 +22,21 @@ class LayoutStrategy {
       return this.calcBoundingBox(objects, context);
     }
   }
-  shouldPerformLayout(context) {
-    return context.type === LAYOUT_TYPE_INITIALIZATION || context.type === LAYOUT_TYPE_IMPERATIVE || !!context.prevStrategy && context.strategy !== context.prevStrategy;
+  shouldPerformLayout(_ref) {
+    let {
+      type,
+      prevStrategy,
+      strategy
+    } = _ref;
+    return type === LAYOUT_TYPE_INITIALIZATION || type === LAYOUT_TYPE_IMPERATIVE || !!prevStrategy && strategy !== prevStrategy;
   }
-  shouldLayoutClipPath(_ref) {
+  shouldLayoutClipPath(_ref2) {
     let {
       type,
       target: {
         clipPath
       }
-    } = _ref;
+    } = _ref2;
     return type !== LAYOUT_TYPE_INITIALIZATION && clipPath && !clipPath.absolutePositioned;
   }
   getInitialSize(context, result) {
@@ -42,15 +47,16 @@ class LayoutStrategy {
    * Override this method to customize layout.
    */
   calcBoundingBox(objects, context) {
-    if (context.type === LAYOUT_TYPE_IMPERATIVE && context.overrides) {
+    const {
+      type,
+      target
+    } = context;
+    if (type === LAYOUT_TYPE_IMPERATIVE && context.overrides) {
       return context.overrides;
     }
     if (objects.length === 0) {
       return;
     }
-    const {
-      target
-    } = context;
     const {
       left,
       top,
@@ -60,7 +66,7 @@ class LayoutStrategy {
     const bboxSize = new Point(width, height);
     const bboxLeftTop = new Point(left, top);
     const bboxCenter = bboxLeftTop.add(bboxSize.scalarDivide(2));
-    if (context.type === LAYOUT_TYPE_INITIALIZATION) {
+    if (type === LAYOUT_TYPE_INITIALIZATION) {
       const actualSize = this.getInitialSize(context, {
         size: bboxSize,
         center: bboxCenter

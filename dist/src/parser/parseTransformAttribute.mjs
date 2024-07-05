@@ -1,5 +1,5 @@
 import { taggedTemplateLiteral as _taggedTemplateLiteral } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-import { iMatrix } from '../constants.mjs';
+import { iMatrix, ROTATE, SKEW_Y, SKEW_X, SCALE } from '../constants.mjs';
 import { reNum } from './constants.mjs';
 import { cleanupSvgAttribute } from '../util/internals/cleanupSvgAttribute.mjs';
 import { createRotateMatrix, multiplyTransformMatrixArray, createSkewYMatrix, createSkewXMatrix, createScaleMatrix, createTranslateMatrix } from '../util/misc/matrix.mjs';
@@ -58,7 +58,7 @@ function parseTransformAttribute(attributeValue) {
       case 'translate':
         matrix = createTranslateMatrix(arg0, arg1);
         break;
-      case 'rotate':
+      case ROTATE:
         matrix = createRotateMatrix({
           angle: arg0
         }, {
@@ -66,13 +66,13 @@ function parseTransformAttribute(attributeValue) {
           y: arg2
         });
         break;
-      case 'scale':
+      case SCALE:
         matrix = createScaleMatrix(arg0, arg1);
         break;
-      case 'skewX':
+      case SKEW_X:
         matrix = createSkewXMatrix(arg0);
         break;
-      case 'skewY':
+      case SKEW_Y:
         matrix = createSkewYMatrix(arg0);
         break;
       case 'matrix':

@@ -675,6 +675,105 @@ class Group extends createCollectionMixin(FabricObject) {
   }
 
   /**
+   * *PMW*
+   * Aligns the items in the group horizontally.
+   * @param {String} type Must be either 'left', 'right' or 'center'
+   */
+  horizontalAlignment(type) {
+    var _this$canvas2;
+    const groupWidth = this.width,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetX;
+    switch (type) {
+      case 'left':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const minX = Math.min(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = minX < tl ? tl - minX : 0;
+          objects[i].set('left', -groupWidth / 2 + padding + offsetX);
+        }
+        break;
+      case 'right':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const maxX = Math.max(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = maxX > tl ? maxX - tl : 0;
+          objects[i].set('left', groupWidth / 2 - offsetX - padding);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: 0,
+            y: objects[i].top
+          });
+          objects[i].set('left', corners.tl.x);
+        }
+        break;
+      default:
+        return;
+    }
+    (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 ? void 0 : _this$canvas2.fire('object:modified', {
+      target: this
+    });
+  }
+
+  /**
+   * *PMW* Aligns the items in the group vertically.
+   * @param {String} type Must be either 'top', 'bottom' or 'center'
+   */
+  verticalAlignment(type) {
+    var _this$canvas3;
+    const groupHeight = this.height,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetY;
+    switch (type) {
+      case 'top':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const minY = Math.min(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = minY < tl ? tl - minY : 0;
+          objects[i].set('top', -groupHeight / 2 + padding + offsetY);
+        }
+        break;
+      case 'bottom':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const maxY = Math.max(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = maxY > tl ? maxY - tl : 0;
+          objects[i].set('top', groupHeight / 2 - padding - offsetY);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: objects[i].left,
+            y: 0
+          });
+          objects[i].set('top', corners.tl.y);
+        }
+        break;
+      default:
+        return;
+    }
+    (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 ? void 0 : _this$canvas3.fire('object:modified', {
+      target: this
+    });
+  }
+
+  /**
    * @todo support loading from svg
    * @private
    * @static

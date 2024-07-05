@@ -19,7 +19,7 @@ export declare abstract class LayoutStrategy {
      * @returns layout result **OR** `undefined` to skip layout
      */
     calcLayoutResult(context: StrictLayoutContext, objects: FabricObject[]): LayoutStrategyResult | undefined;
-    shouldPerformLayout(context: StrictLayoutContext): boolean;
+    shouldPerformLayout({ type, prevStrategy, strategy }: StrictLayoutContext): boolean;
     shouldLayoutClipPath({ type, target: { clipPath } }: StrictLayoutContext): boolean | undefined;
     getInitialSize(context: StrictLayoutContext & InitializationLayoutContext, result: Pick<LayoutStrategyResult, 'center' | 'size'>): Point;
     /**

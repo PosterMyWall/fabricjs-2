@@ -11,7 +11,7 @@ import { parsePreserveAspectRatioAttribute } from '../util/misc/svgParsing.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
 import { WebGLFilterBackend } from '../filters/WebGLFilterBackend.mjs';
-import { NONE } from '../constants.mjs';
+import { FILL, NONE } from '../constants.mjs';
 import { getDocumentFromElement } from '../util/dom_misc.mjs';
 import { log } from '../util/internals/console.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
@@ -26,7 +26,8 @@ const imageDefaultValues = {
   minimumScaleTrigger: 0.5,
   cropX: 0,
   cropY: 0,
-  imageSmoothing: true
+  imageSmoothing: true,
+  ignoreApplyFilters: false
 };
 const IMAGE_PROPS = ['cropX', 'cropY'];
 
@@ -37,6 +38,7 @@ class FabricImage extends FabricObject {
   static getDefaults() {
     return _objectSpread2(_objectSpread2({}, super.getDefaults()), FabricImage.ownDefaults);
   }
+
   /**
    * Constructor
    * Image can be initialized with any canvas drawable or a string.
@@ -256,7 +258,7 @@ class FabricImage extends FabricObject {
       strokeSvg = ["\t<rect x=\"".concat(x, "\" y=\"").concat(y, "\" width=\"").concat(this.width, "\" height=\"").concat(this.height, "\" style=\"").concat(this.getSvgStyles(), "\" />\n")];
       this.fill = origFill;
     }
-    if (this.paintFirst !== 'fill') {
+    if (this.paintFirst !== FILL) {
       svgString = svgString.concat(strokeSvg, imageMarkup);
     } else {
       svgString = svgString.concat(imageMarkup, strokeSvg);
@@ -378,6 +380,11 @@ class FabricImage extends FabricObject {
     const imgElement = this._originalElement,
       sourceWidth = imgElement.naturalWidth || imgElement.width,
       sourceHeight = imgElement.naturalHeight || imgElement.height;
+
+    //*PMW* Return here because filters need to be applied on each frame render for videos
+    if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
+      return this;
+    }
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -444,7 +451,7 @@ class FabricImage extends FabricObject {
     return this.needsItsOwnCache();
   }
   _renderFill(ctx) {
-    const elementToDraw = this._element;
+    let elementToDraw = this._element;
     if (!elementToDraw) {
       return;
     }
@@ -466,7 +473,56 @@ class FabricImage extends FabricObject {
       y = -h / 2,
       maxDestW = Math.min(w, elWidth / scaleX - cropX),
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
+
+    //*PMW* if video apply filter on each frame draw
+    if (this._element.nodeName === 'VIDEO') {
+      elementToDraw = this._applyVideoFilter(this._element);
+    }
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+  }
+
+  /**
+   * *PMW* function added
+   * Applies filter of video element using webgl backend
+   * @param elementToDraw
+   * @return {*|CanvasElement}
+   * @private
+   */
+  _applyVideoFilter(elementToDraw) {
+    let filters = this.filters || [];
+    filters = filters.filter(function (filter) {
+      return filter;
+    });
+    if (filters.length === 0) {
+      this._element = this._originalElement;
+      this._filteredEl = undefined;
+      this._filterScalingX = 1;
+      this._filterScalingY = 1;
+      return this._element;
+    }
+    const videoEl = elementToDraw,
+      sourceWidth = videoEl.width,
+      sourceHeight = videoEl.height;
+    if (this._element === videoEl) {
+      // if the element is the same we need to create a new element
+      const canvasEl = createCanvasElement();
+      canvasEl.width = sourceWidth;
+      canvasEl.height = sourceHeight;
+      this._element = canvasEl;
+      this._filteredEl = canvasEl;
+    } else {
+      var _getContext;
+      // clear the existing element to get new filter data
+      (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 ? void 0 : _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
+    }
+    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
+    if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
+      this._filterScalingX = this._element.width / this._originalElement.width;
+      this._filterScalingY = this._element.height / this._originalElement.height;
+    }
+    const modifiedElementToDraw = this._element;
+    this._element = videoEl;
+    return modifiedElementToDraw;
   }
 
   /**

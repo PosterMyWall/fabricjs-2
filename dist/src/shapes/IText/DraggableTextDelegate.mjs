@@ -3,7 +3,7 @@ import { Point } from '../../Point.mjs';
 import { setStyle } from '../../util/dom_style.mjs';
 import { cloneDeep } from '../../util/internals/cloneDeep.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
-import { NONE } from '../../constants.mjs';
+import { NONE, CHANGED } from '../../constants.mjs';
 
 /**
  * #### Dragging IText/Textbox Lifecycle
@@ -273,7 +273,7 @@ class DraggableTextDelegate {
       target.hiddenTextarea.value = target.text;
       target._updateTextarea();
       target.hiddenTextarea.focus();
-      target.fire('changed', {
+      target.fire(CHANGED, {
         index: insertAt + selectionStartOffset,
         action: 'drop'
       });
@@ -319,7 +319,7 @@ class DraggableTextDelegate {
             target.selectionStart = target.selectionEnd = selectionStart;
             target.hiddenTextarea && (target.hiddenTextarea.value = target.text);
             target._updateTextarea();
-            target.fire('changed', {
+            target.fire(CHANGED, {
               index: selectionStart,
               action: 'dragend'
             });

@@ -12,7 +12,7 @@ import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { toFixed } from '../util/misc/toFixed.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
 import { cloneDeep } from '../util/internals/cloneDeep.mjs';
-import { LEFT, TOP, CENTER } from '../constants.mjs';
+import { LEFT, TOP, CENTER, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
 const _excluded = ["left", "top"];
@@ -214,7 +214,7 @@ class Polyline extends FabricObject {
   _set(key, value) {
     const changed = this.initialized && this[key] !== value;
     const output = super._set(key, value);
-    if (this.exactBoundingBox && changed && ((key === 'scaleX' || key === 'scaleY') && this.strokeUniform && this.constructor.layoutProperties.includes('strokeUniform') || this.constructor.layoutProperties.includes(key))) {
+    if (this.exactBoundingBox && changed && ((key === SCALE_X || key === SCALE_Y) && this.strokeUniform && this.constructor.layoutProperties.includes('strokeUniform') || this.constructor.layoutProperties.includes(key))) {
       this.setDimensions();
     }
     return output;
@@ -333,7 +333,7 @@ class Polyline extends FabricObject {
  */
 _defineProperty(Polyline, "ownDefaults", polylineDefaultValues);
 _defineProperty(Polyline, "type", 'Polyline');
-_defineProperty(Polyline, "layoutProperties", ['skewX', 'skewY', 'strokeLineCap', 'strokeLineJoin', 'strokeMiterLimit', 'strokeWidth', 'strokeUniform', 'points']);
+_defineProperty(Polyline, "layoutProperties", [SKEW_X, SKEW_Y, 'strokeLineCap', 'strokeLineJoin', 'strokeMiterLimit', 'strokeWidth', 'strokeUniform', 'points']);
 _defineProperty(Polyline, "cacheProperties", [...cacheProperties, 'points']);
 _defineProperty(Polyline, "ATTRIBUTE_NAMES", [...SHARED_ATTRIBUTES]);
 classRegistry.setClass(Polyline);

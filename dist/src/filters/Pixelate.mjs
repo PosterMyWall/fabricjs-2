@@ -73,7 +73,7 @@ class Pixelate extends BaseFilter {
 }
 _defineProperty(Pixelate, "type", 'Pixelate');
 _defineProperty(Pixelate, "defaults", pixelateDefaultValues);
-_defineProperty(Pixelate, "uniformLocations", ['uBlockSize']);
+_defineProperty(Pixelate, "uniformLocations", ['uBlocksize']);
 classRegistry.setClass(Pixelate);
 
 export { Pixelate, pixelateDefaultValues };

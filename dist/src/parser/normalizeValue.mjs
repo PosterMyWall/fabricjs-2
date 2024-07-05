@@ -1,13 +1,13 @@
 import { multiplyTransformMatrices } from '../util/misc/matrix.mjs';
 import { parseUnit } from '../util/misc/svgParsing.mjs';
 import { parseTransformAttribute } from './parseTransformAttribute.mjs';
-import { NONE, LEFT, RIGHT, CENTER } from '../constants.mjs';
+import { FILL, STROKE, NONE, LEFT, RIGHT, CENTER } from '../constants.mjs';
 
 function normalizeValue(attr, value, parentAttributes, fontSize) {
   const isArray = Array.isArray(value);
   let parsed;
   let ouputValue = value;
-  if ((attr === 'fill' || attr === 'stroke') && value === NONE) {
+  if ((attr === FILL || attr === STROKE) && value === NONE) {
     ouputValue = '';
   } else if (attr === 'strokeUniform') {
     return value === 'non-scaling-stroke';
@@ -40,13 +40,13 @@ function normalizeValue(attr, value, parentAttributes, fontSize) {
     // parseUnit returns px and we convert it to em
     parsed = parseUnit(value, fontSize) / fontSize * 1000;
   } else if (attr === 'paintFirst') {
-    const fillIndex = value.indexOf('fill');
-    const strokeIndex = value.indexOf('stroke');
-    ouputValue = 'fill';
+    const fillIndex = value.indexOf(FILL);
+    const strokeIndex = value.indexOf(STROKE);
+    ouputValue = FILL;
     if (fillIndex > -1 && strokeIndex > -1 && strokeIndex < fillIndex) {
-      ouputValue = 'stroke';
+      ouputValue = STROKE;
     } else if (fillIndex === -1 && strokeIndex > -1) {
-      ouputValue = 'stroke';
+      ouputValue = STROKE;
     }
   } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font') {
     return value;

@@ -368,6 +368,17 @@ export declare class Group extends Group_base implements GroupProps {
      */
     toClipPathSVG(reviver?: TSVGReviver): string;
     /**
+     * *PMW*
+     * Aligns the items in the group horizontally.
+     * @param {String} type Must be either 'left', 'right' or 'center'
+     */
+    horizontalAlignment(type: 'left' | 'right' | 'center'): void;
+    /**
+     * *PMW* Aligns the items in the group vertically.
+     * @param {String} type Must be either 'top', 'bottom' or 'center'
+     */
+    verticalAlignment(type: 'top' | 'bottom' | 'center'): void;
+    /**
      * @todo support loading from svg
      * @private
      * @static

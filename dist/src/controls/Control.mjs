@@ -1,6 +1,7 @@
 import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Intersection } from '../Intersection.mjs';
 import { Point } from '../Point.mjs';
+import { SCALE } from '../constants.mjs';
 import { multiplyTransformMatrixArray, createTranslateMatrix, createRotateMatrix, createScaleMatrix } from '../util/misc/matrix.mjs';
 import { renderSquareControl, renderCircleControl } from './controlRendering.mjs';
 
@@ -32,7 +33,7 @@ class Control {
      * @type {String}
      * @default 'scale'
      */
-    _defineProperty(this, "actionName", 'scale');
+    _defineProperty(this, "actionName", SCALE);
     /**
      * Drawing angle of the control.
      * NOT used for now, but name marked as needed for internal logic

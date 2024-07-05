@@ -1,4 +1,4 @@
-import { CENTER } from '../constants.mjs';
+import { CENTER, SCALE_X, SCALE_Y } from '../constants.mjs';
 import { qrDecompose } from './misc/matrix.mjs';
 
 /**
@@ -17,8 +17,8 @@ const _assignTransformMatrixProps = object => {
     } = qrDecompose(object.transformMatrix);
     object.flipX = false;
     object.flipY = false;
-    object.set('scaleX', scaleX);
-    object.set('scaleY', scaleY);
+    object.set(SCALE_X, scaleX);
+    object.set(SCALE_Y, scaleY);
     object.angle = angle;
     object.skewX = skewX;
     object.skewY = 0;

@@ -20,6 +20,22 @@ const BOTTOM = 'bottom';
 const RIGHT = 'right';
 const NONE = 'none';
 const reNewline = /\r?\n/;
+const MOVING = 'moving';
+const SCALING = 'scaling';
+const ROTATING = 'rotating';
+const ROTATE = 'rotate';
+const SKEWING = 'skewing';
+const RESIZING = 'resizing';
+const MODIFY_POLY = 'modifyPoly';
+const CHANGED = 'changed';
+const SCALE = 'scale';
+const SCALE_X = 'scaleX';
+const SCALE_Y = 'scaleY';
+const SKEW_X = 'skewX';
+const SKEW_Y = 'skewY';
+const FILL = 'fill';
+const STROKE = 'stroke';
+const MODIFIED = 'modified';
 
-export { ALIASING_LIMIT, BOTTOM, CENTER, DEFAULT_SVG_FONT_SIZE, LEFT, NONE, PiBy180, RIGHT, TOP, VERSION, halfPI, iMatrix, kRect, noop, reNewline, twoMathPi };
+export { ALIASING_LIMIT, BOTTOM, CENTER, CHANGED, DEFAULT_SVG_FONT_SIZE, FILL, LEFT, MODIFIED, MODIFY_POLY, MOVING, NONE, PiBy180, RESIZING, RIGHT, ROTATE, ROTATING, SCALE, SCALE_X, SCALE_Y, SCALING, SKEWING, SKEW_X, SKEW_Y, STROKE, TOP, VERSION, halfPI, iMatrix, kRect, noop, reNewline, twoMathPi };
 //# sourceMappingURL=constants.mjs.map

@@ -21,7 +21,8 @@ class ClipPathLayout extends LayoutStrategy {
       target
     } = context;
     const {
-      clipPath
+      clipPath,
+      group
     } = target;
     if (!clipPath || !this.shouldPerformLayout(context)) {
       return;
@@ -33,9 +34,8 @@ class ClipPathLayout extends LayoutStrategy {
     } = makeBoundingBoxFromPoints(getObjectBounds(target, clipPath));
     const size = new Point(width, height);
     if (clipPath.absolutePositioned) {
-      var _target$group;
       //  we want the center point to exist in group's containing plane
-      const clipPathCenter = sendPointToPlane(clipPath.getRelativeCenterPoint(), undefined, (_target$group = target.group) === null || _target$group === void 0 ? void 0 : _target$group.calcTransformMatrix());
+      const clipPathCenter = sendPointToPlane(clipPath.getRelativeCenterPoint(), undefined, group ? group.calcTransformMatrix() : undefined);
       return {
         center: clipPathCenter,
         size

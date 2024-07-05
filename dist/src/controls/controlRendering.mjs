@@ -1,4 +1,4 @@
-import { twoMathPi } from '../constants.mjs';
+import { twoMathPi, STROKE, FILL } from '../constants.mjs';
 import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 
 /**
@@ -17,7 +17,7 @@ function renderCircleControl(ctx, left, top, styleOverride, fabricObject) {
   const xSize = this.sizeX || styleOverride.cornerSize || fabricObject.cornerSize,
     ySize = this.sizeY || styleOverride.cornerSize || fabricObject.cornerSize,
     transparentCorners = typeof styleOverride.transparentCorners !== 'undefined' ? styleOverride.transparentCorners : fabricObject.transparentCorners,
-    methodName = transparentCorners ? 'stroke' : 'fill',
+    methodName = transparentCorners ? STROKE : FILL,
     stroke = !transparentCorners && (styleOverride.cornerStrokeColor || fabricObject.cornerStrokeColor);
   let myLeft = left,
     myTop = top,
@@ -64,7 +64,7 @@ function renderSquareControl(ctx, left, top, styleOverride, fabricObject) {
   const xSize = this.sizeX || styleOverride.cornerSize || fabricObject.cornerSize,
     ySize = this.sizeY || styleOverride.cornerSize || fabricObject.cornerSize,
     transparentCorners = typeof styleOverride.transparentCorners !== 'undefined' ? styleOverride.transparentCorners : fabricObject.transparentCorners,
-    methodName = transparentCorners ? 'stroke' : 'fill',
+    methodName = transparentCorners ? STROKE : FILL,
     stroke = !transparentCorners && (styleOverride.cornerStrokeColor || fabricObject.cornerStrokeColor),
     xSizeBy2 = xSize / 2,
     ySizeBy2 = ySize / 2;

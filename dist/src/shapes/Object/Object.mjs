@@ -1,7 +1,7 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties, toPropertyKey as _toPropertyKey } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
-import { ALIASING_LIMIT, VERSION, iMatrix, CENTER, LEFT, TOP } from '../../constants.mjs';
+import { ALIASING_LIMIT, VERSION, SCALE_X, SCALE_Y, STROKE, iMatrix, CENTER, LEFT, TOP } from '../../constants.mjs';
 import { AnimatableObject } from './AnimatableObject.mjs';
 import { Point } from '../../Point.mjs';
 import { Shadow } from '../../Shadow.mjs';
@@ -454,10 +454,10 @@ class FabricObject extends AnimatableObject {
    * @param {*} value
    */
   _set(key, value) {
-    if (key === 'scaleX' || key === 'scaleY') {
+    if (key === SCALE_X || key === SCALE_Y) {
       value = this._constrainScale(value);
     }
-    if (key === 'scaleX' && value < 0) {
+    if (key === SCALE_X && value < 0) {
       this.flipX = !this.flipX;
       value *= -1;
     } else if (key === 'scaleY' && value < 0) {
@@ -578,7 +578,7 @@ class FabricObject extends AnimatableObject {
    * @returns Boolean
    */
   needsItsOwnCache() {
-    if (this.paintFirst === 'stroke' && this.hasFill() && this.hasStroke() && !!this.shadow) {
+    if (this.paintFirst === STROKE && this.hasFill() && this.hasStroke() && !!this.shadow) {
       return true;
     }
     if (this.clipPath) {
@@ -873,7 +873,7 @@ class FabricObject extends AnimatableObject {
    * @param {CanvasRenderingContext2D} ctx Context to render on
    */
   _renderPaintInOrder(ctx) {
-    if (this.paintFirst === 'stroke') {
+    if (this.paintFirst === STROKE) {
       this._renderStroke(ctx);
       this._renderFill(ctx);
     } else {

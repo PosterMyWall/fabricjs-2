@@ -1,3 +1,4 @@
+import { ROTATING } from '../constants.mjs';
 import { radiansToDegrees } from '../util/misc/radiansDegreesConversion.mjs';
 import { NOT_ALLOWED_CURSOR, isLocked } from './util.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
@@ -66,7 +67,7 @@ const rotateObjectWithSnapping = (eventData, _ref, x, y) => {
   target.angle = angle;
   return hasRotated;
 };
-const rotationWithSnapping = wrapWithFireEvent('rotating', wrapWithFixedAnchor(rotateObjectWithSnapping));
+const rotationWithSnapping = wrapWithFireEvent(ROTATING, wrapWithFixedAnchor(rotateObjectWithSnapping));
 
 export { rotationStyleHandler, rotationWithSnapping };
 //# sourceMappingURL=rotate.mjs.map

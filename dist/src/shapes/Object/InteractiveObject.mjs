@@ -6,6 +6,7 @@ import { createTranslateMatrix, createRotateMatrix, multiplyTransformMatrices, q
 import { sizeAfterTransform } from '../../util/misc/objectTransforms.mjs';
 import { createObjectDefaultControls } from '../../controls/commonControls.mjs';
 import { interactiveObjectDefaultValues } from './defaultValues.mjs';
+import { SCALE } from '../../constants.mjs';
 import { config } from '../../config.mjs';
 
 class InteractiveFabricObject extends FabricObject {
@@ -47,7 +48,7 @@ class InteractiveFabricObject extends FabricObject {
       const transform = targetCanvas._currentTransform,
         target = transform.target,
         action = transform.action;
-      if (this === target && action && action.startsWith('scale')) {
+      if (this === target && action && action.startsWith(SCALE)) {
         return false;
       }
     }

@@ -3,7 +3,7 @@ import { getFabricDocument, getEnv } from '../../env/index.mjs';
 import { capValue } from '../../util/misc/capValue.mjs';
 import { ITextBehavior } from './ITextBehavior.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
-import { RIGHT, LEFT } from '../../constants.mjs';
+import { RIGHT, LEFT, CHANGED } from '../../constants.mjs';
 
 class ITextKeyBehavior extends ITextBehavior {
   /**
@@ -152,7 +152,7 @@ class ITextKeyBehavior extends ITextBehavior {
     }
     const updateAndFire = () => {
       this.updateFromTextArea();
-      this.fire('changed');
+      this.fire(CHANGED);
       if (this.canvas) {
         this.canvas.fire('text:changed', {
           target: this

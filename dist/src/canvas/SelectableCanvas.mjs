@@ -15,7 +15,7 @@ import { cos } from '../util/misc/cos.mjs';
 import { sin } from '../util/misc/sin.mjs';
 import '../util/misc/vectors.mjs';
 import '../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
-import { RIGHT, LEFT, BOTTOM, TOP, CENTER } from '../constants.mjs';
+import { SCALE, SCALE_X, SCALE_Y, RESIZING, ROTATE, RIGHT, LEFT, BOTTOM, TOP, CENTER, MODIFIED, SKEW_X, SKEW_Y } from '../constants.mjs';
 import { createCanvasElement } from '../util/misc/dom.mjs';
 import { config } from '../config.mjs';
 import '../shapes/Group.mjs';
@@ -393,9 +393,9 @@ class SelectableCanvas extends StaticCanvas {
       return;
     }
     let centerTransform;
-    if (action === 'scale' || action === 'scaleX' || action === 'scaleY' || action === 'resizing') {
+    if (action === SCALE || action === SCALE_X || action === SCALE_Y || action === RESIZING) {
       centerTransform = this.centeredScaling || target.centeredScaling;
-    } else if (action === 'rotate') {
+    } else if (action === ROTATE) {
       centerTransform = this.centeredRotation || target.centeredRotation;
     }
     return centerTransform ? !modifierKeyPressed : modifierKeyPressed;
@@ -1025,7 +1025,7 @@ class SelectableCanvas extends StaticCanvas {
     target.setCoords();
     if (transform.actionPerformed) {
       this.fire('object:modified', options);
-      target.fire('modified', options);
+      target.fire(MODIFIED, options);
     }
   }
 
@@ -1112,7 +1112,7 @@ class SelectableCanvas extends StaticCanvas {
       group
     } = instance;
     if (group && isActiveSelection(group) && this._activeObject === group) {
-      const layoutProps = ['angle', 'flipX', 'flipY', LEFT, 'scaleX', 'scaleY', 'skewX', 'skewY', TOP];
+      const layoutProps = ['angle', 'flipX', 'flipY', LEFT, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y, TOP];
       const originalValues = pick(instance, layoutProps);
       addTransformToObject(instance, group.calcOwnMatrix());
       return originalValues;

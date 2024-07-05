@@ -6,6 +6,7 @@ import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { sin } from '../util/misc/sin.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
+import { SCALE_X, SCALE_Y } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
 const _excluded = ["left", "top", "radius"];
@@ -59,7 +60,7 @@ class Circle extends FabricObject {
    * @return {Number}
    */
   getRadiusX() {
-    return this.get('radius') * this.get('scaleX');
+    return this.get('radius') * this.get(SCALE_X);
   }
 
   /**
@@ -67,7 +68,7 @@ class Circle extends FabricObject {
    * @return {Number}
    */
   getRadiusY() {
-    return this.get('radius') * this.get('scaleY');
+    return this.get('radius') * this.get(SCALE_Y);
   }
 
   /**

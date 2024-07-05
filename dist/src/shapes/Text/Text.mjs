@@ -1,6 +1,6 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
-import { BOTTOM, TOP, CENTER, RIGHT, LEFT, DEFAULT_SVG_FONT_SIZE } from '../../constants.mjs';
+import { STROKE, BOTTOM, TOP, CENTER, RIGHT, FILL, LEFT, DEFAULT_SVG_FONT_SIZE } from '../../constants.mjs';
 import { StyledText } from './StyledText.mjs';
 import { SHARED_ATTRIBUTES } from '../../parser/attributes.mjs';
 import { parseAttributes } from '../../parser/parseAttributes.mjs';
@@ -238,7 +238,7 @@ class FabricText extends StyledText {
    * @param {CanvasRenderingContext2D} ctx Context to render on
    */
   _renderText(ctx) {
-    if (this.paintFirst === 'stroke') {
+    if (this.paintFirst === STROKE) {
       this._renderTextStroke(ctx);
       this._renderTextFill(ctx);
     } else {
@@ -647,7 +647,7 @@ class FabricText extends StyledText {
    * @param {CanvasRenderingContext2D} ctx Context to render on
    */
   _renderTextFill(ctx) {
-    if (!this.fill && !this.styleHas('fill')) {
+    if (!this.fill && !this.styleHas(FILL)) {
       return;
     }
     this._renderTextCommon(ctx, 'fillText');
@@ -1035,7 +1035,7 @@ class FabricText extends StyledText {
       let boxStart = 0;
       let boxWidth = 0;
       let lastDecoration = this.getValueOfPropertyAt(i, 0, type);
-      let lastFill = this.getValueOfPropertyAt(i, 0, 'fill');
+      let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
       let currentDecoration;
       let currentFill;
       const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
@@ -1044,7 +1044,7 @@ class FabricText extends StyledText {
       for (let j = 0, jlen = line.length; j < jlen; j++) {
         const charBox = this.__charBounds[i][j];
         currentDecoration = this.getValueOfPropertyAt(i, j, type);
-        currentFill = this.getValueOfPropertyAt(i, j, 'fill');
+        currentFill = this.getValueOfPropertyAt(i, j, FILL);
         const currentSize = this.getHeightOfChar(i, j);
         const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
         if (path && currentDecoration && currentFill) {

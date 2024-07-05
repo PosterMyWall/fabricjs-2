@@ -5,6 +5,7 @@ import { hasStyleChanged } from '../../util/misc/textStyles.mjs';
 import { toFixed } from '../../util/misc/toFixed.mjs';
 import { FabricObjectSVGExportMixin } from '../Object/FabricObjectSVGExportMixin.mjs';
 import { JUSTIFY } from './constants.mjs';
+import { STROKE, FILL } from '../../constants.mjs';
 
 const multipleSpacesRegex = /  +/g;
 const dblQuoteRegex = /"/g;
@@ -203,7 +204,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       deltaY
     } = style;
     const textDecoration = this.getSvgTextDecoration(style);
-    return [stroke ? colorPropToSVG('stroke', stroke) : '', strokeWidth ? "stroke-width: ".concat(strokeWidth, "; ") : '', fontFamily ? "font-family: ".concat(!fontFamily.includes("'") && !fontFamily.includes('"') ? "'".concat(fontFamily, "'") : fontFamily, "; ") : '', fontSize ? "font-size: ".concat(fontSize, "px; ") : '', fontStyle ? "font-style: ".concat(fontStyle, "; ") : '', fontWeight ? "font-weight: ".concat(fontWeight, "; ") : '', textDecoration ? "text-decoration: ".concat(textDecoration, "; ") : textDecoration, fill ? colorPropToSVG('fill', fill) : '', deltaY ? "baseline-shift: ".concat(-deltaY, "; ") : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
+    return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? "stroke-width: ".concat(strokeWidth, "; ") : '', fontFamily ? "font-family: ".concat(!fontFamily.includes("'") && !fontFamily.includes('"') ? "'".concat(fontFamily, "'") : fontFamily, "; ") : '', fontSize ? "font-size: ".concat(fontSize, "px; ") : '', fontStyle ? "font-style: ".concat(fontStyle, "; ") : '', fontWeight ? "font-weight: ".concat(fontWeight, "; ") : '', textDecoration ? "text-decoration: ".concat(textDecoration, "; ") : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? "baseline-shift: ".concat(-deltaY, "; ") : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
   }
 
   /**

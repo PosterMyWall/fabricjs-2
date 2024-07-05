@@ -1,4 +1,5 @@
 import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { ROTATE, RESIZING } from '../constants.mjs';
 import { changeWidth } from './changeWidth.mjs';
 import { Control } from './Control.mjs';
 import { rotationWithSnapping, rotationStyleHandler } from './rotate.mjs';
@@ -66,7 +67,7 @@ const createObjectDefaultControls = () => ({
     cursorStyleHandler: rotationStyleHandler,
     offsetY: -40,
     withConnection: true,
-    actionName: 'rotate'
+    actionName: ROTATE
   })
 });
 const createResizeControls = () => ({
@@ -75,14 +76,14 @@ const createResizeControls = () => ({
     y: 0,
     actionHandler: changeWidth,
     cursorStyleHandler: scaleSkewCursorStyleHandler,
-    actionName: 'resizing'
+    actionName: RESIZING
   }),
   ml: new Control({
     x: -0.5,
     y: 0,
     actionHandler: changeWidth,
     cursorStyleHandler: scaleSkewCursorStyleHandler,
-    actionName: 'resizing'
+    actionName: RESIZING
   })
 });
 const createTextboxDefaultControls = () => _objectSpread2(_objectSpread2({}, createObjectDefaultControls()), createResizeControls());

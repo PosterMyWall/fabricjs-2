@@ -1,6 +1,6 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../Point.mjs';
-import { iMatrix, CENTER } from '../constants.mjs';
+import { MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY, iMatrix, CENTER } from '../constants.mjs';
 import { invertTransform } from '../util/misc/matrix.mjs';
 import { resolveOrigin } from '../util/misc/resolveOrigin.mjs';
 import { FitContentLayout } from './LayoutStrategies/FitContentLayout.mjs';
@@ -48,7 +48,7 @@ class LayoutManager {
     const {
       target
     } = context;
-    return ['modified', 'moving', 'resizing', 'rotating', 'scaling', 'skewing', 'changed', 'modifyPoly'].map(key => object.on(key, e => this.performLayout(key === 'modified' ? {
+    return [MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY].map(key => object.on(key, e => this.performLayout(key === MODIFIED ? {
       type: LAYOUT_TYPE_OBJECT_MODIFIED,
       trigger: key,
       e,
@@ -120,13 +120,15 @@ class LayoutManager {
   }
   getLayoutResult(context) {
     const {
-      target
+      target,
+      strategy,
+      type
     } = context;
-    const result = context.strategy.calcLayoutResult(context, target.getObjects());
+    const result = strategy.calcLayoutResult(context, target.getObjects());
     if (!result) {
       return;
     }
-    const prevCenter = context.type === LAYOUT_TYPE_INITIALIZATION ? new Point() : target.getRelativeCenterPoint();
+    const prevCenter = type === LAYOUT_TYPE_INITIALIZATION ? new Point() : target.getRelativeCenterPoint();
     const {
       center: nextCenter,
       correction = new Point(),
@@ -134,7 +136,7 @@ class LayoutManager {
     } = result;
     const offset = prevCenter.subtract(nextCenter).add(correction).transform(
     // in `initialization` we do not account for target's transformation matrix
-    context.type === LAYOUT_TYPE_INITIALIZATION ? iMatrix : invertTransform(target.calcOwnMatrix()), true).add(relativeCorrection);
+    type === LAYOUT_TYPE_INITIALIZATION ? iMatrix : invertTransform(target.calcOwnMatrix()), true).add(relativeCorrection);
     return {
       result,
       prevCenter,
@@ -239,8 +241,11 @@ class LayoutManager {
     target.set('dirty', true);
   }
   dispose() {
-    this._subscriptions.forEach(disposers => disposers.forEach(d => d()));
-    this._subscriptions.clear();
+    const {
+      _subscriptions
+    } = this;
+    _subscriptions.forEach(disposers => disposers.forEach(d => d()));
+    _subscriptions.clear();
   }
   toObject() {
     return {

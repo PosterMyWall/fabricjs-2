@@ -1,3 +1,4 @@
+import { SKEW_X, SCALE_Y, SKEW_Y, SCALE_X } from '../constants.mjs';
 import { scaleCursorStyleHandler, scalingX, scalingY } from './scale.mjs';
 import { skewCursorStyleHandler, skewHandlerY, skewHandlerX } from './skew.mjs';
 
@@ -16,11 +17,11 @@ const scaleOrSkewActionName = (eventData, control, fabricObject) => {
   const isAlternative = isAltAction(eventData, fabricObject);
   if (control.x === 0) {
     // then is scaleY or skewX
-    return isAlternative ? 'skewX' : 'scaleY';
+    return isAlternative ? SKEW_X : SCALE_Y;
   }
   if (control.y === 0) {
     // then is scaleY or skewX
-    return isAlternative ? 'skewY' : 'scaleX';
+    return isAlternative ? SKEW_Y : SCALE_X;
   }
   return '';
 };

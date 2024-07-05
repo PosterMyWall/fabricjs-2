@@ -1,6 +1,6 @@
 import { uid } from '../../util/internals/uid.mjs';
 import { colorPropToSVG, matrixToSVG } from '../../util/misc/svgParsing.mjs';
-import { NONE } from '../../constants.mjs';
+import { NONE, FILL, STROKE } from '../../constants.mjs';
 import { isFiller } from '../../util/typeAssertions.mjs';
 
 class FabricObjectSVGExportMixin {
@@ -26,8 +26,8 @@ class FabricObjectSVGExportMixin {
       opacity = typeof this.opacity !== 'undefined' ? this.opacity : '1',
       visibility = this.visible ? '' : ' visibility: hidden;',
       filter = skipShadow ? '' : this.getSvgFilter(),
-      fill = colorPropToSVG('fill', this.fill),
-      stroke = colorPropToSVG('stroke', this.stroke);
+      fill = colorPropToSVG(FILL, this.fill),
+      stroke = colorPropToSVG(STROKE, this.stroke);
     return [stroke, 'stroke-width: ', strokeWidth, '; ', 'stroke-dasharray: ', strokeDashArray, '; ', 'stroke-linecap: ', strokeLineCap, '; ', 'stroke-dashoffset: ', strokeDashOffset, '; ', 'stroke-linejoin: ', strokeLineJoin, '; ', 'stroke-miterlimit: ', strokeMiterLimit, '; ', fill, 'fill-rule: ', fillRule, '; ', 'opacity: ', opacity, ';', filter, visibility].join('');
   }
 
@@ -157,7 +157,7 @@ class FabricObjectSVGExportMixin {
     return reviver ? reviver(markup.join('')) : markup.join('');
   }
   addPaintOrder() {
-    return this.paintFirst !== 'fill' ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
+    return this.paintFirst !== FILL ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
   }
 }
 

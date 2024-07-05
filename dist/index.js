@@ -440,7 +440,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.0.0-pmw-8";
+  var version = "6.0.1-pmw-10";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -462,6 +462,22 @@
   const RIGHT = 'right';
   const NONE = 'none';
   const reNewline = /\r?\n/;
+  const MOVING = 'moving';
+  const SCALING = 'scaling';
+  const ROTATING = 'rotating';
+  const ROTATE = 'rotate';
+  const SKEWING = 'skewing';
+  const RESIZING = 'resizing';
+  const MODIFY_POLY = 'modifyPoly';
+  const CHANGED = 'changed';
+  const SCALE = 'scale';
+  const SCALE_X = 'scaleX';
+  const SCALE_Y = 'scaleY';
+  const SKEW_X = 'skewX';
+  const SKEW_Y = 'skewY';
+  const FILL = 'fill';
+  const STROKE = 'stroke';
+  const MODIFIED = 'modified';
 
   /*
    * This Map connects the objects type value with their
@@ -2820,7 +2836,7 @@
       height
     } = _ref;
     let precision = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : config.NUM_FRACTION_DIGITS;
-    const svgColor = colorPropToSVG('fill', color, false);
+    const svgColor = colorPropToSVG(FILL, color, false);
     const [x, y, w, h] = [left, top, width, height].map(value => toFixed(value, precision));
     return "<rect ".concat(svgColor, " x=\"").concat(x, "\" y=\"").concat(y, "\" width=\"").concat(w, "\" height=\"").concat(h, "\"></rect>");
   };
@@ -4731,7 +4747,7 @@
     moveX && target.set(LEFT, newLeft);
     moveY && target.set(TOP, newTop);
     if (moveX || moveY) {
-      fireEvent('moving', commonEventInfo(eventData, transform, x, y));
+      fireEvent(MOVING, commonEventInfo(eventData, transform, x, y));
     }
     return moveX || moveY;
   };
@@ -4759,8 +4775,8 @@
         opacity = typeof this.opacity !== 'undefined' ? this.opacity : '1',
         visibility = this.visible ? '' : ' visibility: hidden;',
         filter = skipShadow ? '' : this.getSvgFilter(),
-        fill = colorPropToSVG('fill', this.fill),
-        stroke = colorPropToSVG('stroke', this.stroke);
+        fill = colorPropToSVG(FILL, this.fill),
+        stroke = colorPropToSVG(STROKE, this.stroke);
       return [stroke, 'stroke-width: ', strokeWidth, '; ', 'stroke-dasharray: ', strokeDashArray, '; ', 'stroke-linecap: ', strokeLineCap, '; ', 'stroke-dashoffset: ', strokeDashOffset, '; ', 'stroke-linejoin: ', strokeLineJoin, '; ', 'stroke-miterlimit: ', strokeMiterLimit, '; ', fill, 'fill-rule: ', fillRule, '; ', 'opacity: ', opacity, ';', filter, visibility].join('');
     }
 
@@ -4890,7 +4906,7 @@
       return reviver ? reviver(markup.join('')) : markup.join('');
     }
     addPaintOrder() {
-      return this.paintFirst !== 'fill' ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
+      return this.paintFirst !== FILL ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
     }
   }
 
@@ -6278,8 +6294,8 @@
      * @return {void}
      */
     scale(value) {
-      this._set('scaleX', value);
-      this._set('scaleY', value);
+      this._set(SCALE_X, value);
+      this._set(SCALE_Y, value);
       this.setCoords();
     }
 
@@ -6666,7 +6682,7 @@
    * List of properties to consider for animating colors.
    * @type String[]
    */
-  _defineProperty(AnimatableObject, "colorProperties", ['fill', 'stroke', 'backgroundColor']);
+  _defineProperty(AnimatableObject, "colorProperties", [FILL, STROKE, 'backgroundColor']);
 
   function getSvgRegex(arr) {
     return new RegExp('^(' + arr.join('|') + ')\\b', 'i');
@@ -6882,8 +6898,8 @@
 
   const cloneDeep = object => JSON.parse(JSON.stringify(object));
 
-  const stateProperties = [TOP, LEFT, 'scaleX', 'scaleY', 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', 'skewX', 'skewY'];
-  const cacheProperties = ['fill', 'stroke', 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
+  const stateProperties = [TOP, LEFT, SCALE_X, SCALE_Y, 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', SKEW_X, SKEW_Y];
+  const cacheProperties = [FILL, STROKE, 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
   const fabricObjectDefaultValues = {
     // see composeMatrix() to see order of transforms. First defaults listed based on this
     top: 0,
@@ -6904,7 +6920,7 @@
     strokeUniform: false,
     padding: 0,
     opacity: 1,
-    paintFirst: 'fill',
+    paintFirst: FILL,
     fill: 'rgb(0,0,0)',
     fillRule: 'nonzero',
     stroke: null,
@@ -7390,10 +7406,10 @@
      * @param {*} value
      */
     _set(key, value) {
-      if (key === 'scaleX' || key === 'scaleY') {
+      if (key === SCALE_X || key === SCALE_Y) {
         value = this._constrainScale(value);
       }
-      if (key === 'scaleX' && value < 0) {
+      if (key === SCALE_X && value < 0) {
         this.flipX = !this.flipX;
         value *= -1;
       } else if (key === 'scaleY' && value < 0) {
@@ -7514,7 +7530,7 @@
      * @returns Boolean
      */
     needsItsOwnCache() {
-      if (this.paintFirst === 'stroke' && this.hasFill() && this.hasStroke() && !!this.shadow) {
+      if (this.paintFirst === STROKE && this.hasFill() && this.hasStroke() && !!this.shadow) {
         return true;
       }
       if (this.clipPath) {
@@ -7809,7 +7825,7 @@
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _renderPaintInOrder(ctx) {
-      if (this.paintFirst === 'stroke') {
+      if (this.paintFirst === STROKE) {
         this._renderStroke(ctx);
         this._renderFill(ctx);
       } else {
@@ -8309,7 +8325,7 @@
     }
     return false;
   };
-  const changeWidth = wrapWithFireEvent('resizing', wrapWithFixedAnchor(changeObjectWidth));
+  const changeWidth = wrapWithFireEvent(RESIZING, wrapWithFixedAnchor(changeObjectWidth));
 
   /**
    * Render a round control, as per fabric features.
@@ -8327,7 +8343,7 @@
     const xSize = this.sizeX || styleOverride.cornerSize || fabricObject.cornerSize,
       ySize = this.sizeY || styleOverride.cornerSize || fabricObject.cornerSize,
       transparentCorners = typeof styleOverride.transparentCorners !== 'undefined' ? styleOverride.transparentCorners : fabricObject.transparentCorners,
-      methodName = transparentCorners ? 'stroke' : 'fill',
+      methodName = transparentCorners ? STROKE : FILL,
       stroke = !transparentCorners && (styleOverride.cornerStrokeColor || fabricObject.cornerStrokeColor);
     let myLeft = left,
       myTop = top,
@@ -8374,7 +8390,7 @@
     const xSize = this.sizeX || styleOverride.cornerSize || fabricObject.cornerSize,
       ySize = this.sizeY || styleOverride.cornerSize || fabricObject.cornerSize,
       transparentCorners = typeof styleOverride.transparentCorners !== 'undefined' ? styleOverride.transparentCorners : fabricObject.transparentCorners,
-      methodName = transparentCorners ? 'stroke' : 'fill',
+      methodName = transparentCorners ? STROKE : FILL,
       stroke = !transparentCorners && (styleOverride.cornerStrokeColor || fabricObject.cornerStrokeColor),
       xSizeBy2 = xSize / 2,
       ySizeBy2 = ySize / 2;
@@ -8425,7 +8441,7 @@
        * @type {String}
        * @default 'scale'
        */
-      _defineProperty(this, "actionName", 'scale');
+      _defineProperty(this, "actionName", SCALE);
       /**
        * Drawing angle of the control.
        * NOT used for now, but name marked as needed for internal logic
@@ -8743,7 +8759,7 @@
     target.angle = angle;
     return hasRotated;
   };
-  const rotationWithSnapping = wrapWithFireEvent('rotating', wrapWithFixedAnchor(rotateObjectWithSnapping));
+  const rotationWithSnapping = wrapWithFireEvent(ROTATING, wrapWithFixedAnchor(rotateObjectWithSnapping));
 
   /**
    * Inspect event and fabricObject properties to understand if the scaling action
@@ -8892,12 +8908,12 @@
     const oldScaleX = target.scaleX,
       oldScaleY = target.scaleY;
     if (!by) {
-      !isLocked(target, 'lockScalingX') && target.set('scaleX', scaleX);
-      !isLocked(target, 'lockScalingY') && target.set('scaleY', scaleY);
+      !isLocked(target, 'lockScalingX') && target.set(SCALE_X, scaleX);
+      !isLocked(target, 'lockScalingY') && target.set(SCALE_Y, scaleY);
     } else {
       // forbidden cases already handled on top here.
-      by === 'x' && target.set('scaleX', scaleX);
-      by === 'y' && target.set('scaleY', scaleY);
+      by === 'x' && target.set(SCALE_X, scaleX);
+      by === 'y' && target.set(SCALE_Y, scaleY);
     }
     return oldScaleX !== target.scaleX || oldScaleY !== target.scaleY;
   }
@@ -8944,24 +8960,24 @@
       by: 'y'
     });
   };
-  const scalingEqually = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectFromCorner));
-  const scalingX = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectX));
-  const scalingY = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectY));
+  const scalingEqually = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectFromCorner));
+  const scalingX = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectX));
+  const scalingY = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectY));
 
   const _excluded$d = ["target", "ex", "ey", "skewingSide"];
   const AXIS_KEYS = {
     x: {
       counterAxis: 'y',
-      scale: 'scaleX',
-      skew: 'skewX',
+      scale: SCALE_X,
+      skew: SKEW_X,
       lockSkewing: 'lockSkewingX',
       origin: 'originX',
       flip: 'flipX'
     },
     y: {
       counterAxis: 'x',
-      scale: 'scaleY',
-      skew: 'skewY',
+      scale: SCALE_Y,
+      skew: SKEW_Y,
       lockSkewing: 'lockSkewingY',
       origin: 'originY',
       flip: 'flipY'
@@ -9040,7 +9056,7 @@
         }),
         dimAfter = target._getTransformedDimensions(),
         compensationFactor = skewX !== 0 ? dimBefore.x / dimAfter.x : 1;
-      compensationFactor !== 1 && target.set('scaleX', compensationFactor * scaleX);
+      compensationFactor !== 1 && target.set(SCALE_X, compensationFactor * scaleX);
     }
     return changed;
   }
@@ -9086,7 +9102,7 @@
       // anchor to the opposite side of the skewing direction
       // normalize value from [-1, 1] to origin value [0, 1]
       origin = -skewingDirection * 0.5 + 0.5;
-    const finalHandler = wrapWithFireEvent('skewing', wrapWithFixedAnchor((eventData, transform, x, y) => skewObject(axis, transform, new Point(x, y))));
+    const finalHandler = wrapWithFireEvent(SKEWING, wrapWithFixedAnchor((eventData, transform, x, y) => skewObject(axis, transform, new Point(x, y))));
     return finalHandler(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
       [originKey]: origin,
       skewingSide
@@ -9134,11 +9150,11 @@
     const isAlternative = isAltAction(eventData, fabricObject);
     if (control.x === 0) {
       // then is scaleY or skewX
-      return isAlternative ? 'skewX' : 'scaleY';
+      return isAlternative ? SKEW_X : SCALE_Y;
     }
     if (control.y === 0) {
       // then is scaleY or skewX
-      return isAlternative ? 'skewY' : 'scaleX';
+      return isAlternative ? SKEW_Y : SCALE_X;
     }
     return '';
   };
@@ -9240,7 +9256,7 @@
       cursorStyleHandler: rotationStyleHandler,
       offsetY: -40,
       withConnection: true,
-      actionName: 'rotate'
+      actionName: ROTATE
     })
   });
   const createResizeControls = () => ({
@@ -9249,14 +9265,14 @@
       y: 0,
       actionHandler: changeWidth,
       cursorStyleHandler: scaleSkewCursorStyleHandler,
-      actionName: 'resizing'
+      actionName: RESIZING
     }),
     ml: new Control({
       x: -0.5,
       y: 0,
       actionHandler: changeWidth,
       cursorStyleHandler: scaleSkewCursorStyleHandler,
-      actionName: 'resizing'
+      actionName: RESIZING
     })
   });
   const createTextboxDefaultControls = () => _objectSpread2(_objectSpread2({}, createObjectDefaultControls()), createResizeControls());
@@ -9300,7 +9316,7 @@
         const transform = targetCanvas._currentTransform,
           target = transform.target,
           action = transform.action;
-        if (this === target && action && action.startsWith('scale')) {
+        if (this === target && action && action.startsWith(SCALE)) {
           return false;
         }
       }
@@ -9841,7 +9857,8 @@
     // Split image data - for tolerance > 1, pixelDataSize = 4;
     for (let i = 3; i < data.length; i += 4) {
       const alphaChannel = data[i];
-      if (alphaChannel > 0) {
+      //*PMW* changing transparent pixel threshold value
+      if (alphaChannel > 2) {
         return false;
       }
     }
@@ -10459,7 +10476,7 @@
    * Attributes parsed from all SVG elements
    * @type array
    */
-  const SHARED_ATTRIBUTES = ['display', 'transform', 'fill', 'fill-opacity', 'fill-rule', 'opacity', 'stroke', 'stroke-dasharray', 'stroke-linecap', 'stroke-dashoffset', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'id', 'paint-order', 'vector-effect', 'instantiated_by_use', 'clip-path'];
+  const SHARED_ATTRIBUTES = ['display', 'transform', FILL, 'fill-opacity', 'fill-rule', 'opacity', STROKE, 'stroke-dasharray', 'stroke-linecap', 'stroke-dashoffset', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'id', 'paint-order', 'vector-effect', 'instantiated_by_use', 'clip-path'];
 
   function selectorMatches(element, selector) {
     const nodeName = element.nodeName;
@@ -10591,7 +10608,7 @@
         case 'translate':
           matrix = createTranslateMatrix(arg0, arg1);
           break;
-        case 'rotate':
+        case ROTATE:
           matrix = createRotateMatrix({
             angle: arg0
           }, {
@@ -10599,13 +10616,13 @@
             y: arg2
           });
           break;
-        case 'scale':
+        case SCALE:
           matrix = createScaleMatrix(arg0, arg1);
           break;
-        case 'skewX':
+        case SKEW_X:
           matrix = createSkewXMatrix(arg0);
           break;
-        case 'skewY':
+        case SKEW_Y:
           matrix = createSkewYMatrix(arg0);
           break;
         case 'matrix':
@@ -10623,7 +10640,7 @@
     const isArray = Array.isArray(value);
     let parsed;
     let ouputValue = value;
-    if ((attr === 'fill' || attr === 'stroke') && value === NONE) {
+    if ((attr === FILL || attr === STROKE) && value === NONE) {
       ouputValue = '';
     } else if (attr === 'strokeUniform') {
       return value === 'non-scaling-stroke';
@@ -10656,13 +10673,13 @@
       // parseUnit returns px and we convert it to em
       parsed = parseUnit(value, fontSize) / fontSize * 1000;
     } else if (attr === 'paintFirst') {
-      const fillIndex = value.indexOf('fill');
-      const strokeIndex = value.indexOf('stroke');
-      ouputValue = 'fill';
+      const fillIndex = value.indexOf(FILL);
+      const strokeIndex = value.indexOf(STROKE);
+      ouputValue = FILL;
       if (fillIndex > -1 && strokeIndex > -1 && strokeIndex < fillIndex) {
-        ouputValue = 'stroke';
+        ouputValue = STROKE;
       } else if (fillIndex === -1 && strokeIndex > -1) {
-        ouputValue = 'stroke';
+        ouputValue = STROKE;
       }
     } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font') {
       return value;
@@ -11035,16 +11052,21 @@
         return this.calcBoundingBox(objects, context);
       }
     }
-    shouldPerformLayout(context) {
-      return context.type === LAYOUT_TYPE_INITIALIZATION || context.type === LAYOUT_TYPE_IMPERATIVE || !!context.prevStrategy && context.strategy !== context.prevStrategy;
+    shouldPerformLayout(_ref) {
+      let {
+        type,
+        prevStrategy,
+        strategy
+      } = _ref;
+      return type === LAYOUT_TYPE_INITIALIZATION || type === LAYOUT_TYPE_IMPERATIVE || !!prevStrategy && strategy !== prevStrategy;
     }
-    shouldLayoutClipPath(_ref) {
+    shouldLayoutClipPath(_ref2) {
       let {
         type,
         target: {
           clipPath
         }
-      } = _ref;
+      } = _ref2;
       return type !== LAYOUT_TYPE_INITIALIZATION && clipPath && !clipPath.absolutePositioned;
     }
     getInitialSize(context, result) {
@@ -11055,15 +11077,16 @@
      * Override this method to customize layout.
      */
     calcBoundingBox(objects, context) {
-      if (context.type === LAYOUT_TYPE_IMPERATIVE && context.overrides) {
+      const {
+        type,
+        target
+      } = context;
+      if (type === LAYOUT_TYPE_IMPERATIVE && context.overrides) {
         return context.overrides;
       }
       if (objects.length === 0) {
         return;
       }
-      const {
-        target
-      } = context;
       const {
         left,
         top,
@@ -11073,7 +11096,7 @@
       const bboxSize = new Point(width, height);
       const bboxLeftTop = new Point(left, top);
       const bboxCenter = bboxLeftTop.add(bboxSize.scalarDivide(2));
-      if (context.type === LAYOUT_TYPE_INITIALIZATION) {
+      if (type === LAYOUT_TYPE_INITIALIZATION) {
         const actualSize = this.getInitialSize(context, {
           size: bboxSize,
           center: bboxCenter
@@ -11156,7 +11179,7 @@
       const {
         target
       } = context;
-      return ['modified', 'moving', 'resizing', 'rotating', 'scaling', 'skewing', 'changed', 'modifyPoly'].map(key => object.on(key, e => this.performLayout(key === 'modified' ? {
+      return [MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY].map(key => object.on(key, e => this.performLayout(key === MODIFIED ? {
         type: LAYOUT_TYPE_OBJECT_MODIFIED,
         trigger: key,
         e,
@@ -11228,13 +11251,15 @@
     }
     getLayoutResult(context) {
       const {
-        target
+        target,
+        strategy,
+        type
       } = context;
-      const result = context.strategy.calcLayoutResult(context, target.getObjects());
+      const result = strategy.calcLayoutResult(context, target.getObjects());
       if (!result) {
         return;
       }
-      const prevCenter = context.type === LAYOUT_TYPE_INITIALIZATION ? new Point() : target.getRelativeCenterPoint();
+      const prevCenter = type === LAYOUT_TYPE_INITIALIZATION ? new Point() : target.getRelativeCenterPoint();
       const {
         center: nextCenter,
         correction = new Point(),
@@ -11242,7 +11267,7 @@
       } = result;
       const offset = prevCenter.subtract(nextCenter).add(correction).transform(
       // in `initialization` we do not account for target's transformation matrix
-      context.type === LAYOUT_TYPE_INITIALIZATION ? iMatrix : invertTransform(target.calcOwnMatrix()), true).add(relativeCorrection);
+      type === LAYOUT_TYPE_INITIALIZATION ? iMatrix : invertTransform(target.calcOwnMatrix()), true).add(relativeCorrection);
       return {
         result,
         prevCenter,
@@ -11347,8 +11372,11 @@
       target.set('dirty', true);
     }
     dispose() {
-      this._subscriptions.forEach(disposers => disposers.forEach(d => d()));
-      this._subscriptions.clear();
+      const {
+        _subscriptions
+      } = this;
+      _subscriptions.forEach(disposers => disposers.forEach(d => d()));
+      _subscriptions.clear();
     }
     toObject() {
       return {
@@ -12023,6 +12051,105 @@
       }
       return this._createBaseClipPathSVGMarkup(svgString, {
         reviver
+      });
+    }
+
+    /**
+     * *PMW*
+     * Aligns the items in the group horizontally.
+     * @param {String} type Must be either 'left', 'right' or 'center'
+     */
+    horizontalAlignment(type) {
+      var _this$canvas2;
+      const groupWidth = this.width,
+        objects = this._objects,
+        padding = this.padding;
+      let i = 0,
+        corners,
+        tl,
+        offsetX;
+      switch (type) {
+        case 'left':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+            tl = corners.tl.x;
+            const minX = Math.min(tl, corners.tr.x, corners.bl.x, corners.br.x);
+            offsetX = minX < tl ? tl - minX : 0;
+            objects[i].set('left', -groupWidth / 2 + padding + offsetX);
+          }
+          break;
+        case 'right':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+            tl = corners.tl.x;
+            const maxX = Math.max(tl, corners.tr.x, corners.bl.x, corners.br.x);
+            offsetX = maxX > tl ? maxX - tl : 0;
+            objects[i].set('left', groupWidth / 2 - offsetX - padding);
+          }
+          break;
+        case 'center':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints({
+              x: 0,
+              y: objects[i].top
+            });
+            objects[i].set('left', corners.tl.x);
+          }
+          break;
+        default:
+          return;
+      }
+      (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 ? void 0 : _this$canvas2.fire('object:modified', {
+        target: this
+      });
+    }
+
+    /**
+     * *PMW* Aligns the items in the group vertically.
+     * @param {String} type Must be either 'top', 'bottom' or 'center'
+     */
+    verticalAlignment(type) {
+      var _this$canvas3;
+      const groupHeight = this.height,
+        objects = this._objects,
+        padding = this.padding;
+      let i = 0,
+        corners,
+        tl,
+        offsetY;
+      switch (type) {
+        case 'top':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+            tl = corners.tl.y;
+            const minY = Math.min(tl, corners.tr.y, corners.bl.y, corners.br.y);
+            offsetY = minY < tl ? tl - minY : 0;
+            objects[i].set('top', -groupHeight / 2 + padding + offsetY);
+          }
+          break;
+        case 'bottom':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+            tl = corners.tl.y;
+            const maxY = Math.max(tl, corners.tr.y, corners.bl.y, corners.br.y);
+            offsetY = maxY > tl ? maxY - tl : 0;
+            objects[i].set('top', groupHeight / 2 - padding - offsetY);
+          }
+          break;
+        case 'center':
+          for (i = 0; i < objects.length; i++) {
+            corners = objects[i].getCornerPoints({
+              x: objects[i].left,
+              y: 0
+            });
+            objects[i].set('top', corners.tl.y);
+          }
+          break;
+        default:
+          return;
+      }
+      (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 ? void 0 : _this$canvas3.fire('object:modified', {
+        target: this
       });
     }
 
@@ -13028,8 +13155,8 @@
       } = qrDecompose(object.transformMatrix);
       object.flipX = false;
       object.flipY = false;
-      object.set('scaleX', scaleX);
-      object.set('scaleY', scaleY);
+      object.set(SCALE_X, scaleX);
+      object.set(SCALE_Y, scaleY);
       object.angle = angle;
       object.skewX = skewX;
       object.skewY = 0;
@@ -13656,9 +13783,9 @@
         return;
       }
       let centerTransform;
-      if (action === 'scale' || action === 'scaleX' || action === 'scaleY' || action === 'resizing') {
+      if (action === SCALE || action === SCALE_X || action === SCALE_Y || action === RESIZING) {
         centerTransform = this.centeredScaling || target.centeredScaling;
-      } else if (action === 'rotate') {
+      } else if (action === ROTATE) {
         centerTransform = this.centeredRotation || target.centeredRotation;
       }
       return centerTransform ? !modifierKeyPressed : modifierKeyPressed;
@@ -14288,7 +14415,7 @@
       target.setCoords();
       if (transform.actionPerformed) {
         this.fire('object:modified', options);
-        target.fire('modified', options);
+        target.fire(MODIFIED, options);
       }
     }
 
@@ -14375,7 +14502,7 @@
         group
       } = instance;
       if (group && isActiveSelection(group) && this._activeObject === group) {
-        const layoutProps = ['angle', 'flipX', 'flipY', LEFT, 'scaleX', 'scaleY', 'skewX', 'skewY', TOP];
+        const layoutProps = ['angle', 'flipX', 'flipY', LEFT, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y, TOP];
         const originalValues = pick(instance, layoutProps);
         addTransformToObject(instance, group.calcOwnMatrix());
         return originalValues;
@@ -17149,7 +17276,7 @@
      * @return {Number}
      */
     getRadiusX() {
-      return this.get('radius') * this.get('scaleX');
+      return this.get('radius') * this.get(SCALE_X);
     }
 
     /**
@@ -17157,7 +17284,7 @@
      * @return {Number}
      */
     getRadiusY() {
-      return this.get('radius') * this.get('scaleY');
+      return this.get('radius') * this.get(SCALE_Y);
     }
 
     /**
@@ -17978,7 +18105,7 @@
      * @return {Number}
      */
     getRx() {
-      return this.get('rx') * this.get('scaleX');
+      return this.get('rx') * this.get(SCALE_X);
     }
 
     /**
@@ -17986,7 +18113,7 @@
      * @return {Number}
      */
     getRy() {
-      return this.get('ry') * this.get('scaleY');
+      return this.get('ry') * this.get(SCALE_Y);
     }
 
     /**
@@ -18292,7 +18419,7 @@
     _set(key, value) {
       const changed = this.initialized && this[key] !== value;
       const output = super._set(key, value);
-      if (this.exactBoundingBox && changed && ((key === 'scaleX' || key === 'scaleY') && this.strokeUniform && this.constructor.layoutProperties.includes('strokeUniform') || this.constructor.layoutProperties.includes(key))) {
+      if (this.exactBoundingBox && changed && ((key === SCALE_X || key === SCALE_Y) && this.strokeUniform && this.constructor.layoutProperties.includes('strokeUniform') || this.constructor.layoutProperties.includes(key))) {
         this.setDimensions();
       }
       return output;
@@ -18411,7 +18538,7 @@
    */
   _defineProperty(Polyline, "ownDefaults", polylineDefaultValues);
   _defineProperty(Polyline, "type", 'Polyline');
-  _defineProperty(Polyline, "layoutProperties", ['skewX', 'skewY', 'strokeLineCap', 'strokeLineJoin', 'strokeMiterLimit', 'strokeWidth', 'strokeUniform', 'points']);
+  _defineProperty(Polyline, "layoutProperties", [SKEW_X, SKEW_Y, 'strokeLineCap', 'strokeLineJoin', 'strokeMiterLimit', 'strokeWidth', 'strokeUniform', 'points']);
   _defineProperty(Polyline, "cacheProperties", [...cacheProperties, 'points']);
   _defineProperty(Polyline, "ATTRIBUTE_NAMES", [...SHARED_ATTRIBUTES]);
   classRegistry.setClass(Polyline);
@@ -18756,7 +18883,7 @@
   const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
   const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
   const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
-  const styleProperties = [...fontProperties, ...textDecorationProperties, 'stroke', 'strokeWidth', 'fill', 'deltaY', 'textBackgroundColor'];
+  const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor'];
 
   // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
   // regexes, list of properties that are not suppose to change by instances, magic consts.
@@ -19284,7 +19411,7 @@
         deltaY
       } = style;
       const textDecoration = this.getSvgTextDecoration(style);
-      return [stroke ? colorPropToSVG('stroke', stroke) : '', strokeWidth ? "stroke-width: ".concat(strokeWidth, "; ") : '', fontFamily ? "font-family: ".concat(!fontFamily.includes("'") && !fontFamily.includes('"') ? "'".concat(fontFamily, "'") : fontFamily, "; ") : '', fontSize ? "font-size: ".concat(fontSize, "px; ") : '', fontStyle ? "font-style: ".concat(fontStyle, "; ") : '', fontWeight ? "font-weight: ".concat(fontWeight, "; ") : '', textDecoration ? "text-decoration: ".concat(textDecoration, "; ") : textDecoration, fill ? colorPropToSVG('fill', fill) : '', deltaY ? "baseline-shift: ".concat(-deltaY, "; ") : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
+      return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? "stroke-width: ".concat(strokeWidth, "; ") : '', fontFamily ? "font-family: ".concat(!fontFamily.includes("'") && !fontFamily.includes('"') ? "'".concat(fontFamily, "'") : fontFamily, "; ") : '', fontSize ? "font-size: ".concat(fontSize, "px; ") : '', fontStyle ? "font-style: ".concat(fontStyle, "; ") : '', fontWeight ? "font-weight: ".concat(fontWeight, "; ") : '', textDecoration ? "text-decoration: ".concat(textDecoration, "; ") : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? "baseline-shift: ".concat(-deltaY, "; ") : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
     }
 
     /**
@@ -19519,7 +19646,7 @@
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _renderText(ctx) {
-      if (this.paintFirst === 'stroke') {
+      if (this.paintFirst === STROKE) {
         this._renderTextStroke(ctx);
         this._renderTextFill(ctx);
       } else {
@@ -19928,7 +20055,7 @@
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _renderTextFill(ctx) {
-      if (!this.fill && !this.styleHas('fill')) {
+      if (!this.fill && !this.styleHas(FILL)) {
         return;
       }
       this._renderTextCommon(ctx, 'fillText');
@@ -20316,7 +20443,7 @@
         let boxStart = 0;
         let boxWidth = 0;
         let lastDecoration = this.getValueOfPropertyAt(i, 0, type);
-        let lastFill = this.getValueOfPropertyAt(i, 0, 'fill');
+        let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
         let currentDecoration;
         let currentFill;
         const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
@@ -20325,7 +20452,7 @@
         for (let j = 0, jlen = line.length; j < jlen; j++) {
           const charBox = this.__charBounds[i][j];
           currentDecoration = this.getValueOfPropertyAt(i, j, type);
-          currentFill = this.getValueOfPropertyAt(i, j, 'fill');
+          currentFill = this.getValueOfPropertyAt(i, j, FILL);
           const currentSize = this.getHeightOfChar(i, j);
           const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
           if (path && currentDecoration && currentFill) {
@@ -20996,7 +21123,7 @@
         target.hiddenTextarea.value = target.text;
         target._updateTextarea();
         target.hiddenTextarea.focus();
-        target.fire('changed', {
+        target.fire(CHANGED, {
           index: insertAt + selectionStartOffset,
           action: 'drop'
         });
@@ -21042,7 +21169,7 @@
               target.selectionStart = target.selectionEnd = selectionStart;
               target.hiddenTextarea && (target.hiddenTextarea.value = target.text);
               target._updateTextarea();
-              target.fire('changed', {
+              target.fire(CHANGED, {
                 index: selectionStart,
                 action: 'dragend'
               });
@@ -21619,7 +21746,7 @@
         this.setCoords();
       }
       this.fire('editing:exited');
-      isTextChanged && this.fire('modified');
+      isTextChanged && this.fire(MODIFIED);
       if (this.canvas) {
         this.canvas.fire('text:editing:exited', {
           target: this
@@ -22098,7 +22225,7 @@
       }
       const updateAndFire = () => {
         this.updateFromTextArea();
-        this.fire('changed');
+        this.fire(CHANGED);
         if (this.canvas) {
           this.canvas.fire('text:changed', {
             target: this
@@ -23199,7 +23326,7 @@
         // and why can't happen at the top of the function
         this.renderSelection(ctx, boundaries);
       }
-      ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, 'fill');
+      ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, FILL);
       ctx.globalAlpha = this._currentCursorOpacity;
       ctx.fillRect(boundaries.left + boundaries.leftOffset - cursorWidth / 2, topOffset + boundaries.top + dy, cursorWidth, charHeight);
     }
@@ -23316,7 +23443,7 @@
      */
     getCurrentCharColor() {
       const cp = this._getCurrentCharIndex();
-      return this.getValueOfPropertyAt(cp.l, cp.c, 'fill');
+      return this.getValueOfPropertyAt(cp.l, cp.c, FILL);
     }
 
     /**
@@ -23906,7 +24033,8 @@
         target
       } = context;
       const {
-        clipPath
+        clipPath,
+        group
       } = target;
       if (!clipPath || !this.shouldPerformLayout(context)) {
         return;
@@ -23918,9 +24046,8 @@
       } = makeBoundingBoxFromPoints(getObjectBounds(target, clipPath));
       const size = new Point(width, height);
       if (clipPath.absolutePositioned) {
-        var _target$group;
         //  we want the center point to exist in group's containing plane
-        const clipPathCenter = sendPointToPlane(clipPath.getRelativeCenterPoint(), undefined, (_target$group = target.group) === null || _target$group === void 0 ? void 0 : _target$group.calcTransformMatrix());
+        const clipPathCenter = sendPointToPlane(clipPath.getRelativeCenterPoint(), undefined, group ? group.calcTransformMatrix() : undefined);
         return {
           center: clipPathCenter,
           size
@@ -24656,7 +24783,8 @@
     minimumScaleTrigger: 0.5,
     cropX: 0,
     cropY: 0,
-    imageSmoothing: true
+    imageSmoothing: true,
+    ignoreApplyFilters: false
   };
   const IMAGE_PROPS = ['cropX', 'cropY'];
 
@@ -24667,6 +24795,7 @@
     static getDefaults() {
       return _objectSpread2(_objectSpread2({}, super.getDefaults()), FabricImage.ownDefaults);
     }
+
     /**
      * Constructor
      * Image can be initialized with any canvas drawable or a string.
@@ -24886,7 +25015,7 @@
         strokeSvg = ["\t<rect x=\"".concat(x, "\" y=\"").concat(y, "\" width=\"").concat(this.width, "\" height=\"").concat(this.height, "\" style=\"").concat(this.getSvgStyles(), "\" />\n")];
         this.fill = origFill;
       }
-      if (this.paintFirst !== 'fill') {
+      if (this.paintFirst !== FILL) {
         svgString = svgString.concat(strokeSvg, imageMarkup);
       } else {
         svgString = svgString.concat(imageMarkup, strokeSvg);
@@ -25008,6 +25137,11 @@
       const imgElement = this._originalElement,
         sourceWidth = imgElement.naturalWidth || imgElement.width,
         sourceHeight = imgElement.naturalHeight || imgElement.height;
+
+      //*PMW* Return here because filters need to be applied on each frame render for videos
+      if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
+        return this;
+      }
       if (this._element === this._originalElement) {
         // if the _element a reference to _originalElement
         // we need to create a new element to host the filtered pixels
@@ -25074,7 +25208,7 @@
       return this.needsItsOwnCache();
     }
     _renderFill(ctx) {
-      const elementToDraw = this._element;
+      let elementToDraw = this._element;
       if (!elementToDraw) {
         return;
       }
@@ -25096,7 +25230,56 @@
         y = -h / 2,
         maxDestW = Math.min(w, elWidth / scaleX - cropX),
         maxDestH = Math.min(h, elHeight / scaleY - cropY);
+
+      //*PMW* if video apply filter on each frame draw
+      if (this._element.nodeName === 'VIDEO') {
+        elementToDraw = this._applyVideoFilter(this._element);
+      }
       elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+    }
+
+    /**
+     * *PMW* function added
+     * Applies filter of video element using webgl backend
+     * @param elementToDraw
+     * @return {*|CanvasElement}
+     * @private
+     */
+    _applyVideoFilter(elementToDraw) {
+      let filters = this.filters || [];
+      filters = filters.filter(function (filter) {
+        return filter;
+      });
+      if (filters.length === 0) {
+        this._element = this._originalElement;
+        this._filteredEl = undefined;
+        this._filterScalingX = 1;
+        this._filterScalingY = 1;
+        return this._element;
+      }
+      const videoEl = elementToDraw,
+        sourceWidth = videoEl.width,
+        sourceHeight = videoEl.height;
+      if (this._element === videoEl) {
+        // if the element is the same we need to create a new element
+        const canvasEl = createCanvasElement();
+        canvasEl.width = sourceWidth;
+        canvasEl.height = sourceHeight;
+        this._element = canvasEl;
+        this._filteredEl = canvasEl;
+      } else {
+        var _getContext;
+        // clear the existing element to get new filter data
+        (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 ? void 0 : _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
+      }
+      getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
+      if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
+        this._filterScalingX = this._element.width / this._originalElement.width;
+        this._filterScalingY = this._element.height / this._originalElement.height;
+      }
+      const modifiedElementToDraw = this._element;
+      this._element = videoEl;
+      return modifiedElementToDraw;
     }
 
     /**
@@ -25635,8 +25818,8 @@
       const klass = findTag(el);
       if (klass) {
         const obj = await klass.fromElement(el, this.options, this.cssRules);
-        this.resolveGradient(obj, el, 'fill');
-        this.resolveGradient(obj, el, 'stroke');
+        this.resolveGradient(obj, el, FILL);
+        this.resolveGradient(obj, el, STROKE);
         if (obj instanceof FabricImage && obj._originalElement) {
           removeTransformMatrixForSvgParsing(obj, obj.parsePreserveAspectRatioAttribute());
         } else {
@@ -25863,7 +26046,7 @@
     });
   }
 
-  const ACTION_NAME = 'modifyPoly';
+  const ACTION_NAME = MODIFY_POLY;
   /**
    * This function locates the controls.
    * It'll be used both for drawing and for interaction.
@@ -26762,7 +26945,7 @@
      */
     sendUniformData(gl, uniformLocations) {
       const delta = this.chooseRightDelta();
-      gl.uniform2fv(uniformLocations.delta, delta);
+      gl.uniform2fv(uniformLocations.uDelta, delta);
     }
     isNeutralState() {
       return this.blur === 0;
@@ -27717,7 +27900,7 @@
   }
   _defineProperty(Pixelate, "type", 'Pixelate');
   _defineProperty(Pixelate, "defaults", pixelateDefaultValues);
-  _defineProperty(Pixelate, "uniformLocations", ['uBlockSize']);
+  _defineProperty(Pixelate, "uniformLocations", ['uBlocksize']);
   classRegistry.setClass(Pixelate);
 
   const fragmentShader = "\nprecision highp float;\nuniform sampler2D uTexture;\nuniform vec4 uLow;\nuniform vec4 uHigh;\nvarying vec2 vTexCoord;\nvoid main() {\n  gl_FragColor = texture2D(uTexture, vTexCoord);\n  if(all(greaterThan(gl_FragColor.rgb,uLow.rgb)) && all(greaterThan(uHigh.rgb,gl_FragColor.rgb))) {\n    gl_FragColor.a = 0.0;\n  }\n}\n";

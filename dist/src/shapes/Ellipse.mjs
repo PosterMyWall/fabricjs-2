@@ -1,5 +1,5 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-import { twoMathPi } from '../constants.mjs';
+import { SCALE_X, SCALE_Y, twoMathPi } from '../constants.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
@@ -52,7 +52,7 @@ class Ellipse extends FabricObject {
    * @return {Number}
    */
   getRx() {
-    return this.get('rx') * this.get('scaleX');
+    return this.get('rx') * this.get(SCALE_X);
   }
 
   /**
@@ -60,7 +60,7 @@ class Ellipse extends FabricObject {
    * @return {Number}
    */
   getRy() {
-    return this.get('ry') * this.get('scaleY');
+    return this.get('ry') * this.get(SCALE_Y);
   }
 
   /**

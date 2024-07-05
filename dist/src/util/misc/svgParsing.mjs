@@ -1,6 +1,6 @@
 import { Color } from '../../color/Color.mjs';
 import { config } from '../../config.mjs';
-import { DEFAULT_SVG_FONT_SIZE, NONE } from '../../constants.mjs';
+import { DEFAULT_SVG_FONT_SIZE, NONE, FILL } from '../../constants.mjs';
 import { toFixed } from './toFixed.mjs';
 
 /**
@@ -126,7 +126,7 @@ const createSVGRect = function (color, _ref) {
     height
   } = _ref;
   let precision = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : config.NUM_FRACTION_DIGITS;
-  const svgColor = colorPropToSVG('fill', color, false);
+  const svgColor = colorPropToSVG(FILL, color, false);
   const [x, y, w, h] = [left, top, width, height].map(value => toFixed(value, precision));
   return "<rect ".concat(svgColor, " x=\"").concat(x, "\" y=\"").concat(y, "\" width=\"").concat(w, "\" height=\"").concat(h, "\"></rect>");
 };

@@ -4,7 +4,7 @@ import { ITextClickBehavior } from './ITextClickBehavior.mjs';
 import { keysMap, keysMapRtl, ctrlKeysMapDown, ctrlKeysMapUp } from './constants.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { JUSTIFY, JUSTIFY_RIGHT, JUSTIFY_LEFT, JUSTIFY_CENTER } from '../Text/constants.mjs';
-import { RIGHT, LEFT, CENTER } from '../../constants.mjs';
+import { RIGHT, LEFT, CENTER, FILL } from '../../constants.mjs';
 
 // Declare IText protected properties to workaround TS
 const protectedDefaultValues = {
@@ -360,7 +360,7 @@ class IText extends ITextClickBehavior {
       // and why can't happen at the top of the function
       this.renderSelection(ctx, boundaries);
     }
-    ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, 'fill');
+    ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, FILL);
     ctx.globalAlpha = this._currentCursorOpacity;
     ctx.fillRect(boundaries.left + boundaries.leftOffset - cursorWidth / 2, topOffset + boundaries.top + dy, cursorWidth, charHeight);
   }
@@ -477,7 +477,7 @@ class IText extends ITextClickBehavior {
    */
   getCurrentCharColor() {
     const cp = this._getCurrentCharIndex();
-    return this.getValueOfPropertyAt(cp.l, cp.c, 'fill');
+    return this.getValueOfPropertyAt(cp.l, cp.c, FILL);
   }
 
   /**

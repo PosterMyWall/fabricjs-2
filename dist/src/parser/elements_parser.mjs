@@ -6,7 +6,7 @@ import { classRegistry } from '../ClassRegistry.mjs';
 import { invertTransform, multiplyTransformMatrices, qrDecompose } from '../util/misc/matrix.mjs';
 import { removeTransformMatrixForSvgParsing } from '../util/transform_matrix_removal.mjs';
 import { Point } from '../Point.mjs';
-import { CENTER } from '../constants.mjs';
+import { FILL, STROKE, CENTER } from '../constants.mjs';
 import { getGradientDefs } from './getGradientDefs.mjs';
 import { getCSSRules } from './getCSSRules.mjs';
 import { getTagName } from './getTagName.mjs';
@@ -31,8 +31,8 @@ class ElementsParser {
     const klass = findTag(el);
     if (klass) {
       const obj = await klass.fromElement(el, this.options, this.cssRules);
-      this.resolveGradient(obj, el, 'fill');
-      this.resolveGradient(obj, el, 'stroke');
+      this.resolveGradient(obj, el, FILL);
+      this.resolveGradient(obj, el, STROKE);
       if (obj instanceof FabricImage && obj._originalElement) {
         removeTransformMatrixForSvgParsing(obj, obj.parsePreserveAspectRatioAttribute());
       } else {

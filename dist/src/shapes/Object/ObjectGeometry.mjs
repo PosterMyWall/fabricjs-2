@@ -1,4 +1,4 @@
-import { iMatrix } from '../../constants.mjs';
+import { SCALE_X, SCALE_Y, iMatrix } from '../../constants.mjs';
 import { Intersection } from '../../Intersection.mjs';
 import { Point } from '../../Point.mjs';
 import { makeBoundingBoxFromPoints } from '../../util/misc/boundingBoxFromPoints.mjs';
@@ -293,8 +293,8 @@ class ObjectGeometry extends ObjectOrigin {
    * @return {void}
    */
   scale(value) {
-    this._set('scaleX', value);
-    this._set('scaleY', value);
+    this._set(SCALE_X, value);
+    this._set(SCALE_Y, value);
     this.setCoords();
   }
 

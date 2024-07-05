@@ -1,4 +1,4 @@
-import { LEFT, TOP } from '../constants.mjs';
+import { LEFT, TOP, MOVING } from '../constants.mjs';
 import { fireEvent } from './fireEvent.mjs';
 import { isLocked, commonEventInfo } from './util.mjs';
 
@@ -24,7 +24,7 @@ const dragHandler = (eventData, transform, x, y) => {
   moveX && target.set(LEFT, newLeft);
   moveY && target.set(TOP, newTop);
   if (moveX || moveY) {
-    fireEvent('moving', commonEventInfo(eventData, transform, x, y));
+    fireEvent(MOVING, commonEventInfo(eventData, transform, x, y));
   }
   return moveX || moveY;
 };

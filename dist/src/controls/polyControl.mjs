@@ -3,6 +3,7 @@ import { Point } from '../Point.mjs';
 import { Control } from './Control.mjs';
 import { multiplyTransformMatrices } from '../util/misc/matrix.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
+import { MODIFY_POLY } from '../constants.mjs';
 import '../util/misc/vectors.mjs';
 import '../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
 import '../config.mjs';
@@ -13,7 +14,7 @@ import '../util/path/regex.mjs';
 import '../parser/constants.mjs';
 import '../util/animation/AnimationRegistry.mjs';
 
-const ACTION_NAME = 'modifyPoly';
+const ACTION_NAME = MODIFY_POLY;
 /**
  * This function locates the controls.
  * It'll be used both for drawing and for interaction.

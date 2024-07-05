@@ -1,6 +1,7 @@
 import { NOT_ALLOWED_CURSOR, findCornerQuadrant, isLocked, getLocalPoint, isTransformCentered, invertOrigin } from './util.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
 import { wrapWithFixedAnchor } from './wrapWithFixedAnchor.mjs';
+import { SCALING, SCALE_X, SCALE_Y } from '../constants.mjs';
 
 /**
  * Inspect event and fabricObject properties to understand if the scaling action
@@ -149,12 +150,12 @@ function scaleObject(eventData, transform, x, y) {
   const oldScaleX = target.scaleX,
     oldScaleY = target.scaleY;
   if (!by) {
-    !isLocked(target, 'lockScalingX') && target.set('scaleX', scaleX);
-    !isLocked(target, 'lockScalingY') && target.set('scaleY', scaleY);
+    !isLocked(target, 'lockScalingX') && target.set(SCALE_X, scaleX);
+    !isLocked(target, 'lockScalingY') && target.set(SCALE_Y, scaleY);
   } else {
     // forbidden cases already handled on top here.
-    by === 'x' && target.set('scaleX', scaleX);
-    by === 'y' && target.set('scaleY', scaleY);
+    by === 'x' && target.set(SCALE_X, scaleX);
+    by === 'y' && target.set(SCALE_Y, scaleY);
   }
   return oldScaleX !== target.scaleX || oldScaleY !== target.scaleY;
 }
@@ -201,9 +202,9 @@ const scaleObjectY = (eventData, transform, x, y) => {
     by: 'y'
   });
 };
-const scalingEqually = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectFromCorner));
-const scalingX = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectX));
-const scalingY = wrapWithFireEvent('scaling', wrapWithFixedAnchor(scaleObjectY));
+const scalingEqually = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectFromCorner));
+const scalingX = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectX));
+const scalingY = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectY));
 
 export { scaleCursorStyleHandler, scaleIsProportional, scaleObjectFromCorner, scalingEqually, scalingIsForbidden, scalingX, scalingY };
 //# sourceMappingURL=scale.mjs.map

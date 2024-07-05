@@ -3,7 +3,7 @@ import { Point } from '../../Point.mjs';
 import { FabricText } from '../Text/Text.mjs';
 import { animate } from '../../util/animation/animate.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
-import { reNewline, LEFT, RIGHT } from '../../constants.mjs';
+import { reNewline, MODIFIED, LEFT, RIGHT } from '../../constants.mjs';
 
 /**
  *  extend this regex to support non english languages
@@ -559,7 +559,7 @@ class ITextBehavior extends FabricText {
       this.setCoords();
     }
     this.fire('editing:exited');
-    isTextChanged && this.fire('modified');
+    isTextChanged && this.fire(MODIFIED);
     if (this.canvas) {
       this.canvas.fire('text:editing:exited', {
         target: this

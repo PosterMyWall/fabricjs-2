@@ -14,6 +14,7 @@ interface UniqueImageProps {
     cropX: number;
     cropY: number;
     imageSmoothing: boolean;
+    ignoreApplyFilters: boolean;
     filters: BaseFilter<string, Record<string, any>>[];
     resizeFilter?: Resize;
 }
@@ -102,6 +103,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * @default
      */
     imageSmoothing: boolean;
+    ignoreApplyFilters: boolean;
     preserveAspectRatio: string;
     protected src: string;
     filters: BaseFilter<string, Record<string, any>>[];
@@ -208,7 +210,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * @param {Array} filters to be applied
      * @param {Boolean} forResizing specify if the filter operation is a resize operation
      */
-    applyFilters(filters?: BaseFilter<string, Record<string, any>>[]): void;
+    applyFilters(filters?: BaseFilter<string, Record<string, any>>[]): this | undefined;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
@@ -233,6 +235,14 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      */
     shouldCache(): boolean;
     _renderFill(ctx: CanvasRenderingContext2D): void;
+    /**
+     * *PMW* function added
+     * Applies filter of video element using webgl backend
+     * @param elementToDraw
+     * @return {*|CanvasElement}
+     * @private
+     */
+    _applyVideoFilter(elementToDraw: HTMLVideoElement): ImageSource;
     /**
      * needed to check if image needs resize
      * @private

@@ -5,22 +5,22 @@ import { radiansToDegrees, degreesToRadians } from '../util/misc/radiansDegreesC
 import { isLocked, NOT_ALLOWED_CURSOR, findCornerQuadrant, getLocalPoint } from './util.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
 import { wrapWithFixedAnchor } from './wrapWithFixedAnchor.mjs';
-import { CENTER } from '../constants.mjs';
+import { CENTER, SKEWING, SCALE_X, SKEW_X, SCALE_Y, SKEW_Y } from '../constants.mjs';
 
 const _excluded = ["target", "ex", "ey", "skewingSide"];
 const AXIS_KEYS = {
   x: {
     counterAxis: 'y',
-    scale: 'scaleX',
-    skew: 'skewX',
+    scale: SCALE_X,
+    skew: SKEW_X,
     lockSkewing: 'lockSkewingX',
     origin: 'originX',
     flip: 'flipX'
   },
   y: {
     counterAxis: 'x',
-    scale: 'scaleY',
-    skew: 'skewY',
+    scale: SCALE_Y,
+    skew: SKEW_Y,
     lockSkewing: 'lockSkewingY',
     origin: 'originY',
     flip: 'flipY'
@@ -99,7 +99,7 @@ function skewObject(axis, _ref, pointer) {
       }),
       dimAfter = target._getTransformedDimensions(),
       compensationFactor = skewX !== 0 ? dimBefore.x / dimAfter.x : 1;
-    compensationFactor !== 1 && target.set('scaleX', compensationFactor * scaleX);
+    compensationFactor !== 1 && target.set(SCALE_X, compensationFactor * scaleX);
   }
   return changed;
 }
@@ -145,7 +145,7 @@ function skewHandler(axis, eventData, transform, x, y) {
     // anchor to the opposite side of the skewing direction
     // normalize value from [-1, 1] to origin value [0, 1]
     origin = -skewingDirection * 0.5 + 0.5;
-  const finalHandler = wrapWithFireEvent('skewing', wrapWithFixedAnchor((eventData, transform, x, y) => skewObject(axis, transform, new Point(x, y))));
+  const finalHandler = wrapWithFireEvent(SKEWING, wrapWithFixedAnchor((eventData, transform, x, y) => skewObject(axis, transform, new Point(x, y))));
   return finalHandler(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
     [originKey]: origin,
     skewingSide

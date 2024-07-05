@@ -1,4 +1,4 @@
-import { CENTER, RIGHT, LEFT } from '../constants.mjs';
+import { RESIZING, CENTER, RIGHT, LEFT } from '../constants.mjs';
 import { resolveOrigin } from '../util/misc/resolveOrigin.mjs';
 import { getLocalPoint, isTransformCentered } from './util.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
@@ -30,7 +30,7 @@ const changeObjectWidth = (eventData, transform, x, y) => {
   }
   return false;
 };
-const changeWidth = wrapWithFireEvent('resizing', wrapWithFixedAnchor(changeObjectWidth));
+const changeWidth = wrapWithFireEvent(RESIZING, wrapWithFixedAnchor(changeObjectWidth));
 
 export { changeObjectWidth, changeWidth };
 //# sourceMappingURL=changeWidth.mjs.map

@@ -1,4 +1,5 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { FILL, STROKE } from '../../constants.mjs';
 import { animateColor, animate } from '../../util/animation/animate.mjs';
 import { StackedObject } from './StackedObject.mjs';
 
@@ -70,7 +71,7 @@ class AnimatableObject extends StackedObject {
  * List of properties to consider for animating colors.
  * @type String[]
  */
-_defineProperty(AnimatableObject, "colorProperties", ['fill', 'stroke', 'backgroundColor']);
+_defineProperty(AnimatableObject, "colorProperties", [FILL, STROKE, 'backgroundColor']);
 
 export { AnimatableObject };
 //# sourceMappingURL=AnimatableObject.mjs.map
