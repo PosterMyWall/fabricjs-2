@@ -49,7 +49,7 @@ class BaseConfiguration {
    * @type Boolean
    * @default
    */
-  disableGroupSelector: false;
+  disableGroupSelector = false;
 
   /**
    * *PMW* added variable to mark when canvas is being two-finger panned.

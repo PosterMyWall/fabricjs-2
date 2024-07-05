@@ -61,6 +61,12 @@ export interface GroupEvents extends ObjectEvents, CollectionEvents {
 export interface GroupOwnProps {
   subTargetCheck: boolean;
   interactive: boolean;
+  delegateProperties: boolean,
+  caterCacheForTextChildren: boolean,
+  leanBackground: boolean,
+  leanBackgroundOffset: number,
+  selected: boolean,
+  useSelectedFlag: boolean,
 }
 
 export interface SerializedGroupProps
@@ -77,6 +83,12 @@ export interface GroupProps extends FabricObjectProps, GroupOwnProps {
 export const groupDefaultValues: Partial<TClassProperties<Group>> = {
   strokeWidth: 0,
   subTargetCheck: false,
+  delegateProperties: true,
+  caterCacheForTextChildren: false,
+  leanBackground: false,
+  leanBackgroundOffset: 0,
+  selected: false,
+  useSelectedFlag: false,
   interactive: false,
 };
 
@@ -101,12 +113,6 @@ export class Group
   declare subTargetCheck: boolean;
 
   /**
-   * *PMW property added*
-   * To delete some properties or not
-   */
-  public delegateProperties = true;
-
-  /**
    * *PMW*
    * Properties that are delegated to group objects when reading/writing
    */
@@ -127,21 +133,27 @@ export class Group
 
   /**
    * *PMW property added*
+   * To delete some properties or not
+   */
+  declare delegateProperties: boolean;
+
+  /**
+   * *PMW property added*
    * Whether to cater to the text children objects for caching.
    */
-  public caterCacheForTextChildren = false;
+  declare caterCacheForTextChildren: boolean;
 
   /**
    * *PMW property added*
    * Whether to render a rectangle background or a tilted background
    */
-  public leanBackground = false;
+  declare leanBackground : boolean;
 
   /**
    * *PMW property added*
    * Leanness of background
    */
-  public leanBackgroundOffset = 0;
+  declare leanBackgroundOffset : number;
 
   /**
    * *PMW property added*
@@ -149,13 +161,13 @@ export class Group
    * This is being used in GraphicItemSlideshowMediator to handle text editing.
    * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
    */
-  public selected = false;
+  declare selected: boolean;
 
   /**
    * *PMW property added*
    * Whether the PMW added selected flag should be used.
    */
-  public useSelectedFlag = false;
+  declare useSelectedFlag: boolean;
 
   /**
    * Used to allow targeting of object inside groups.
@@ -685,7 +697,7 @@ export class Group
     this._transformDone = false;
   }
 
-  public isTable(): this is Table{
+  public isTable(): this is Table {
     return false;
   }
 

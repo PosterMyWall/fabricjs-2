@@ -42,7 +42,7 @@ declare class BaseConfiguration {
      * @type Boolean
      * @default
      */
-    disableGroupSelector: false;
+    disableGroupSelector: boolean;
     /**
      * *PMW* added variable to mark when canvas is being two-finger panned.
      * @type Boolean

@@ -24,6 +24,12 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
+  delegateProperties: true,
+  caterCacheForTextChildren: false,
+  leanBackground: false,
+  leanBackgroundOffset: 0,
+  selected: false,
+  useSelectedFlag: false,
   interactive: false
 };
 
@@ -55,11 +61,6 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * *PMW property added*
-     * To delete some properties or not
-     */
-    _defineProperty(this, "delegateProperties", true);
-    /**
      * *PMW*
      * Properties that are delegated to group objects when reading/writing
      */
@@ -77,33 +78,6 @@ class Group extends createCollectionMixin(FabricObject) {
       textDecoration: true,
       textAlign: true
     });
-    /**
-     * *PMW property added*
-     * Whether to cater to the text children objects for caching.
-     */
-    _defineProperty(this, "caterCacheForTextChildren", false);
-    /**
-     * *PMW property added*
-     * Whether to render a rectangle background or a tilted background
-     */
-    _defineProperty(this, "leanBackground", false);
-    /**
-     * *PMW property added*
-     * Leanness of background
-     */
-    _defineProperty(this, "leanBackgroundOffset", 0);
-    /**
-     * *PMW property added*
-     * Whether the object is currently selected.
-     * This is being used in GraphicItemSlideshowMediator to handle text editing.
-     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
-     */
-    _defineProperty(this, "selected", false);
-    /**
-     * *PMW property added*
-     * Whether the PMW added selected flag should be used.
-     */
-    _defineProperty(this, "useSelectedFlag", false);
     /**
      * Used internally to optimize performance
      * Once an object is selected, instance is rendered without the selected object.

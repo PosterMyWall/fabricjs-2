@@ -45,7 +45,7 @@ class BaseConfiguration {
      * @type Boolean
      * @default
      */
-    _defineProperty(this, "disableGroupSelector", void 0);
+    _defineProperty(this, "disableGroupSelector", false);
     /**
      * *PMW* added variable to mark when canvas is being two-finger panned.
      * @type Boolean

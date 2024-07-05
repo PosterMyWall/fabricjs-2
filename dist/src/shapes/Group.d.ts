@@ -13,6 +13,12 @@ export interface GroupEvents extends ObjectEvents, CollectionEvents {
 export interface GroupOwnProps {
     subTargetCheck: boolean;
     interactive: boolean;
+    delegateProperties: boolean;
+    caterCacheForTextChildren: boolean;
+    leanBackground: boolean;
+    leanBackgroundOffset: number;
+    selected: boolean;
+    useSelectedFlag: boolean;
 }
 export interface SerializedGroupProps extends SerializedObjectProps, GroupOwnProps {
     objects: SerializedObjectProps[];
@@ -35,10 +41,6 @@ declare const Group_base: {
         getObjects(...types: string[]): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
         item(index: number): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>;
         isEmpty(): boolean;
-        /**
-         * *PMW property added*
-         * Whether the PMW added selected flag should be used.
-         */
         size(): number;
         contains(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, deep?: boolean | undefined): boolean;
         complexity(): number;
@@ -59,12 +61,7 @@ declare const Group_base: {
     getDefaults(): Record<string, any>;
     createControls(): {
         controls: Record<string, import("../..").Control>;
-    }; /**
-     * Constructor
-     *
-     * @param {FabricObject[]} [objects] instance objects
-     * @param {Object} [options] Options object
-     */
+    };
     stateProperties: string[];
     cacheProperties: string[];
     type: string;
@@ -89,15 +86,15 @@ export declare class Group extends Group_base implements GroupProps {
      */
     subTargetCheck: boolean;
     /**
-     * *PMW property added*
-     * To delete some properties or not
-     */
-    delegateProperties: boolean;
-    /**
      * *PMW*
      * Properties that are delegated to group objects when reading/writing
      */
     delegatedProperties: Record<any, any>;
+    /**
+     * *PMW property added*
+     * To delete some properties or not
+     */
+    delegateProperties: boolean;
     /**
      * *PMW property added*
      * Whether to cater to the text children objects for caching.
