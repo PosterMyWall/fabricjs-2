@@ -82,6 +82,8 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      * @default
      */
     selectionColor: string;
+    column: number;
+    dataType: string;
     /**
      * Indicates whether text is in editing mode
      * @type Boolean
@@ -167,6 +169,20 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      * @param {Number} index new position of property
      */
     protected _updateAndFire(property: 'selectionStart' | 'selectionEnd', index: number): void;
+    /**
+     * *PMW*
+     * Returns location of cursor on canvas
+     */
+    getCharOffset(position: number): {
+        x: number;
+        y: number;
+    };
+    /**
+     * *PMW*
+     * Draws a background for the object big as its untrasformed dimensions
+     * @private
+     */
+    _renderBackground(ctx: CanvasRenderingContext2D): void;
     /**
      * Fires the even of selection changed
      * @private

@@ -24,6 +24,8 @@ export interface SerializedObjectProps extends BaseProps, FillStrokeProps {
    * @default
    */
   backgroundColor: string;
+  leanBackground: boolean;
+  leanBackgroundOffset: number;
 
   /**
    * Shadow object representing shadow of this shape
@@ -38,6 +40,9 @@ export interface SerializedObjectProps extends BaseProps, FillStrokeProps {
    * @default
    */
   visible: boolean;
+
+  pmwBmBtnText: string;
+  pmwBmBtnIcon: string;
 
   /**
    * a fabricObject that, without stroke define a clipping area with their shape. filled in black

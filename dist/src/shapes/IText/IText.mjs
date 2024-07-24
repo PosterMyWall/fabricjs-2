@@ -18,6 +18,8 @@ const iTextDefaultValues = _objectSpread2({
   selectionColor: 'rgba(17,119,255,0.3)',
   isEditing: false,
   editable: true,
+  column: 0,
+  dataType: '',
   editingBorderColor: 'rgba(102,153,255,0.25)',
   cursorWidth: 2,
   cursorColor: '',
@@ -144,6 +146,54 @@ class IText extends ITextClickBehavior {
       this[property] = index;
     }
     this._updateTextarea();
+  }
+
+  /**
+   * *PMW*
+   * Returns location of cursor on canvas
+   */
+  getCharOffset(position) {
+    let topOffset = 0,
+      leftOffset = 0;
+    const cursorPosition = this.get2DCursorLocation(position),
+      charIndex = cursorPosition.charIndex,
+      lineIndex = cursorPosition.lineIndex;
+    for (let i = 0; i < lineIndex; i++) {
+      topOffset += this.getHeightOfLine(i);
+    }
+    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
+    const bound = this.__charBounds[lineIndex][charIndex];
+    bound && (leftOffset = bound.left);
+    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
+      leftOffset -= this._getWidthOfCharSpacing();
+    }
+    return {
+      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
+      y: topOffset
+    };
+  }
+
+  /**
+   * *PMW*
+   * Draws a background for the object big as its untrasformed dimensions
+   * @private
+   */
+  _renderBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    const dim = this._getNonTransformedDimensions();
+    let scaleX = this.scaleX,
+      scaleY = this.scaleY;
+    ctx.fillStyle = this.backgroundColor;
+    if (this.group) {
+      scaleX *= this.group.scaleX;
+      scaleY *= this.group.scaleY;
+    }
+    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
+    // if there is background color no other shadows
+    // should be casted
+    this._removeShadow(ctx);
   }
 
   /**

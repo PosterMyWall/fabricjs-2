@@ -492,7 +492,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.0.1-pmw-10";
+var version = "6.0.1-pmw-12";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -6977,9 +6977,13 @@ const fabricObjectDefaultValues = {
   fillRule: 'nonzero',
   stroke: null,
   strokeDashArray: null,
+  leanBackground: false,
+  leanBackgroundOffset: 0,
   strokeDashOffset: 0,
   strokeLineCap: 'butt',
   strokeLineJoin: 'miter',
+  pmwBmBtnText: '',
+  pmwBmBtnIcon: '',
   strokeMiterLimit: 4,
   globalCompositeOperation: 'source-over',
   backgroundColor: '',
@@ -7106,18 +7110,6 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
      * @private
      */
     _defineProperty(this, "_cacheContext", null);
-    /**
-     * *PMW* new property
-     * PosterMyWall property for the default text of the button.
-     * @default
-     */
-    _defineProperty(this, "pmwBmBtnText", '');
-    /**
-     * *PMW* new property
-     * An svg of the icon place in the pmw bottom-middle button
-     * @default
-     */
-    _defineProperty(this, "pmwBmBtnIcon", '');
     Object.assign(this, FabricObject.ownDefaults);
     this.setOptions(options);
   }
@@ -7729,9 +7721,25 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     if (!this.backgroundColor) {
       return;
     }
-    const dim = this._getNonTransformedDimensions();
-    ctx.fillStyle = this.backgroundColor;
-    ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      const dim = this._getNonTransformedDimensions();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    }
     // if there is background color no other shadows
     // should be casted
     this._removeShadow(ctx);
@@ -8068,6 +8076,24 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
       boundingRect = this.getBoundingRect(),
       shadow = this.shadow,
       shadowOffset = new Point();
+
+    /*________________________ *PMW* added portion start ________________________*/
+    // extends bounding box to cater to font of text objects inside group item (text/slideshow item).
+    // This is used to prevent text from getting cut off during pdf generation.
+
+    if (options.expandBoundingBoxByFont && this.isGroup()) {
+      let maxWidthToAdd = 0,
+        maxHeightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        maxWidthToAdd = boundingRect.width * 0.75;
+        maxHeightToAdd = boundingRect.height * 0.75;
+      }
+      boundingRect.width += maxWidthToAdd;
+      boundingRect.height += maxHeightToAdd;
+    }
+    /*________________________ *PMW* added portion end ________________________*/
+
     if (shadow) {
       const shadowBlur = shadow.blur;
       const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
@@ -8108,6 +8134,13 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     canvas.destroy();
     return canvasEl;
   }
+  isGroup() {
+    return false;
+  }
+
+  /**
+   * *PMW*
+   */
   getCornerPoints(center) {
     const angle = this.angle;
     let width = this.getScaledWidth();
@@ -11458,8 +11491,6 @@ const groupDefaultValues = {
   subTargetCheck: false,
   delegateProperties: true,
   caterCacheForTextChildren: false,
-  leanBackground: false,
-  leanBackgroundOffset: 0,
   selected: false,
   useSelectedFlag: false,
   interactive: false
@@ -11562,6 +11593,9 @@ class Group extends createCollectionMixin(FabricObject) {
       return dims;
     }
     return super._getCacheCanvasDimensions();
+  }
+  isGroup() {
+    return true;
   }
 
   /**
@@ -11950,52 +11984,11 @@ class Group extends createCollectionMixin(FabricObject) {
    */
   render(ctx) {
     this._transformDone = true;
-    //*PMW* for rencering custom backgrounds
-    ctx.save();
-    this.transform(ctx);
-    if (this.isTable()) {
-      this.renderTableCustomBackground(ctx);
-      this.renderTableBorders(ctx);
-    } else {
-      this.renderGroupBackground(ctx);
-    }
-    ctx.restore();
     super.render(ctx);
     this._transformDone = false;
   }
   isTable() {
     return false;
-  }
-
-  /**
-   * *PMW* new function
-   * Renders background color for groups
-   * @param ctx Context to render on
-   */
-  renderGroupBackground(ctx) {
-    if (!this.backgroundColor) {
-      return;
-    }
-    if (this.leanBackground) {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.beginPath();
-      const offset = this.leanBackgroundOffset / 4,
-        slant = this.leanBackgroundOffset / 2,
-        yFix = this.leanBackgroundOffset / 10;
-      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-      ctx.restore();
-    }
   }
 
   /**
@@ -18624,63 +18617,65 @@ classRegistry.setClass(Tabs, 'tabs');
 
 class Table extends Group {
   constructor() {
-    super(...arguments);
+    let objects = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    super(objects, options);
     /**
      * Number of table rows
-     * @type {Number}
      */
     _defineProperty(this, "rows", 0);
     /**
      * Number of table columns
-     * @type {Number}
      */
     _defineProperty(this, "columns", 0);
     /**
      * Layout style
-     * @type {String}
      */
     _defineProperty(this, "layoutType", '');
     /**
      * Background color 1 for alternate table background
-     * @type {String}
      */
     _defineProperty(this, "alternateBackgroundColor1", null);
     /**
      * Background color 2 for alternate table background
-     * @type {String}
      */
     _defineProperty(this, "alternateBackgroundColor2", null);
     /**
      * Background color for highlighted rows
-     * @type {String}
      */
     _defineProperty(this, "highlightedRowsBackgroundColor", null);
     /**
      * Array containing indices of highlighted rows
-     * @type {Array}
      */
     _defineProperty(this, "highlightedRows", []);
     /**
      * 2D array containing table data
-     * @type {Array}
      */
     _defineProperty(this, "tableArray", [[]]);
     /**
      * Spacing Between rows of table
-     * @type {Number}
      */
     _defineProperty(this, "ySpacing", 0);
     /**
      * Spacing Between column of table
-     * @type {Number}
      */
     _defineProperty(this, "xSpacing", 0);
+    _defineProperty(this, "fontSize", 0);
     /**
      * Property used for showing the 'edit content' button
-     * @type {boolean}
      */
     _defineProperty(this, "hasButton", true);
   }
+  render(ctx) {
+    this._transformDone = true;
+    super.render(ctx);
+    ctx.save();
+    this.transform(ctx);
+    this.renderTableBorders(ctx);
+    ctx.restore();
+    this._transformDone = false;
+  }
+
   /**
    * Draws the table/schedule border
    * @param {CanvasRenderingContext2D} ctx context to draw on
@@ -18710,9 +18705,9 @@ class Table extends Group {
    * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
    * @param {CanvasRenderingContext2D} ctx context to render on
    */
-  renderTableCustomBackground(ctx) {
+  _renderBackground(ctx) {
     if (this.highlightedRows.length == 0 && !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2) || !this.isTableLayout()) {
-      this.renderGroupBackground(ctx);
+      super._renderBackground(ctx);
       return;
     }
     const backgroundData = this.getTableBackGroundData();
@@ -18843,7 +18838,6 @@ class Table extends Group {
       itemIndex;
     for (let i = 2; i <= this.columns; i++) {
       maxWidth = 0;
-      // @ts-ignore
       while (objects[x] && objects[x].column == i) {
         w = objects[x].width;
         if (w > maxWidth) {
@@ -20057,7 +20051,6 @@ class FabricText extends StyledText {
       height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       lineHeight = this.getHeightOfLine(i);
-      height += i === len - 1 ? lineHeight / this.lineHeight : lineHeight;
       // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
       // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
       // *PMW* preventing height to be smaller than selector size.
@@ -23036,6 +23029,8 @@ const iTextDefaultValues = _objectSpread2({
   selectionColor: 'rgba(17,119,255,0.3)',
   isEditing: false,
   editable: true,
+  column: 0,
+  dataType: '',
   editingBorderColor: 'rgba(102,153,255,0.25)',
   cursorWidth: 2,
   cursorColor: '',
@@ -23162,6 +23157,54 @@ class IText extends ITextClickBehavior {
       this[property] = index;
     }
     this._updateTextarea();
+  }
+
+  /**
+   * *PMW*
+   * Returns location of cursor on canvas
+   */
+  getCharOffset(position) {
+    let topOffset = 0,
+      leftOffset = 0;
+    const cursorPosition = this.get2DCursorLocation(position),
+      charIndex = cursorPosition.charIndex,
+      lineIndex = cursorPosition.lineIndex;
+    for (let i = 0; i < lineIndex; i++) {
+      topOffset += this.getHeightOfLine(i);
+    }
+    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
+    const bound = this.__charBounds[lineIndex][charIndex];
+    bound && (leftOffset = bound.left);
+    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
+      leftOffset -= this._getWidthOfCharSpacing();
+    }
+    return {
+      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
+      y: topOffset
+    };
+  }
+
+  /**
+   * *PMW*
+   * Draws a background for the object big as its untrasformed dimensions
+   * @private
+   */
+  _renderBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    const dim = this._getNonTransformedDimensions();
+    let scaleX = this.scaleX,
+      scaleY = this.scaleY;
+    ctx.fillStyle = this.backgroundColor;
+    if (this.group) {
+      scaleX *= this.group.scaleX;
+      scaleY *= this.group.scaleY;
+    }
+    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
+    // if there is background color no other shadows
+    // should be casted
+    this._removeShadow(ctx);
   }
 
   /**

@@ -25,6 +25,8 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
     abstract selectionEnd: number;
     abstract cursorDuration: number;
     abstract editable: boolean;
+    abstract column: number;
+    abstract dataType: string;
     abstract editingBorderColor: string;
     abstract compositionStart: number;
     abstract compositionEnd: number;

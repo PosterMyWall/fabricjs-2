@@ -15,8 +15,6 @@ export interface GroupOwnProps {
     interactive: boolean;
     delegateProperties: boolean;
     caterCacheForTextChildren: boolean;
-    leanBackground: boolean;
-    leanBackgroundOffset: number;
     selected: boolean;
     useSelectedFlag: boolean;
 }
@@ -102,16 +100,6 @@ export declare class Group extends Group_base implements GroupProps {
     caterCacheForTextChildren: boolean;
     /**
      * *PMW property added*
-     * Whether to render a rectangle background or a tilted background
-     */
-    leanBackground: boolean;
-    /**
-     * *PMW property added*
-     * Leanness of background
-     */
-    leanBackgroundOffset: number;
-    /**
-     * *PMW property added*
      * Whether the object is currently selected.
      * This is being used in GraphicItemSlideshowMediator to handle text editing.
      * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
@@ -176,6 +164,7 @@ export declare class Group extends Group_base implements GroupProps {
      * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
+    isGroup(): boolean;
     /**
      * *PMW funtion added*
      * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
@@ -324,12 +313,6 @@ export declare class Group extends Group_base implements GroupProps {
      */
     render(ctx: CanvasRenderingContext2D): void;
     isTable(): this is Table;
-    /**
-     * *PMW* new function
-     * Renders background color for groups
-     * @param ctx Context to render on
-     */
-    renderGroupBackground(ctx: CanvasRenderingContext2D): void;
     /**
      *
      * @private

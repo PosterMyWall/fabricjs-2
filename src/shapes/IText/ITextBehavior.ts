@@ -50,6 +50,8 @@ export abstract class ITextBehavior<
   declare abstract selectionEnd: number;
   declare abstract cursorDuration: number;
   declare abstract editable: boolean;
+  declare abstract column: number;
+  declare abstract dataType: string;
   declare abstract editingBorderColor: string;
 
   declare abstract compositionStart: number;

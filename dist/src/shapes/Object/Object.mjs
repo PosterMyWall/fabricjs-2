@@ -102,18 +102,6 @@ class FabricObject extends AnimatableObject {
      * @private
      */
     _defineProperty(this, "_cacheContext", null);
-    /**
-     * *PMW* new property
-     * PosterMyWall property for the default text of the button.
-     * @default
-     */
-    _defineProperty(this, "pmwBmBtnText", '');
-    /**
-     * *PMW* new property
-     * An svg of the icon place in the pmw bottom-middle button
-     * @default
-     */
-    _defineProperty(this, "pmwBmBtnIcon", '');
     Object.assign(this, FabricObject.ownDefaults);
     this.setOptions(options);
   }
@@ -725,9 +713,25 @@ class FabricObject extends AnimatableObject {
     if (!this.backgroundColor) {
       return;
     }
-    const dim = this._getNonTransformedDimensions();
-    ctx.fillStyle = this.backgroundColor;
-    ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      const dim = this._getNonTransformedDimensions();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    }
     // if there is background color no other shadows
     // should be casted
     this._removeShadow(ctx);
@@ -1064,6 +1068,24 @@ class FabricObject extends AnimatableObject {
       boundingRect = this.getBoundingRect(),
       shadow = this.shadow,
       shadowOffset = new Point();
+
+    /*________________________ *PMW* added portion start ________________________*/
+    // extends bounding box to cater to font of text objects inside group item (text/slideshow item).
+    // This is used to prevent text from getting cut off during pdf generation.
+
+    if (options.expandBoundingBoxByFont && this.isGroup()) {
+      let maxWidthToAdd = 0,
+        maxHeightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        maxWidthToAdd = boundingRect.width * 0.75;
+        maxHeightToAdd = boundingRect.height * 0.75;
+      }
+      boundingRect.width += maxWidthToAdd;
+      boundingRect.height += maxHeightToAdd;
+    }
+    /*________________________ *PMW* added portion end ________________________*/
+
     if (shadow) {
       const shadowBlur = shadow.blur;
       const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
@@ -1104,6 +1126,13 @@ class FabricObject extends AnimatableObject {
     canvas.destroy();
     return canvasEl;
   }
+  isGroup() {
+    return false;
+  }
+
+  /**
+   * *PMW*
+   */
   getCornerPoints(center) {
     const angle = this.angle;
     let width = this.getScaledWidth();

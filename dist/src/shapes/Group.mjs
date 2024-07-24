@@ -26,8 +26,6 @@ const groupDefaultValues = {
   subTargetCheck: false,
   delegateProperties: true,
   caterCacheForTextChildren: false,
-  leanBackground: false,
-  leanBackgroundOffset: 0,
   selected: false,
   useSelectedFlag: false,
   interactive: false
@@ -130,6 +128,9 @@ class Group extends createCollectionMixin(FabricObject) {
       return dims;
     }
     return super._getCacheCanvasDimensions();
+  }
+  isGroup() {
+    return true;
   }
 
   /**
@@ -518,52 +519,11 @@ class Group extends createCollectionMixin(FabricObject) {
    */
   render(ctx) {
     this._transformDone = true;
-    //*PMW* for rencering custom backgrounds
-    ctx.save();
-    this.transform(ctx);
-    if (this.isTable()) {
-      this.renderTableCustomBackground(ctx);
-      this.renderTableBorders(ctx);
-    } else {
-      this.renderGroupBackground(ctx);
-    }
-    ctx.restore();
     super.render(ctx);
     this._transformDone = false;
   }
   isTable() {
     return false;
-  }
-
-  /**
-   * *PMW* new function
-   * Renders background color for groups
-   * @param ctx Context to render on
-   */
-  renderGroupBackground(ctx) {
-    if (!this.backgroundColor) {
-      return;
-    }
-    if (this.leanBackground) {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.beginPath();
-      const offset = this.leanBackgroundOffset / 4,
-        slant = this.leanBackgroundOffset / 2,
-        yFix = this.leanBackgroundOffset / 10;
-      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-      ctx.restore();
-    }
   }
 
   /**

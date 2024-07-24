@@ -63,8 +63,6 @@ export interface GroupOwnProps {
   interactive: boolean;
   delegateProperties: boolean;
   caterCacheForTextChildren: boolean;
-  leanBackground: boolean;
-  leanBackgroundOffset: number;
   selected: boolean;
   useSelectedFlag: boolean;
 }
@@ -85,8 +83,6 @@ export const groupDefaultValues: Partial<TClassProperties<Group>> = {
   subTargetCheck: false,
   delegateProperties: true,
   caterCacheForTextChildren: false,
-  leanBackground: false,
-  leanBackgroundOffset: 0,
   selected: false,
   useSelectedFlag: false,
   interactive: false,
@@ -142,18 +138,6 @@ export class Group
    * Whether to cater to the text children objects for caching.
    */
   declare caterCacheForTextChildren: boolean;
-
-  /**
-   * *PMW property added*
-   * Whether to render a rectangle background or a tilted background
-   */
-  declare leanBackground: boolean;
-
-  /**
-   * *PMW property added*
-   * Leanness of background
-   */
-  declare leanBackgroundOffset: number;
 
   /**
    * *PMW property added*
@@ -260,6 +244,11 @@ export class Group
     }
     return super._getCacheCanvasDimensions();
   }
+
+  isGroup(){
+    return true;
+  }
+
 
   /**
    * *PMW funtion added*
@@ -682,65 +671,12 @@ export class Group
    */
   render(ctx: CanvasRenderingContext2D) {
     this._transformDone = true;
-    //*PMW* for rencering custom backgrounds
-    ctx.save();
-    this.transform(ctx);
-    if (this.isTable()) {
-      this.renderTableCustomBackground(ctx);
-      this.renderTableBorders(ctx);
-    } else {
-      this.renderGroupBackground(ctx);
-    }
-    ctx.restore();
-
     super.render(ctx);
     this._transformDone = false;
   }
 
   public isTable(): this is Table {
     return false;
-  }
-
-  /**
-   * *PMW* new function
-   * Renders background color for groups
-   * @param ctx Context to render on
-   */
-  renderGroupBackground(ctx: CanvasRenderingContext2D) {
-    if (!this.backgroundColor) {
-      return;
-    }
-
-    if (this.leanBackground) {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.beginPath();
-      const offset = this.leanBackgroundOffset / 4,
-        slant = this.leanBackgroundOffset / 2,
-        yFix = this.leanBackgroundOffset / 10;
-      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
-      ctx.lineTo(
-        -this.width / 2 + this.width + offset,
-        -this.height / 2 - yFix
-      );
-      ctx.lineTo(
-        -this.width / 2 + this.width - slant + offset,
-        -this.height / 2 + this.height - yFix
-      );
-      ctx.lineTo(
-        -this.width / 2 - slant + offset,
-        -this.height / 2 + this.height - yFix
-      );
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-
-      ctx.restore();
-    }
   }
 
   /**

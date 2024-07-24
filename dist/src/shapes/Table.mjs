@@ -4,63 +4,65 @@ import { classRegistry } from '../ClassRegistry.mjs';
 
 class Table extends Group {
   constructor() {
-    super(...arguments);
+    let objects = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    super(objects, options);
     /**
      * Number of table rows
-     * @type {Number}
      */
     _defineProperty(this, "rows", 0);
     /**
      * Number of table columns
-     * @type {Number}
      */
     _defineProperty(this, "columns", 0);
     /**
      * Layout style
-     * @type {String}
      */
     _defineProperty(this, "layoutType", '');
     /**
      * Background color 1 for alternate table background
-     * @type {String}
      */
     _defineProperty(this, "alternateBackgroundColor1", null);
     /**
      * Background color 2 for alternate table background
-     * @type {String}
      */
     _defineProperty(this, "alternateBackgroundColor2", null);
     /**
      * Background color for highlighted rows
-     * @type {String}
      */
     _defineProperty(this, "highlightedRowsBackgroundColor", null);
     /**
      * Array containing indices of highlighted rows
-     * @type {Array}
      */
     _defineProperty(this, "highlightedRows", []);
     /**
      * 2D array containing table data
-     * @type {Array}
      */
     _defineProperty(this, "tableArray", [[]]);
     /**
      * Spacing Between rows of table
-     * @type {Number}
      */
     _defineProperty(this, "ySpacing", 0);
     /**
      * Spacing Between column of table
-     * @type {Number}
      */
     _defineProperty(this, "xSpacing", 0);
+    _defineProperty(this, "fontSize", 0);
     /**
      * Property used for showing the 'edit content' button
-     * @type {boolean}
      */
     _defineProperty(this, "hasButton", true);
   }
+  render(ctx) {
+    this._transformDone = true;
+    super.render(ctx);
+    ctx.save();
+    this.transform(ctx);
+    this.renderTableBorders(ctx);
+    ctx.restore();
+    this._transformDone = false;
+  }
+
   /**
    * Draws the table/schedule border
    * @param {CanvasRenderingContext2D} ctx context to draw on
@@ -90,9 +92,9 @@ class Table extends Group {
    * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
    * @param {CanvasRenderingContext2D} ctx context to render on
    */
-  renderTableCustomBackground(ctx) {
+  _renderBackground(ctx) {
     if (this.highlightedRows.length == 0 && !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2) || !this.isTableLayout()) {
-      this.renderGroupBackground(ctx);
+      super._renderBackground(ctx);
       return;
     }
     const backgroundData = this.getTableBackGroundData();
@@ -223,7 +225,6 @@ class Table extends Group {
       itemIndex;
     for (let i = 2; i <= this.columns; i++) {
       maxWidth = 0;
-      // @ts-ignore
       while (objects[x] && objects[x].column == i) {
         w = objects[x].width;
         if (w > maxWidth) {

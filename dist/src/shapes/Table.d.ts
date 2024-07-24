@@ -1,5 +1,19 @@
-import { Group } from './Group';
-import type { IText } from 'fabric';
+import { Group, type GroupProps } from './Group';
+import type { FabricObject, IText } from 'fabric';
+export interface TableProps extends GroupProps {
+    rows: number;
+    columns: number;
+    layoutType: string;
+    alternateBackgroundColor1: string;
+    alternateBackgroundColor2: string;
+    highlightedRowsBackgroundColor: string;
+    highlightedRows: Array<number>;
+    tableArray: Array<Array<IText>>;
+    ySpacing: number;
+    xSpacing: number;
+    fontSize: number;
+    hasButton: boolean;
+}
 export declare class Table extends Group {
     /**
      * Type of an object
@@ -9,59 +23,51 @@ export declare class Table extends Group {
     static type: string;
     /**
      * Number of table rows
-     * @type {Number}
      */
     rows: number;
     /**
      * Number of table columns
-     * @type {Number}
      */
     columns: number;
     /**
      * Layout style
-     * @type {String}
      */
     layoutType: string;
     /**
      * Background color 1 for alternate table background
-     * @type {String}
      */
     alternateBackgroundColor1: null;
     /**
      * Background color 2 for alternate table background
-     * @type {String}
      */
     alternateBackgroundColor2: null;
     /**
      * Background color for highlighted rows
-     * @type {String}
      */
     highlightedRowsBackgroundColor: null;
     /**
      * Array containing indices of highlighted rows
-     * @type {Array}
      */
     highlightedRows: Array<number>;
     /**
      * 2D array containing table data
-     * @type {Array}
      */
     tableArray: Array<Array<IText>>;
     /**
      * Spacing Between rows of table
-     * @type {Number}
      */
     ySpacing: number;
     /**
      * Spacing Between column of table
-     * @type {Number}
      */
     xSpacing: number;
+    fontSize: number;
     /**
      * Property used for showing the 'edit content' button
-     * @type {boolean}
      */
     hasButton: boolean;
+    constructor(objects?: FabricObject[], options?: Partial<TableProps>);
+    render(ctx: CanvasRenderingContext2D): void;
     /**
      * Draws the table/schedule border
      * @param {CanvasRenderingContext2D} ctx context to draw on
@@ -74,7 +80,7 @@ export declare class Table extends Group {
      * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
      * @param {CanvasRenderingContext2D} ctx context to render on
      */
-    renderTableCustomBackground(ctx: CanvasRenderingContext2D): void;
+    _renderBackground(ctx: CanvasRenderingContext2D): void;
     /**
      * Returns an array containing string values corresponding to rows background color.
      * 'highlight' for selected rows

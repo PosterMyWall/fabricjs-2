@@ -32,6 +32,7 @@ export type ObjectToCanvasElementOptions = {
     withoutShadow?: boolean;
     /** Account for canvas viewport transform */
     viewportTransform?: boolean;
+    expandBoundingBoxByFont?: boolean;
     /** Function to create the output canvas to export onto */
     canvasProvider?: <T extends StaticCanvas>(el?: HTMLCanvasElement) => T;
 };
@@ -89,6 +90,16 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
     strokeMiterLimit: number;
     globalCompositeOperation: GlobalCompositeOperation;
     backgroundColor: string;
+    /**
+     * *PMW property added*
+     * Whether to render a rectangle background or a tilted background
+     */
+    leanBackground: boolean;
+    /**
+     * *PMW property added*
+     * Leanness of background
+     */
+    leanBackgroundOffset: number;
     shadow: Shadow | null;
     visible: boolean;
     includeDefaultValues: boolean;
@@ -99,6 +110,18 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
     absolutePositioned: boolean;
     centeredRotation: boolean;
     centeredScaling: boolean;
+    /**
+     * *PMW* new property
+     * PosterMyWall property for the default text of the button.
+     * @default
+     */
+    pmwBmBtnText: string;
+    /**
+     * *PMW* new property
+     * An svg of the icon place in the pmw bottom-middle button
+     * @default
+     */
+    pmwBmBtnIcon: string;
     /**
      * This list of properties is used to check if the state of an object is changed.
      * This state change now is only used for children of groups to understand if a group
@@ -187,18 +210,6 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @private
      */
     ownCaching?: boolean;
-    /**
-     * *PMW* new property
-     * PosterMyWall property for the default text of the button.
-     * @default
-     */
-    pmwBmBtnText: string;
-    /**
-     * *PMW* new property
-     * An svg of the icon place in the pmw bottom-middle button
-     * @default
-     */
-    pmwBmBtnIcon: string;
     /**
      * Private. indicates if the object inside a group is on a transformed context or not
      * or is part of a larger cache for many object ( a group for example)
@@ -554,6 +565,10 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @return {HTMLCanvasElement} Returns DOM element <canvas> with the FabricObject
      */
     toCanvasElement(options?: ObjectToCanvasElementOptions): HTMLCanvasElement;
+    isGroup(): this is Group;
+    /**
+     * *PMW*
+     */
     getCornerPoints(center: XY): GetCornerPointsResponse;
     /**
      * Converts an object into a data-url-like string

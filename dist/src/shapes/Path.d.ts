@@ -159,7 +159,11 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         opacity: number;
         globalCompositeOperation: "color" | "screen" | "color-burn" | "color-dodge" | "copy" | "darken" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "lighter" | "luminosity" | "multiply" | "overlay" | "saturation" | "soft-light" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
         backgroundColor: string;
+        leanBackground: boolean;
+        leanBackgroundOffset: number;
         visible: boolean;
+        pmwBmBtnText: string;
+        pmwBmBtnIcon: string;
         width: number;
         height: number;
         originX: number | "center" | "left" | "right";

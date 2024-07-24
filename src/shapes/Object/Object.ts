@@ -96,6 +96,7 @@ export type ObjectToCanvasElementOptions = {
   withoutShadow?: boolean;
   /** Account for canvas viewport transform */
   viewportTransform?: boolean;
+  expandBoundingBoxByFont?: boolean;
   /** Function to create the output canvas to export onto */
   canvasProvider?: <T extends StaticCanvas>(el?: HTMLCanvasElement) => T;
 };
@@ -105,11 +106,12 @@ type toDataURLOptions = ObjectToCanvasElementOptions & {
 };
 
 interface GetCornerPointsResponse {
- tl: Point,
- tr: Point,
- bl: Point,
- br: Point,
+  tl: Point;
+  tr: Point;
+  bl: Point;
+  br: Point;
 }
+
 /**
  * Root object class from which all 2d shape classes inherit from
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
@@ -166,6 +168,18 @@ export class FabricObject<
   declare globalCompositeOperation: GlobalCompositeOperation;
   declare backgroundColor: string;
 
+  /**
+   * *PMW property added*
+   * Whether to render a rectangle background or a tilted background
+   */
+  declare leanBackground: boolean;
+
+  /**
+   * *PMW property added*
+   * Leanness of background
+   */
+  declare leanBackgroundOffset: number;
+
   declare shadow: Shadow | null;
 
   declare visible: boolean;
@@ -180,6 +194,20 @@ export class FabricObject<
   declare absolutePositioned: boolean;
   declare centeredRotation: boolean;
   declare centeredScaling: boolean;
+
+  /**
+   * *PMW* new property
+   * PosterMyWall property for the default text of the button.
+   * @default
+   */
+  declare pmwBmBtnText: string;
+
+  /**
+   * *PMW* new property
+   * An svg of the icon place in the pmw bottom-middle button
+   * @default
+   */
+  declare pmwBmBtnIcon: string;
 
   /**
    * This list of properties is used to check if the state of an object is changed.
@@ -279,21 +307,6 @@ export class FabricObject<
    * @private
    */
   declare ownCaching?: boolean;
-
-
-  /**
-   * *PMW* new property
-   * PosterMyWall property for the default text of the button.
-   * @default
-   */
-  public pmwBmBtnText= '';
-
-  /**
-   * *PMW* new property
-   * An svg of the icon place in the pmw bottom-middle button
-   * @default
-   */
-  public pmwBmBtnIcon= '';
 
   /**
    * Private. indicates if the object inside a group is on a transformed context or not
@@ -1039,10 +1052,35 @@ export class FabricObject<
     if (!this.backgroundColor) {
       return;
     }
-    const dim = this._getNonTransformedDimensions();
-    ctx.fillStyle = this.backgroundColor;
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(
+        -this.width / 2 + this.width + offset,
+        -this.height / 2 - yFix
+      );
+      ctx.lineTo(
+        -this.width / 2 + this.width - slant + offset,
+        -this.height / 2 + this.height - yFix
+      );
+      ctx.lineTo(
+        -this.width / 2 - slant + offset,
+        -this.height / 2 + this.height - yFix
+      );
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }else {
+      const dim = this._getNonTransformedDimensions();
+      ctx.fillStyle = this.backgroundColor;
 
-    ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+      ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    }
     // if there is background color no other shadows
     // should be casted
     this._removeShadow(ctx);
@@ -1421,6 +1459,25 @@ export class FabricObject<
       shadow = this.shadow,
       shadowOffset = new Point();
 
+    /*________________________ *PMW* added portion start ________________________*/
+    // extends bounding box to cater to font of text objects inside group item (text/slideshow item).
+    // This is used to prevent text from getting cut off during pdf generation.
+
+    if (options.expandBoundingBoxByFont && this.isGroup()) {
+      let maxWidthToAdd = 0,
+        maxHeightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+
+      if (maxFontSize > 0) {
+        maxWidthToAdd = boundingRect.width * 0.75;
+        maxHeightToAdd = boundingRect.height * 0.75;
+      }
+
+      boundingRect.width += maxWidthToAdd;
+      boundingRect.height += maxHeightToAdd;
+    }
+    /*________________________ *PMW* added portion end ________________________*/
+
     if (shadow) {
       const shadowBlur = shadow.blur;
       const scaling = shadow.nonScaling
@@ -1470,13 +1527,20 @@ export class FabricObject<
     return canvasEl;
   }
 
+  isGroup(): this is Group{
+    return false;
+  }
+
+  /**
+   * *PMW*
+   */
   public getCornerPoints(center: XY): GetCornerPointsResponse {
     const angle = this.angle;
-      let width = this.getScaledWidth();
+    let width = this.getScaledWidth();
     const height = this.getScaledHeight();
-      const x = center.x;
-      const y = center.y;
-      const theta = degreesToRadians(angle);
+    const x = center.x;
+    const y = center.y;
+    const theta = degreesToRadians(angle);
 
     if (width < 0) {
       width = Math.abs(width);
@@ -1490,10 +1554,10 @@ export class FabricObject<
       offsetY = Math.sin(_angle + theta) * _hypotenuse;
 
     return {
-      tl: new Point(x - offsetX,y - offsetY),
-      tr: new Point(x - offsetX + width * cosTh,y - offsetY + width * sinTh),
-      bl: new Point(x - offsetX - height * sinTh,y - offsetY + height * cosTh),
-      br: new Point(x + offsetX,y + offsetY)
+      tl: new Point(x - offsetX, y - offsetY),
+      tr: new Point(x - offsetX + width * cosTh, y - offsetY + width * sinTh),
+      bl: new Point(x - offsetX - height * sinTh, y - offsetY + height * cosTh),
+      br: new Point(x + offsetX, y + offsetY),
     };
   }
 

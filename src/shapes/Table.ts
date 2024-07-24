@@ -1,7 +1,22 @@
 //*PMW* class addded for tables
-import { Group } from './Group';
+import { Group, type GroupProps } from './Group';
 import { classRegistry } from '../ClassRegistry';
-import type { IText } from 'fabric';
+import type { FabricObject, IText } from 'fabric';
+
+export interface TableProps extends GroupProps {
+  rows: number;
+  columns: number;
+  layoutType: string;
+  alternateBackgroundColor1: string;
+  alternateBackgroundColor2: string;
+  highlightedRowsBackgroundColor: string;
+  highlightedRows: Array<number>;
+  tableArray: Array<Array<IText>>;
+  ySpacing: number;
+  xSpacing: number;
+  fontSize: number;
+  hasButton: boolean;
+}
 
 export class Table extends Group {
   /**
@@ -13,59 +28,66 @@ export class Table extends Group {
 
   /**
    * Number of table rows
-   * @type {Number}
    */
   rows = 0;
   /**
    * Number of table columns
-   * @type {Number}
    */
   columns = 0;
   /**
    * Layout style
-   * @type {String}
    */
   layoutType = '';
   /**
    * Background color 1 for alternate table background
-   * @type {String}
    */
   alternateBackgroundColor1 = null;
   /**
    * Background color 2 for alternate table background
-   * @type {String}
    */
   alternateBackgroundColor2 = null;
   /**
    * Background color for highlighted rows
-   * @type {String}
    */
   highlightedRowsBackgroundColor = null;
   /**
    * Array containing indices of highlighted rows
-   * @type {Array}
    */
   highlightedRows: Array<number> = [];
   /**
    * 2D array containing table data
-   * @type {Array}
    */
   tableArray: Array<Array<IText>> = [[]];
   /**
    * Spacing Between rows of table
-   * @type {Number}
    */
   ySpacing = 0;
   /**
    * Spacing Between column of table
-   * @type {Number}
    */
   xSpacing = 0;
+
+  fontSize = 0;
   /**
    * Property used for showing the 'edit content' button
-   * @type {boolean}
    */
   hasButton = true;
+
+  constructor(objects: FabricObject[] = [], options: Partial<TableProps> = {}) {
+    super(objects,options);
+  }
+
+
+  render(ctx: CanvasRenderingContext2D) {
+    this._transformDone = true;
+    super.render(ctx);
+    ctx.save();
+    this.transform(ctx);
+    this.renderTableBorders(ctx);
+    ctx.restore();
+    this._transformDone = false;
+  }
+
 
   /**
    * Draws the table/schedule border
@@ -102,13 +124,13 @@ export class Table extends Group {
    * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
    * @param {CanvasRenderingContext2D} ctx context to render on
    */
-  renderTableCustomBackground(ctx: CanvasRenderingContext2D) {
+  _renderBackground(ctx: CanvasRenderingContext2D) {
     if (
       (this.highlightedRows.length == 0 &&
         !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2)) ||
       !this.isTableLayout()
     ) {
-      this.renderGroupBackground(ctx);
+      super._renderBackground(ctx);
       return;
     }
 
@@ -242,14 +264,13 @@ export class Table extends Group {
    * @param {CanvasRenderingContext2D} ctx context to render on
    */
   drawColumnBorders(ctx: CanvasRenderingContext2D) {
-    const objects = this.getObjects();
+    const objects = this.getObjects() as Array<IText>;
     let x = this.rows,
       maxWidth,
       w,
       itemIndex;
     for (let i = 2; i <= this.columns; i++) {
       maxWidth = 0;
-      // @ts-ignore
       while (objects[x] && objects[x].column == i) {
         w = objects[x].width;
         if (w > maxWidth) {
