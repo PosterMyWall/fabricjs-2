@@ -72,6 +72,7 @@ export const fabricObjectDefaultValues: Partial<
   paintFirst: FILL,
   fill: 'rgb(0,0,0)',
   fillRule: 'nonzero',
+  __PMWID: '',
   stroke: null,
   strokeDashArray: null,
   leanBackground: false,
