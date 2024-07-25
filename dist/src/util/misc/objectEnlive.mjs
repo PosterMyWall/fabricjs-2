@@ -48,6 +48,7 @@ const loadImage = function (url) {
   });
 };
 /**
+ * @TODO type this correctly.
  * Creates corresponding fabric instances from their object representations
  * @param {Object[]} objects Objects to enliven
  * @param {EnlivenObjectOptions} [options]

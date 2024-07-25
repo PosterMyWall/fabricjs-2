@@ -92,6 +92,14 @@ class Observable {
   }
 
   /**
+   * Unsubscribe all event listeners for eventname.
+   * Do not use this pattern. You could kill internal fabricJS events.
+   * We know we should have protected events for internal flows, but we don't have yet
+   * @deprecated
+   * @param {string} eventName event name (eg. 'after:render')
+   */
+
+  /**
    * unsubscribe an event listener
    * @param {string} eventName event name (eg. 'after:render')
    * @param {TEventCallback} handler event listener to unsubscribe

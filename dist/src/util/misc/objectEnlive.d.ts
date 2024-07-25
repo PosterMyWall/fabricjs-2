@@ -24,6 +24,7 @@ export type EnlivenObjectOptions = Abortable & {
     reviver?: <T extends BaseFabricObject | FabricObject | BaseFilter<string> | Shadow | TFiller>(serializedObj: Record<string, any>, instance: T) => void;
 };
 /**
+ * @TODO type this correctly.
  * Creates corresponding fabric instances from their object representations
  * @param {Object[]} objects Objects to enliven
  * @param {EnlivenObjectOptions} [options]

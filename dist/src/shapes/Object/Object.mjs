@@ -59,18 +59,20 @@ class FabricObject extends AnimatableObject {
   }
 
   /**
-   * The class type. Used to identify which class this is.
-   * This is used for serialization purposes and internally it can be used
-   * to identify classes. As a developer you could use `instance of Class`
-   * but to avoid importing all the code and blocking tree shaking we try
-   * to avoid doing that.
+   * The class type.
+   * This is used for serialization and deserialization purposes and internally it can be used
+   * to identify classes.
+   * When we transform a class in a plain JS object we need a way to recognize which class it was,
+   * and the type is the way we do that. It has no other purposes and you should not give one.
+   * Hard to reach on instances and please do not use to drive instance's logic (this.constructor.type).
+   * To idenfity a class use instanceof class ( instanceof Rect ).
+   * We do not do that in fabricJS code because we want to try to have code splitting possible.
    */
 
   /**
    * Legacy identifier of the class. Prefer using utils like isType or instanceOf
    * Will be removed in fabric 7 or 8.
-   * The setter exists because is very hard to catch all the ways in which a type value
-   * could be set in the instance
+   * The setter exists to avoid type errors in old code and possibly current deserialization code.
    * @TODO add sustainable warning message
    * @type string
    * @deprecated
@@ -92,7 +94,6 @@ class FabricObject extends AnimatableObject {
    */
   constructor(options) {
     super();
-    _defineProperty(this, "__PMWID", '');
     /**
      * Quick access for the _cacheCanvas rendering context
      * This is part of the objectCaching feature
@@ -1318,6 +1319,24 @@ class FabricObject extends AnimatableObject {
     return this._fromObject(object, options);
   }
 }
+/**
+ * *PMW property added*
+ * Whether to render a rectangle background or a tilted background
+ */
+/**
+ * *PMW property added*
+ * Leanness of background
+ */
+/**
+ * *PMW* new property
+ * PosterMyWall property for the default text of the button.
+ * @default
+ */
+/**
+ * *PMW* new property
+ * An svg of the icon place in the pmw bottom-middle button
+ * @default
+ */
 /**
  * This list of properties is used to check if the state of an object is changed.
  * This state change now is only used for children of groups to understand if a group

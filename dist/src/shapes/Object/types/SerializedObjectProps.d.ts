@@ -23,6 +23,7 @@ export interface SerializedObjectProps extends BaseProps, FillStrokeProps {
     backgroundColor: string;
     leanBackground: boolean;
     leanBackgroundOffset: number;
+    __PMWID: string;
     /**
      * Shadow object representing shadow of this shape
      * @type Shadow

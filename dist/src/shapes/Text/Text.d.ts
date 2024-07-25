@@ -35,7 +35,7 @@ interface UniqueTextProps {
     lineHeight: number;
     fontSize: number;
     cacheExpansionFactor: number;
-    fontWeight: string;
+    fontWeight: string | number;
     fontFamily: string;
     fontStyle: string;
     pathSide: TPathSide;
@@ -105,7 +105,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @type {(Number|String)}
      * @default
      */
-    fontWeight: string;
+    fontWeight: string | number;
     /**
      * Font family
      * @type String

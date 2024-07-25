@@ -1,4 +1,4 @@
-var version = "6.0.1-pmw-12";
+var version = "6.0.2-pmw-13";
 
 export { version };
 //# sourceMappingURL=package.json.mjs.map
