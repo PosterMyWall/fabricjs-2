@@ -95,7 +95,7 @@ interface UniqueTextProps {
   lineHeight: number;
   fontSize: number;
   cacheExpansionFactor: number;
-  fontWeight: string;
+  fontWeight: string | number;
   fontFamily: string;
   fontStyle: string;
   pathSide: TPathSide;
@@ -185,7 +185,7 @@ export class FabricText<
    * @type {(Number|String)}
    * @default
    */
-  declare fontWeight: string;
+  declare fontWeight: string | number;
 
   /**
    * Font family
