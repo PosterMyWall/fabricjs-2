@@ -440,7 +440,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.0.2-pmw-13";
+  var version = "6.0.2-pmw-14";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -6933,6 +6933,7 @@
     fill: 'rgb(0,0,0)',
     fillRule: 'nonzero',
     __PMWID: '',
+    erasable: false,
     stroke: null,
     strokeDashArray: null,
     leanBackground: false,
@@ -15551,6 +15552,9 @@
      * @param {Event} e Event object fired on mousemove
      */
     __onMouseMove(e) {
+      if (config.isCanvasTwoFingerPanning) {
+        return;
+      }
       this._isClick = false;
       this._cacheTransformEventData(e);
       this._handleEvent(e, 'move:before');

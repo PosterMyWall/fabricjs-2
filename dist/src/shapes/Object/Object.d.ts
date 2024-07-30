@@ -78,6 +78,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
     opacity: number;
     __PMWTESTPROPERTY: string;
     __PMWID: string;
+    erasable: boolean | 'deep';
     bindedObjectPmwId: string;
     paintFirst: 'fill' | 'stroke';
     fill: string | TFiller | null;

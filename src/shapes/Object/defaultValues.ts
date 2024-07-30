@@ -73,6 +73,7 @@ export const fabricObjectDefaultValues: Partial<
   fill: 'rgb(0,0,0)',
   fillRule: 'nonzero',
   __PMWID: '',
+  erasable: false,
   stroke: null,
   strokeDashArray: null,
   leanBackground: false,

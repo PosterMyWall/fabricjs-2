@@ -215,9 +215,6 @@ interface DnDEvents {
 
 interface CanvasTouchEvents {
   'after:touchstart': TEvent & { target: FabricObject };
-  'before:touch:gesture': TEvent & { target: FabricObject };
-  'touch:drag': TEvent & { target: FabricObject };
-  'touch:dbltap': TEvent & { target: FabricObject };
 }
 
 interface CanvasDnDEvents extends DnDEvents {

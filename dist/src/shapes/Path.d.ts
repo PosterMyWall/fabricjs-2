@@ -162,6 +162,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         leanBackground: boolean;
         leanBackgroundOffset: number;
         __PMWID: string;
+        erasable: boolean | "deep";
         visible: boolean;
         pmwBmBtnText: string;
         pmwBmBtnIcon: string;

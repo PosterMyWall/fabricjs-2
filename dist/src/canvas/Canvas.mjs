@@ -959,6 +959,9 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousemove
    */
   __onMouseMove(e) {
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
     this._isClick = false;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'move:before');
