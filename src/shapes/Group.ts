@@ -81,7 +81,7 @@ export interface GroupProps extends FabricObjectProps, GroupOwnProps {
 export const groupDefaultValues: Partial<TClassProperties<Group>> = {
   strokeWidth: 0,
   subTargetCheck: false,
-  delegateProperties: true,
+  delegateProperties: false,
   caterCacheForTextChildren: false,
   selected: false,
   useSelectedFlag: false,
