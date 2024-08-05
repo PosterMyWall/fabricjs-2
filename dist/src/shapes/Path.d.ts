@@ -148,8 +148,8 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         evented: boolean;
         activeOn: "down" | "up";
         clipPath: import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>;
-        fill: string | import("../Pattern").Pattern | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | null;
-        stroke: string | import("../Pattern").Pattern | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | null;
+        fill: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
+        stroke: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
         shadow: import("../Shadow").Shadow | null;
         canvas: import("../..").Canvas | import("../..").StaticCanvas<import("../EventTypeDefs").StaticCanvasEvents>;
         minScaleLimit: number;
@@ -157,7 +157,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         includeDefaultValues: boolean;
         excludeFromExport: boolean;
         opacity: number;
-        globalCompositeOperation: "color" | "screen" | "color-burn" | "color-dodge" | "copy" | "darken" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "lighter" | "luminosity" | "multiply" | "overlay" | "saturation" | "soft-light" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
+        globalCompositeOperation: "color" | "color-burn" | "color-dodge" | "copy" | "darken" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "lighter" | "luminosity" | "multiply" | "overlay" | "saturation" | "screen" | "soft-light" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
         backgroundColor: string;
         leanBackground: boolean;
         leanBackgroundOffset: number;

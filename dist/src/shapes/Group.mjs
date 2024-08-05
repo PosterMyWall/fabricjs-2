@@ -24,7 +24,7 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
-  delegateProperties: true,
+  delegateProperties: false,
   caterCacheForTextChildren: false,
   selected: false,
   useSelectedFlag: false,

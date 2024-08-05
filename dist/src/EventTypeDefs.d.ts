@@ -8,7 +8,7 @@ import type { Canvas } from './canvas/Canvas';
 import type { IText } from './shapes/IText/IText';
 import type { StaticCanvas } from './canvas/StaticCanvas';
 import type { LayoutBeforeEvent, LayoutAfterEvent } from './LayoutManager/types';
-import type { MODIFY_POLY, MOVING, RESIZING, ROTATING, SCALING, SKEWING } from './constants';
+import type { MODIFIED, MODIFY_PATH, MODIFY_POLY, MOVING, RESIZING, ROTATING, SCALING, SKEWING } from './constants';
 export type ModifierKey = keyof Pick<MouseEvent | PointerEvent | TouchEvent, 'altKey' | 'shiftKey' | 'ctrlKey' | 'metaKey'>;
 export type TOptionalModifierKey = ModifierKey | null | undefined;
 export type TPointerEvent = MouseEvent | TouchEvent | PointerEvent;
@@ -67,21 +67,26 @@ export interface BasicTransformEvent<E extends Event = TPointerEvent> extends TE
     transform: Transform;
     pointer: Point;
 }
-export type TModificationEvents = typeof MOVING | typeof SCALING | typeof ROTATING | typeof SKEWING | typeof RESIZING | typeof MODIFY_POLY;
+export type TModificationEvents = typeof MOVING | typeof SCALING | typeof ROTATING | typeof SKEWING | typeof RESIZING | typeof MODIFY_POLY | typeof MODIFY_PATH;
 export interface ModifiedEvent<E extends Event = TPointerEvent> {
     e?: E;
     transform?: Transform;
     target: FabricObject;
     action?: string;
 }
-type ObjectModificationEvents = {
-    moving: BasicTransformEvent;
-    scaling: BasicTransformEvent;
-    rotating: BasicTransformEvent;
-    skewing: BasicTransformEvent;
-    resizing: BasicTransformEvent;
-    modifyPoly: BasicTransformEvent;
-    modified: ModifiedEvent;
+export interface ModifyPathEvent {
+    commandIndex: number;
+    pointIndex: number;
+}
+export type ObjectModificationEvents = {
+    [MOVING]: BasicTransformEvent;
+    [SCALING]: BasicTransformEvent;
+    [ROTATING]: BasicTransformEvent;
+    [SKEWING]: BasicTransformEvent;
+    [RESIZING]: BasicTransformEvent;
+    [MODIFY_POLY]: BasicTransformEvent;
+    [MODIFY_PATH]: BasicTransformEvent & ModifyPathEvent;
+    [MODIFIED]: ModifiedEvent;
 };
 type CanvasModificationEvents = {
     'before:transform': TEvent & {
@@ -105,6 +110,9 @@ type CanvasModificationEvents = {
     'object:modifyPoly': BasicTransformEvent & {
         target: FabricObject;
     };
+    'object:modifyPath': BasicTransformEvent & {
+        target: FabricObject;
+    } & ModifyPathEvent;
     'object:modified': ModifiedEvent;
 };
 export interface TPointerEventInfo<E extends TPointerEvent = TPointerEvent> extends TEvent<E> {

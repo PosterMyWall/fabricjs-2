@@ -1,6 +1,6 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../Point.mjs';
-import { MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY, iMatrix, CENTER } from '../constants.mjs';
+import { MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY, MODIFY_PATH, iMatrix, CENTER } from '../constants.mjs';
 import { invertTransform } from '../util/misc/matrix.mjs';
 import { resolveOrigin } from '../util/misc/resolveOrigin.mjs';
 import { FitContentLayout } from './LayoutStrategies/FitContentLayout.mjs';
@@ -48,7 +48,7 @@ class LayoutManager {
     const {
       target
     } = context;
-    return [MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY].map(key => object.on(key, e => this.performLayout(key === MODIFIED ? {
+    return [MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY, MODIFY_PATH].map(key => object.on(key, e => this.performLayout(key === MODIFIED ? {
       type: LAYOUT_TYPE_OBJECT_MODIFIED,
       trigger: key,
       e,

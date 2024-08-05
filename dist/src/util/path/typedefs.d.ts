@@ -206,6 +206,7 @@ export type TComplexPathData = TComplexParsedCommand[];
  *
  */
 export type TSimpleParsedCommand = TParsedAbsoluteMoveToCommand | TParsedAbsoluteLineCommand | TParsedAbsoluteClosePathCommand | TParsedAbsoluteCubicCurveCommand | TParsedAbsoluteQuadraticCurveCommand;
+export type TSimpleParseCommandType = 'L' | 'M' | 'C' | 'Q' | 'Z';
 /**
  * A series of simple paths
  */

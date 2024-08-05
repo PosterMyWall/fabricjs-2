@@ -1,7 +1,7 @@
 import type { InteractiveFabricObject } from '../shapes/Object/InteractiveObject';
 import type { Control } from './Control';
 export type ControlRenderingStyleOverride = Partial<Pick<InteractiveFabricObject, 'cornerStyle' | 'cornerSize' | 'cornerColor' | 'cornerStrokeColor' | 'cornerDashArray' | 'transparentCorners'>>;
-export type ControlRenderer = (ctx: CanvasRenderingContext2D, left: number, top: number, styleOverride: ControlRenderingStyleOverride, fabricObject: InteractiveFabricObject) => void;
+export type ControlRenderer<O extends InteractiveFabricObject = InteractiveFabricObject> = (ctx: CanvasRenderingContext2D, left: number, top: number, styleOverride: ControlRenderingStyleOverride, fabricObject: O) => void;
 /**
  * Render a round control, as per fabric features.
  * This function is written to respect object properties like transparentCorners, cornerSize

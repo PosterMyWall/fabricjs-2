@@ -106,23 +106,19 @@ const enlivenObjectEnlivables = function (serializedObject) {
       if (!value) {
         return value;
       }
-      // clipPath or shadow or gradient
-      if (value.type) {
+      /**
+       * clipPath or shadow or gradient or text on a path or a pattern,
+       * or the backgroundImage or overlayImage of canvas
+       * If we have a type and there is a classe registered for it, we enlive it.
+       * If there is no class registered for it we return the value as is
+       * */
+      if (value.type && classRegistry.getClass(value.type)) {
         return enlivenObjects([value], {
           signal
         }).then(_ref => {
           let [enlived] = _ref;
           instances.push(enlived);
           return enlived;
-        });
-      }
-      // pattern
-      if (value.source) {
-        return classRegistry.getClass('pattern').fromObject(value, {
-          signal
-        }).then(pattern => {
-          instances.push(pattern);
-          return pattern;
         });
       }
       return value;

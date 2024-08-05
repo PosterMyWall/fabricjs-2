@@ -33,7 +33,7 @@ export type EnlivenObjectOptions = Abortable & {
  * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
  * @returns {Promise<FabricObject[]>}
  */
-export declare const enlivenObjects: <T extends Shadow | FabricObject<Partial<import("../../..").FabricObjectProps>, import("../../..").SerializedObjectProps, import("../../EventTypeDefs").ObjectEvents> | BaseFilter<string, object> | BaseFabricObject<Partial<import("../../shapes/Object/types/ObjectProps").ObjectProps>, import("../../..").SerializedObjectProps, import("../../EventTypeDefs").ObjectEvents> | TFiller>(objects: any[], { signal, reviver }?: EnlivenObjectOptions) => Promise<T[]>;
+export declare const enlivenObjects: <T extends Shadow | FabricObject<Partial<import("../../..").FabricObjectProps>, import("../../..").SerializedObjectProps, import("../../EventTypeDefs").ObjectEvents> | TFiller | BaseFabricObject<Partial<import("../../shapes/Object/types/ObjectProps").ObjectProps>, import("../../..").SerializedObjectProps, import("../../EventTypeDefs").ObjectEvents> | BaseFilter<string, object>>(objects: any[], { signal, reviver }?: EnlivenObjectOptions) => Promise<T[]>;
 /**
  * Creates corresponding fabric instances residing in an object, e.g. `clipPath`
  * @param {Object} object with properties to enlive ( fill, stroke, clipPath, path )

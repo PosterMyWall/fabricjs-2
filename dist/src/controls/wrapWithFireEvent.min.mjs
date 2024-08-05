@@ -1,2 +1,2 @@
-import{fireEvent as m}from"./fireEvent.min.mjs";import{commonEventInfo as r}from"./util.min.mjs";const t=(t,o)=>(i,n,e,s)=>{const f=o(i,n,e,s);return f&&m(t,r(i,n,e,s)),f};export{t as wrapWithFireEvent};
+import{objectSpread2 as r}from"../../_virtual/_rollupPluginBabelHelpers.min.mjs";import{fireEvent as m}from"./fireEvent.min.mjs";import{commonEventInfo as o}from"./util.min.mjs";const t=(t,i,e)=>(n,l,p,s)=>{const u=i(n,l,p,s);return u&&m(t,r(r({},o(n,l,p,s)),e)),u};export{t as wrapWithFireEvent};
 //# sourceMappingURL=wrapWithFireEvent.min.mjs.map

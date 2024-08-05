@@ -22,6 +22,7 @@ export declare const ROTATE = "rotate";
 export declare const SKEWING = "skewing";
 export declare const RESIZING = "resizing";
 export declare const MODIFY_POLY = "modifyPoly";
+export declare const MODIFY_PATH = "modifyPath";
 export declare const CHANGED = "changed";
 export declare const SCALE = "scale";
 export declare const SCALE_X = "scaleX";

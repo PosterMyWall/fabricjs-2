@@ -10,4 +10,5 @@ export { skewCursorStyleHandler, skewHandlerX, skewHandlerY } from './skew.mjs';
 export { getLocalPoint } from './util.mjs';
 export { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
 export { wrapWithFixedAnchor } from './wrapWithFixedAnchor.mjs';
+export { createPathControls } from './pathControl.mjs';
 //# sourceMappingURL=index.mjs.map

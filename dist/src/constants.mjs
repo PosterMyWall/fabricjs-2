@@ -27,6 +27,7 @@ const ROTATE = 'rotate';
 const SKEWING = 'skewing';
 const RESIZING = 'resizing';
 const MODIFY_POLY = 'modifyPoly';
+const MODIFY_PATH = 'modifyPath';
 const CHANGED = 'changed';
 const SCALE = 'scale';
 const SCALE_X = 'scaleX';
@@ -37,5 +38,5 @@ const FILL = 'fill';
 const STROKE = 'stroke';
 const MODIFIED = 'modified';
 
-export { ALIASING_LIMIT, BOTTOM, CENTER, CHANGED, DEFAULT_SVG_FONT_SIZE, FILL, LEFT, MODIFIED, MODIFY_POLY, MOVING, NONE, PiBy180, RESIZING, RIGHT, ROTATE, ROTATING, SCALE, SCALE_X, SCALE_Y, SCALING, SKEWING, SKEW_X, SKEW_Y, STROKE, TOP, VERSION, halfPI, iMatrix, kRect, noop, reNewline, twoMathPi };
+export { ALIASING_LIMIT, BOTTOM, CENTER, CHANGED, DEFAULT_SVG_FONT_SIZE, FILL, LEFT, MODIFIED, MODIFY_PATH, MODIFY_POLY, MOVING, NONE, PiBy180, RESIZING, RIGHT, ROTATE, ROTATING, SCALE, SCALE_X, SCALE_Y, SCALING, SKEWING, SKEW_X, SKEW_Y, STROKE, TOP, VERSION, halfPI, iMatrix, kRect, noop, reNewline, twoMathPi };
 //# sourceMappingURL=constants.mjs.map
