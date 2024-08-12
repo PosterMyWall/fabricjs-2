@@ -492,7 +492,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.1.0-pmw-15";
+var version = "6.2.0-pmw-16";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -550,6 +550,9 @@ class ClassRegistry {
   constructor() {
     this[JSON$1] = new Map();
     this[SVG] = new Map();
+  }
+  has(classType) {
+    return this[JSON$1].has(classType);
   }
   getClass(classType) {
     const constructor = this[JSON$1].get(classType);
@@ -2051,7 +2054,7 @@ const enlivenObjectEnlivables = function (serializedObject) {
        * If we have a type and there is a classe registered for it, we enlive it.
        * If there is no class registered for it we return the value as is
        * */
-      if (value.type && classRegistry.getClass(value.type)) {
+      if (value.type && classRegistry.has(value.type)) {
         return enlivenObjects([value], {
           signal
         }).then(_ref => {
@@ -2933,6 +2936,7 @@ function getScrollLeftTop(element) {
       top
     };
   }
+  let elementLoop = element;
   const docElement = doc.documentElement,
     body = doc.body || {
       scrollLeft: 0,
@@ -2942,19 +2946,16 @@ function getScrollLeftTop(element) {
   //  to account for ShadowDOM. We still want to traverse up out of ShadowDOM,
   //  but the .parentNode of a root ShadowDOM node will always be null, instead
   //  it should be accessed through .host. See http://stackoverflow.com/a/24765528/4383938
-  // @ts-expect-error Set element to element parent, or 'host' in case of ShadowDOM
-  while (element && (element.parentNode || element.host)) {
-    // @ts-expect-error Set element to element parent, or 'host' in case of ShadowDOM
-    element = element.parentNode || element.host;
-    // @ts-expect-error because element is typed as HTMLElement but it can go up to document
-    if (element === doc) {
+  while (elementLoop && (elementLoop.parentNode || elementLoop.host)) {
+    elementLoop = elementLoop.parentNode || elementLoop.host;
+    if (elementLoop === doc) {
       left = body.scrollLeft || docElement.scrollLeft || 0;
       top = body.scrollTop || docElement.scrollTop || 0;
     } else {
-      left += element.scrollLeft || 0;
-      top += element.scrollTop || 0;
+      left += elementLoop.scrollLeft || 0;
+      top += elementLoop.scrollTop || 0;
     }
-    if (element.nodeType === 1 && element.style.position === 'fixed') {
+    if (elementLoop.nodeType === 1 && elementLoop.style.position === 'fixed') {
       break;
     }
   }
@@ -3027,29 +3028,23 @@ const setCSSDimensions = (el, _ref2) => {
  */
 function getElementOffset(element) {
   var _getWindowFromElement;
-  let box = {
-    left: 0,
-    top: 0
-  };
   const doc = element && getDocumentFromElement(element),
     offset = {
       left: 0,
       top: 0
-    },
-    offsetAttributes = {
-      borderLeftWidth: LEFT,
-      borderTopWidth: TOP,
-      paddingLeft: LEFT,
-      paddingTop: TOP
     };
   if (!doc) {
     return offset;
   }
   const elemStyle = ((_getWindowFromElement = getWindowFromElement(element)) === null || _getWindowFromElement === void 0 ? void 0 : _getWindowFromElement.getComputedStyle(element, null)) || {};
-  for (const attr in offsetAttributes) {
-    // @ts-expect-error TS learn to iterate!
-    offset[offsetAttributes[attr]] += parseInt(elemStyle[attr], 10) || 0;
-  }
+  offset.left += parseInt(elemStyle.borderLeftWidth, 10) || 0;
+  offset.top += parseInt(elemStyle.borderTopWidth, 10) || 0;
+  offset.left += parseInt(elemStyle.paddingLeft, 10) || 0;
+  offset.top += parseInt(elemStyle.paddingTop, 10) || 0;
+  let box = {
+    left: 0,
+    top: 0
+  };
   const docElem = doc.documentElement;
   if (typeof element.getBoundingClientRect !== 'undefined') {
     box = element.getBoundingClientRect();
@@ -6165,7 +6160,7 @@ class ObjectGeometry extends ObjectOrigin {
    * that otherwise are the object's current values.
    * @example <caption>Set object's bottom left corner to point (5,5) on canvas</caption>
    * object.setXY(new Point(5, 5), 'left', 'bottom').
-   * @param {Point} point position in canvas coordinate plane
+   * @param {Point} point position in scene coordinate plane
    * @param {TOriginX} [originX] Horizontal origin: 'left', 'center' or 'right'
    * @param {TOriginY} [originY] Vertical origin: 'top', 'center' or 'bottom'
    */
@@ -6834,11 +6829,7 @@ class Shadow {
 
   constructor(arg0) {
     const options = typeof arg0 === 'string' ? Shadow.parseShadow(arg0) : arg0;
-    Object.assign(this, Shadow.ownDefaults);
-    for (const prop in options) {
-      // @ts-expect-error for loops are so messy in TS
-      this[prop] = options[prop];
-    }
+    Object.assign(this, Shadow.ownDefaults, options);
     this.id = uid();
   }
 
@@ -10866,6 +10857,7 @@ function parseStyleObject(style, oStyle) {
  */
 function parseStyleString(style, oStyle) {
   style.replace(/;\s*$/, '').split(';').forEach(chunk => {
+    if (!chunk) return;
     const [attr, value] = chunk.split(':');
     oStyle[attr.trim().toLowerCase()] = value.trim();
   });
@@ -11518,7 +11510,6 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
-  delegateProperties: false,
   caterCacheForTextChildren: false,
   selected: false,
   useSelectedFlag: false,
@@ -11553,23 +11544,31 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * *PMW*
-     * Properties that are delegated to group objects when reading/writing
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
      */
-    _defineProperty(this, "delegatedProperties", {
-      fill: true,
-      opacity: true,
-      fontFamily: true,
-      fontWeight: true,
-      fontSize: true,
-      fontStyle: true,
-      lineHeight: true,
-      letterSpacing: true,
-      charSpacing: true,
-      text: true,
-      textDecoration: true,
-      textAlign: true
-    });
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    /**
+     * Used to allow targeting of object inside groups.
+     * set to true if you want to select an object inside a group.\
+     * **REQUIRES** `subTargetCheck` set to true
+     * This will be not removed but slowly replaced with a method setInteractive
+     * that will take care of enabling subTargetCheck and necessary object events.
+     * There is too much attached to group interactivity to just be evaluated by a
+     * boolean in the code
+     * @default
+     * @deprecated
+     * @type boolean
+     */
     /**
      * Used internally to optimize performance
      * Once an object is selected, instance is rendered without the selected object.
@@ -11622,9 +11621,6 @@ class Group extends createCollectionMixin(FabricObject) {
       return dims;
     }
     return super._getCacheCanvasDimensions();
-  }
-  isGroup() {
-    return true;
   }
 
   /**
@@ -11799,7 +11795,7 @@ class Group extends createCollectionMixin(FabricObject) {
   _set(key, value) {
     const prev = this[key];
     super._set(key, value);
-    if (this.delegateProperties && this.delegatedProperties[key] || key === 'canvas' && prev !== value) {
+    if (key === 'canvas' && prev !== value) {
       (this._objects || []).forEach(object => {
         object._set(key, value);
       });
@@ -12410,7 +12406,7 @@ const arcToSegments = (toX, toY, rx, ry, large, sweep, rotateX) => {
 
   // Convert into cubic bezier segments <= 90deg
   const segments = Math.ceil(Math.abs(dtheta / PI * 2)),
-    result = new Array(segments),
+    result = [],
     mDelta = dtheta / segments,
     mT = 8 / 3 * Math.sin(mDelta / 4) * Math.sin(mDelta / 4) / Math.sin(mDelta / 2);
   let th3 = mTheta + mDelta;
@@ -12962,7 +12958,6 @@ const rePathCmd = new RegExp(rePathCommand, 'i');
  *   ['Q', 3, 5, 2, 1, 4, 0],
  *   ['Q', 9, 12, 2, 1, 4, 0],
  * ];
- *
  */
 const parsePath = pathString => {
   // clean the string
@@ -19469,8 +19464,6 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgStyles(skipShadow) {
-    // cant use ts-expect-error because of ts 5.3 cross check
-    // @ts-ignore TS doesn't respect this type casting
     return "".concat(super.getSvgStyles(skipShadow), " white-space: pre;");
   }
 
@@ -21572,7 +21565,6 @@ class ITextBehavior extends FabricText {
     } : undefined);
     this._fireSelectionChanged();
     if (this.canvas) {
-      // @ts-expect-error in reality it is an IText instance
       this.canvas.fire('text:editing:entered', {
         target: this,
         e
@@ -24118,8 +24110,6 @@ class Textbox extends IText {
    * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
    * @return {Object} object representation of an instance
    */
-  // cant use ts-expect-error because of ts 5.3 cross check
-  // @ts-ignore TS this typing limitations
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return super.toObject(['minWidth', 'splitByGrapheme', ...propertiesToInclude]);
@@ -25318,8 +25308,6 @@ class FabricImage extends FabricObject {
    */
   drawCacheOnCanvas(ctx) {
     ctx.imageSmoothingEnabled = this.imageSmoothing;
-    // cant use ts-expect-error because of ts 5.3 cross check
-    // @ts-ignore TS doesn't respect this type casting
     super.drawCacheOnCanvas(ctx);
   }
 
@@ -25760,65 +25748,82 @@ function getMultipleNodes(doc, nodeNames) {
 
 function parseUseDirectives(doc) {
   const nodelist = getMultipleNodes(doc, ['use', 'svg:use']);
-  let i = 0;
-  while (nodelist.length && i < nodelist.length) {
-    const el = nodelist[i],
-      xlinkAttribute = el.getAttribute('xlink:href') || el.getAttribute('href');
-    if (xlinkAttribute === null) {
+  const skipAttributes = ['x', 'y', 'xlink:href', 'href', 'transform'];
+  for (const useElement of nodelist) {
+    const useAttributes = useElement.attributes;
+    const useAttrMap = {};
+    for (const attr of useAttributes) {
+      attr.value && (useAttrMap[attr.name] = attr.value);
+    }
+    const xlink = (useAttrMap['xlink:href'] || useAttrMap.href || '').slice(1);
+    if (xlink === '') {
       return;
     }
-    const xlink = xlinkAttribute.slice(1);
-    const x = el.getAttribute('x') || 0;
-    const y = el.getAttribute('y') || 0;
-    const el2Orig = doc.getElementById(xlink);
-    if (el2Orig === null) {
+    const referencedElement = doc.getElementById(xlink);
+    if (referencedElement === null) {
       // if we can't find the target of the xlink, consider this use tag bad, similar to no xlink
       return;
     }
-    let el2 = el2Orig.cloneNode(true);
-    let currentTrans = (el2.getAttribute('transform') || '') + ' translate(' + x + ', ' + y + ')';
-    const oldLength = nodelist.length;
-    const namespace = svgNS;
-    applyViewboxTransform(el2);
-    if (/^svg$/i.test(el2.nodeName)) {
-      const el3 = el2.ownerDocument.createElementNS(namespace, 'g');
-      for (let j = 0, attrs = el2.attributes, len = attrs.length; j < len; j++) {
-        const attr = attrs.item(j);
-        attr && el3.setAttributeNS(namespace, attr.nodeName, attr.nodeValue);
-      }
-      // el2.firstChild != null
-      while (el2.firstChild) {
-        el3.appendChild(el2.firstChild);
-      }
-      el2 = el3;
+    let clonedOriginal = referencedElement.cloneNode(true);
+    const originalAttributes = clonedOriginal.attributes;
+    const originalAttrMap = {};
+    for (const attr of originalAttributes) {
+      attr.value && (originalAttrMap[attr.name] = attr.value);
     }
-    for (let j = 0, attrs = el.attributes, len = attrs.length; j < len; j++) {
-      const attr = attrs.item(j);
+
+    // Transform attribute needs to be merged in a particular way
+    const {
+      x = 0,
+      y = 0,
+      transform = ''
+    } = useAttrMap;
+    const currentTrans = "".concat(transform, " ").concat(originalAttrMap.transform || '', " translate(").concat(x, ", ").concat(y, ")");
+    applyViewboxTransform(clonedOriginal);
+    if (/^svg$/i.test(clonedOriginal.nodeName)) {
+      // if is an SVG, create a group and apply all the attributes on top of it
+      const el3 = clonedOriginal.ownerDocument.createElementNS(svgNS, 'g');
+      Object.entries(originalAttrMap).forEach(_ref => {
+        let [name, value] = _ref;
+        return el3.setAttributeNS(svgNS, name, value);
+      });
+      el3.append(...clonedOriginal.childNodes);
+      clonedOriginal = el3;
+    }
+    for (const attr of useAttributes) {
       if (!attr) {
         continue;
       }
       const {
-        nodeName,
-        nodeValue
+        name,
+        value
       } = attr;
-      if (nodeName === 'x' || nodeName === 'y' || nodeName === 'xlink:href' || nodeName === 'href') {
+      if (skipAttributes.includes(name)) {
         continue;
       }
-      if (nodeName === 'transform') {
-        currentTrans = nodeValue + ' ' + currentTrans;
+      if (name === 'style') {
+        // when use has a style, merge the two styles, with the ref being priority (not use)
+        // priority is by feature. an attribute for fill on the original element
+        // will overwrite the fill in style or attribute for tha use
+        const styleRecord = {};
+        parseStyleString(value, styleRecord);
+        // cleanup styleRecord from attributes of original
+        Object.entries(originalAttrMap).forEach(_ref2 => {
+          let [name, value] = _ref2;
+          styleRecord[name] = value;
+        });
+        // now we can put in the style of the original that will overwrite the original attributes
+        parseStyleString(originalAttrMap.style || '', styleRecord);
+        const mergedStyles = Object.entries(styleRecord).map(entry => entry.join(':')).join(';');
+        clonedOriginal.setAttribute(name, mergedStyles);
       } else {
-        el2.setAttribute(nodeName, nodeValue);
+        // set the attribute from use element only if the original does not have it already
+        !originalAttrMap[name] && clonedOriginal.setAttribute(name, value);
       }
     }
-    el2.setAttribute('transform', currentTrans);
-    el2.setAttribute('instantiated_by_use', '1');
-    el2.removeAttribute('id');
-    const parentNode = el.parentNode;
-    parentNode.replaceChild(el2, el);
-    // some browsers do not shorten nodelist after replaceChild (IE8)
-    if (nodelist.length === oldLength) {
-      i++;
-    }
+    clonedOriginal.setAttribute('transform', currentTrans);
+    clonedOriginal.setAttribute('instantiated_by_use', '1');
+    clonedOriginal.removeAttribute('id');
+    useElement.parentNode.replaceChild(clonedOriginal, useElement);
   }
 }
 
@@ -26751,7 +26756,6 @@ class BaseFilter {
     return _objectSpread2({
       type: this.type
     }, defaultKeys.reduce((acc, key) => {
-      //@ts-expect-error TS doesn't get i want an object that looks like this
       acc[key] = this[key];
       return acc;
     }, {}));

@@ -58,7 +58,6 @@ export declare const getPointOnPath: (path: TSimplePathData, distance: number, i
  *   ['Q', 3, 5, 2, 1, 4, 0],
  *   ['Q', 9, 12, 2, 1, 4, 0],
  * ];
- *
  */
 export declare const parsePath: (pathString: string) => TComplexPathData;
 /**

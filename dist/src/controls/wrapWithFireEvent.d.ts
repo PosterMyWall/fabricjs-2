@@ -6,5 +6,5 @@ import type { TModificationEvents, Transform, TransformActionHandler } from '../
  * @param {object} extraEventInfo extra information to pas to the event handler
  * @return {TransformActionHandler<T>} a function with an action handler signature
  */
-export declare const wrapWithFireEvent: <T extends Transform, P extends object = Record<string, never>>(eventName: TModificationEvents, actionHandler: TransformActionHandler<T>, extraEventInfo?: P | undefined) => TransformActionHandler<T>;
+export declare const wrapWithFireEvent: <T extends Transform, P extends object = Record<string, never>>(eventName: TModificationEvents, actionHandler: TransformActionHandler<T>, extraEventInfo?: P) => TransformActionHandler<T>;
 //# sourceMappingURL=wrapWithFireEvent.d.ts.map

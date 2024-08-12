@@ -24,7 +24,6 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
-  delegateProperties: false,
   caterCacheForTextChildren: false,
   selected: false,
   useSelectedFlag: false,
@@ -59,23 +58,31 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * *PMW*
-     * Properties that are delegated to group objects when reading/writing
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
      */
-    _defineProperty(this, "delegatedProperties", {
-      fill: true,
-      opacity: true,
-      fontFamily: true,
-      fontWeight: true,
-      fontSize: true,
-      fontStyle: true,
-      lineHeight: true,
-      letterSpacing: true,
-      charSpacing: true,
-      text: true,
-      textDecoration: true,
-      textAlign: true
-    });
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    /**
+     * Used to allow targeting of object inside groups.
+     * set to true if you want to select an object inside a group.\
+     * **REQUIRES** `subTargetCheck` set to true
+     * This will be not removed but slowly replaced with a method setInteractive
+     * that will take care of enabling subTargetCheck and necessary object events.
+     * There is too much attached to group interactivity to just be evaluated by a
+     * boolean in the code
+     * @default
+     * @deprecated
+     * @type boolean
+     */
     /**
      * Used internally to optimize performance
      * Once an object is selected, instance is rendered without the selected object.
@@ -128,9 +135,6 @@ class Group extends createCollectionMixin(FabricObject) {
       return dims;
     }
     return super._getCacheCanvasDimensions();
-  }
-  isGroup() {
-    return true;
   }
 
   /**
@@ -305,7 +309,7 @@ class Group extends createCollectionMixin(FabricObject) {
   _set(key, value) {
     const prev = this[key];
     super._set(key, value);
-    if (this.delegateProperties && this.delegatedProperties[key] || key === 'canvas' && prev !== value) {
+    if (key === 'canvas' && prev !== value) {
       (this._objects || []).forEach(object => {
         object._set(key, value);
       });

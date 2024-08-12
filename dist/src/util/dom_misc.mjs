@@ -13,6 +13,7 @@ function getScrollLeftTop(element) {
       top
     };
   }
+  let elementLoop = element;
   const docElement = doc.documentElement,
     body = doc.body || {
       scrollLeft: 0,
@@ -22,19 +23,16 @@ function getScrollLeftTop(element) {
   //  to account for ShadowDOM. We still want to traverse up out of ShadowDOM,
   //  but the .parentNode of a root ShadowDOM node will always be null, instead
   //  it should be accessed through .host. See http://stackoverflow.com/a/24765528/4383938
-  // @ts-expect-error Set element to element parent, or 'host' in case of ShadowDOM
-  while (element && (element.parentNode || element.host)) {
-    // @ts-expect-error Set element to element parent, or 'host' in case of ShadowDOM
-    element = element.parentNode || element.host;
-    // @ts-expect-error because element is typed as HTMLElement but it can go up to document
-    if (element === doc) {
+  while (elementLoop && (elementLoop.parentNode || elementLoop.host)) {
+    elementLoop = elementLoop.parentNode || elementLoop.host;
+    if (elementLoop === doc) {
       left = body.scrollLeft || docElement.scrollLeft || 0;
       top = body.scrollTop || docElement.scrollTop || 0;
     } else {
-      left += element.scrollLeft || 0;
-      top += element.scrollTop || 0;
+      left += elementLoop.scrollLeft || 0;
+      top += elementLoop.scrollTop || 0;
     }
-    if (element.nodeType === 1 && element.style.position === 'fixed') {
+    if (elementLoop.nodeType === 1 && elementLoop.style.position === 'fixed') {
       break;
     }
   }

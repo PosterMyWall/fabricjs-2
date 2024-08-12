@@ -142,7 +142,7 @@ export declare class Polyline<Props extends TOptions<FabricObjectProps> = Partia
      * @param {Object} [options] Options object
      */
     static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<Polyline<{
-        signal?: AbortSignal | undefined;
+        signal?: AbortSignal;
     }, SerializedPolylineProps, ObjectEvents>>;
     /**
      * Returns Polyline instance from an object representation

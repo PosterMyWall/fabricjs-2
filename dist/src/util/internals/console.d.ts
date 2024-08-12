@@ -1,4 +1,4 @@
-export declare const log: (severity: 'log' | 'warn' | 'error', ...optionalParams: any[]) => void;
+export declare const log: (severity: "log" | "warn" | "error", ...optionalParams: any[]) => void;
 export declare class FabricError extends Error {
     constructor(message?: string, options?: ErrorOptions);
 }

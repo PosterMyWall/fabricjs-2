@@ -34,33 +34,29 @@ export type TSVGExportOptions = {
 };
 declare const StaticCanvas_base: {
     new (...args: any[]): {
-        _objects: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[];
-        _onObjectAdded(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>): void;
-        _onObjectRemoved(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>): void;
-        _onStackOrderChanged(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>): void;
-        add(...objects: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[]): number;
-        insertAt(index: number, ...objects: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[]): number;
-        remove(...objects: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[]): FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[];
-        forEachObject(callback: (object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, index: number, array: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[]) => any): void;
-        getObjects(...types: string[]): FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[]; /**
-         * A reference to the canvas actual HTMLCanvasElement.
-         * Can be use to read the raw pixels, but never write or manipulate
-         * @type HTMLCanvasElement
-         */
+        _objects: FabricObject[];
+        _onObjectAdded(object: FabricObject): void;
+        _onObjectRemoved(object: FabricObject): void;
+        _onStackOrderChanged(object: FabricObject): void;
+        add(...objects: FabricObject[]): number;
+        insertAt(index: number, ...objects: FabricObject[]): number;
+        remove(...objects: FabricObject[]): FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[];
+        forEachObject(callback: (object: FabricObject, index: number, array: FabricObject[]) => any): void;
+        getObjects(...types: string[]): FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[];
         item(index: number): FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>;
         isEmpty(): boolean;
         size(): number;
-        contains(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, deep?: boolean | undefined): boolean;
+        contains(object: FabricObject, deep?: boolean): boolean;
         complexity(): number;
-        sendObjectToBack(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>): boolean;
-        bringObjectToFront(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>): boolean;
-        sendObjectBackwards(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, intersecting?: boolean | undefined): boolean;
-        bringObjectForward(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, intersecting?: boolean | undefined): boolean;
-        moveObjectTo(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, index: number): boolean;
-        findNewLowerIndex(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, idx: number, intersecting?: boolean | undefined): number;
-        findNewUpperIndex(object: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>, idx: number, intersecting?: boolean | undefined): number;
+        sendObjectToBack(object: FabricObject): boolean;
+        bringObjectToFront(object: FabricObject): boolean;
+        sendObjectBackwards(object: FabricObject, intersecting?: boolean): boolean;
+        bringObjectForward(object: FabricObject, intersecting?: boolean): boolean;
+        moveObjectTo(object: FabricObject, index: number): boolean;
+        findNewLowerIndex(object: FabricObject, idx: number, intersecting?: boolean): number;
+        findNewUpperIndex(object: FabricObject, idx: number, intersecting?: boolean): number;
         collectObjects({ left, top, width, height }: import("../typedefs").TBBox, { includeIntersecting }?: {
-            includeIntersecting?: boolean | undefined;
+            includeIntersecting?: boolean;
         }): import("../..").InteractiveFabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>[];
     };
 } & {
@@ -596,7 +592,7 @@ export declare class StaticCanvas<EventSpec extends StaticCanvasEvents = StaticC
      *   filter: (object) => object.isContainedWithinObject(myObject) || object.intersectsWithObject(myObject)
      * });
      */
-    toDataURL(options?: TDataUrlOptions<import("../shapes/Object/Object").FabricObject<Partial<import("../shapes/Object/types/ObjectProps").ObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>>): string;
+    toDataURL(options?: TDataUrlOptions): string;
     /**
      * Create a new HTMLCanvas element painted with the current canvas content.
      * No need to resize the actual one or repaint it.
@@ -611,7 +607,7 @@ export declare class StaticCanvas<EventSpec extends StaticCanvasEvents = StaticC
      * @param {Number} [options.height] Cropping height.
      * @param {(object: fabric.Object) => boolean} [options.filter] Function to filter objects.
      */
-    toCanvasElement(multiplier?: number, { width, height, left, top, filter }?: TToCanvasElementOptions<import("../shapes/Object/Object").FabricObject<Partial<import("../shapes/Object/types/ObjectProps").ObjectProps>, import("../..").SerializedObjectProps, import("../EventTypeDefs").ObjectEvents>>): HTMLCanvasElement;
+    toCanvasElement(multiplier?: number, { width, height, left, top, filter }?: TToCanvasElementOptions): HTMLCanvasElement;
     /**
      * Waits until rendering has settled to destroy the canvas
      * @returns {Promise<boolean>} a promise resolving to `true` once the canvas has been destroyed or to `false` if the canvas has was already destroyed

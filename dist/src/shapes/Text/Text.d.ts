@@ -720,7 +720,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {Object} [options] Options object
      */
     static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<FabricText<{
-        signal?: AbortSignal | undefined;
+        signal?: AbortSignal;
         left: number;
         top: number;
         underline: boolean;

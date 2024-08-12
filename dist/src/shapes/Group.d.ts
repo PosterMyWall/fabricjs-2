@@ -13,7 +13,6 @@ export interface GroupEvents extends ObjectEvents, CollectionEvents {
 export interface GroupOwnProps {
     subTargetCheck: boolean;
     interactive: boolean;
-    delegateProperties: boolean;
     caterCacheForTextChildren: boolean;
     selected: boolean;
     useSelectedFlag: boolean;
@@ -28,29 +27,29 @@ export interface GroupProps extends FabricObjectProps, GroupOwnProps {
 export declare const groupDefaultValues: Partial<TClassProperties<Group>>;
 declare const Group_base: {
     new (...args: any[]): {
-        _objects: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
-        _onObjectAdded(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>): void;
-        _onObjectRemoved(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>): void;
-        _onStackOrderChanged(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>): void;
-        add(...objects: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]): number;
-        insertAt(index: number, ...objects: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]): number;
-        remove(...objects: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
-        forEachObject(callback: (object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, index: number, array: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]) => any): void;
+        _objects: FabricObject[];
+        _onObjectAdded(object: FabricObject): void;
+        _onObjectRemoved(object: FabricObject): void;
+        _onStackOrderChanged(object: FabricObject): void;
+        add(...objects: FabricObject[]): number;
+        insertAt(index: number, ...objects: FabricObject[]): number;
+        remove(...objects: FabricObject[]): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
+        forEachObject(callback: (object: FabricObject, index: number, array: FabricObject[]) => any): void;
         getObjects(...types: string[]): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
         item(index: number): FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>;
         isEmpty(): boolean;
         size(): number;
-        contains(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, deep?: boolean | undefined): boolean;
+        contains(object: FabricObject, deep?: boolean): boolean;
         complexity(): number;
-        sendObjectToBack(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>): boolean;
-        bringObjectToFront(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>): boolean;
-        sendObjectBackwards(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, intersecting?: boolean | undefined): boolean;
-        bringObjectForward(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, intersecting?: boolean | undefined): boolean;
-        moveObjectTo(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, index: number): boolean;
-        findNewLowerIndex(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, idx: number, intersecting?: boolean | undefined): number;
-        findNewUpperIndex(object: FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>, idx: number, intersecting?: boolean | undefined): number;
+        sendObjectToBack(object: FabricObject): boolean;
+        bringObjectToFront(object: FabricObject): boolean;
+        sendObjectBackwards(object: FabricObject, intersecting?: boolean): boolean;
+        bringObjectForward(object: FabricObject, intersecting?: boolean): boolean;
+        moveObjectTo(object: FabricObject, index: number): boolean;
+        findNewLowerIndex(object: FabricObject, idx: number, intersecting?: boolean): number;
+        findNewUpperIndex(object: FabricObject, idx: number, intersecting?: boolean): number;
         collectObjects({ left, top, width, height }: import("../typedefs").TBBox, { includeIntersecting }?: {
-            includeIntersecting?: boolean | undefined;
+            includeIntersecting?: boolean;
         }): import("./Object/InteractiveObject").InteractiveFabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[];
     };
 } & {
@@ -63,10 +62,10 @@ declare const Group_base: {
     stateProperties: string[];
     cacheProperties: string[];
     type: string;
-    _fromObject<S extends import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>>({ type, ...object }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
-        extraParam?: string | undefined;
+    _fromObject<S extends import("./Object/Object").FabricObject>({ type, ...object }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
+        extraParam?: string;
     }): Promise<S>;
-    fromObject<T extends TOptions<SerializedObjectProps>>(object: T, options?: Abortable | undefined): Promise<import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>>;
+    fromObject<T extends TOptions<SerializedObjectProps>>(object: T, options?: Abortable): Promise<import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>>;
     colorProperties: string[];
 };
 /**
@@ -83,16 +82,6 @@ export declare class Group extends Group_base implements GroupProps {
      * @type boolean
      */
     subTargetCheck: boolean;
-    /**
-     * *PMW*
-     * Properties that are delegated to group objects when reading/writing
-     */
-    delegatedProperties: Record<any, any>;
-    /**
-     * *PMW property added*
-     * To delete some properties or not
-     */
-    delegateProperties: boolean;
     /**
      * *PMW property added*
      * Whether to cater to the text children objects for caching.
@@ -164,7 +153,6 @@ export declare class Group extends Group_base implements GroupProps {
      * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
-    isGroup(): boolean;
     /**
      * *PMW funtion added*
      * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.

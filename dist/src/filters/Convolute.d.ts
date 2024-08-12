@@ -1,5 +1,6 @@
 import { BaseFilter } from './BaseFilter';
 import type { T2DPipelineState, TWebGLUniformLocationMap } from './typedefs';
+import { fragmentSource } from './shaders/convolute';
 export type ConvoluteOwnProps = {
     opaque: boolean;
     matrix: number[];
@@ -51,7 +52,7 @@ export declare class Convolute extends BaseFilter<'Convolute', ConvoluteOwnProps
     static type: string;
     static defaults: ConvoluteOwnProps;
     static uniformLocations: string[];
-    getCacheKey(): "Convolute_3_1" | "Convolute_3_0" | "Convolute_5_1" | "Convolute_5_0" | "Convolute_7_1" | "Convolute_7_0" | "Convolute_9_1" | "Convolute_9_0";
+    getCacheKey(): keyof typeof fragmentSource;
     getFragmentSource(): string;
     /**
      * Apply the Brightness operation to a Uint8ClampedArray representing the pixels of an image.

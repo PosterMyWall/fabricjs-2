@@ -305,7 +305,6 @@ class ITextBehavior extends FabricText {
     } : undefined);
     this._fireSelectionChanged();
     if (this.canvas) {
-      // @ts-expect-error in reality it is an IText instance
       this.canvas.fire('text:editing:entered', {
         target: this,
         e

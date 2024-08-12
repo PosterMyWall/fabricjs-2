@@ -76,7 +76,7 @@ export declare class Rect<Props extends TOptions<RectProps> = Partial<RectProps>
         width: any;
         height: any;
         visible: boolean;
-        signal?: AbortSignal | undefined;
+        signal?: AbortSignal;
     }, SerializedRectProps, ObjectEvents>>;
 }
 export {};

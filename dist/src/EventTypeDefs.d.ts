@@ -282,7 +282,7 @@ export interface CanvasEvents extends StaticCanvasEvents, CanvasPointerEvents, C
     };
     'text:editing:entered': {
         target: IText;
-    };
+    } & Partial<TEvent>;
     'text:editing:exited': {
         target: IText;
     };

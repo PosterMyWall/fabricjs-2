@@ -19,6 +19,9 @@ class ClassRegistry {
     this[JSON] = new Map();
     this[SVG] = new Map();
   }
+  has(classType) {
+    return this[JSON].has(classType);
+  }
   getClass(classType) {
     const constructor = this[JSON].get(classType);
     if (!constructor) {

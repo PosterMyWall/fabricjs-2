@@ -82,7 +82,7 @@ export declare class ObjectGeometry<EventSpec extends ObjectEvents = ObjectEvent
      * that otherwise are the object's current values.
      * @example <caption>Set object's bottom left corner to point (5,5) on canvas</caption>
      * object.setXY(new Point(5, 5), 'left', 'bottom').
-     * @param {Point} point position in canvas coordinate plane
+     * @param {Point} point position in scene coordinate plane
      * @param {TOriginX} [originX] Horizontal origin: 'left', 'center' or 'right'
      * @param {TOriginY} [originY] Vertical origin: 'top', 'center' or 'bottom'
      */

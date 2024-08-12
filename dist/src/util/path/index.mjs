@@ -99,7 +99,7 @@ const arcToSegments = (toX, toY, rx, ry, large, sweep, rotateX) => {
 
   // Convert into cubic bezier segments <= 90deg
   const segments = Math.ceil(Math.abs(dtheta / PI * 2)),
-    result = new Array(segments),
+    result = [],
     mDelta = dtheta / segments,
     mT = 8 / 3 * Math.sin(mDelta / 4) * Math.sin(mDelta / 4) / Math.sin(mDelta / 2);
   let th3 = mTheta + mDelta;
@@ -651,7 +651,6 @@ const rePathCmd = new RegExp(rePathCommand, 'i');
  *   ['Q', 3, 5, 2, 1, 4, 0],
  *   ['Q', 9, 12, 2, 1, 4, 0],
  * ];
- *
  */
 const parsePath = pathString => {
   // clean the string

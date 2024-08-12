@@ -1,3 +1,3 @@
 import type { ObjectModificationEvents, TModificationEvents } from '../EventTypeDefs';
-export declare const fireEvent: (eventName: TModificationEvents, options: import("../EventTypeDefs").BasicTransformEvent<import("../EventTypeDefs").TPointerEvent> | (import("../EventTypeDefs").BasicTransformEvent<import("../EventTypeDefs").TPointerEvent> & import("../EventTypeDefs").ModifyPathEvent)) => void;
+export declare const fireEvent: (eventName: TModificationEvents, options: ObjectModificationEvents[typeof eventName]) => void;
 //# sourceMappingURL=fireEvent.d.ts.map

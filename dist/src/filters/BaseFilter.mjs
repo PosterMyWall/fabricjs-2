@@ -295,7 +295,6 @@ class BaseFilter {
     return _objectSpread2({
       type: this.type
     }, defaultKeys.reduce((acc, key) => {
-      //@ts-expect-error TS doesn't get i want an object that looks like this
       acc[key] = this[key];
       return acc;
     }, {}));

@@ -431,8 +431,6 @@ class FabricImage extends FabricObject {
    */
   drawCacheOnCanvas(ctx) {
     ctx.imageSmoothingEnabled = this.imageSmoothing;
-    // cant use ts-expect-error because of ts 5.3 cross check
-    // @ts-ignore TS doesn't respect this type casting
     super.drawCacheOnCanvas(ctx);
   }
 

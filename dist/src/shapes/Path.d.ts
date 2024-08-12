@@ -36,7 +36,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
      * @param {Partial<PathProps>} [options] Options object
      * @return {Path} thisArg
      */
-    constructor(path: TComplexPathData | string, { path, left, top, ...options }?: Partial<Props>);
+    constructor(path: TComplexPathData | string, { path: _, left, top, ...options }?: Partial<Props>);
     /**
      * @private
      * @param {TComplexPathData | string} path Path data (sequence of coordinates and corresponding "command" tokens)
@@ -139,19 +139,19 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         left: undefined;
         top: undefined;
         noScaleCache: boolean;
-        hoverCursor: string | null;
-        moveCursor: string | null;
+        hoverCursor: CSSStyleDeclaration["cursor"] | null;
+        moveCursor: CSSStyleDeclaration["cursor"] | null;
         selectionBackgroundColor: string;
         perPixelTargetFind: boolean;
         targetFindTolerance: number;
         selectable: boolean;
         evented: boolean;
         activeOn: "down" | "up";
-        clipPath: import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>;
+        clipPath: import("./Object/Object").FabricObject;
         fill: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
         stroke: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
         shadow: import("../Shadow").Shadow | null;
-        canvas: import("../..").Canvas | import("../..").StaticCanvas<import("../EventTypeDefs").StaticCanvasEvents>;
+        canvas: import("../..").StaticCanvas | import("../..").Canvas;
         minScaleLimit: number;
         objectCaching: boolean;
         includeDefaultValues: boolean;
@@ -197,7 +197,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         transparentCorners: boolean;
         cornerColor: string;
         cornerStrokeColor: string;
-        cornerStyle: "circle" | "rect";
+        cornerStyle: "rect" | "circle";
         cornerDashArray: number[] | null;
         padding: number;
         hasControls: boolean;

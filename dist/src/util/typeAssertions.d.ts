@@ -7,7 +7,7 @@ import type { ActiveSelection } from '../shapes/ActiveSelection';
 export declare const isFiller: (filler: TFiller | string | null) => filler is TFiller;
 export declare const isSerializableFiller: (filler: TFiller | string | null) => filler is TFiller;
 export declare const isPattern: (filler: TFiller) => filler is Pattern;
-export declare const isTextObject: (fabricObject?: FabricObject) => fabricObject is FabricText<Partial<import("../shapes/Text/Text").TextProps>, import("../shapes/Text/Text").SerializedTextProps, import("../EventTypeDefs").ObjectEvents>;
-export declare const isPath: (fabricObject?: FabricObject) => fabricObject is Path<Partial<import("../shapes/Path").PathProps>, import("../shapes/Path").SerializedPathProps, import("../EventTypeDefs").ObjectEvents>;
+export declare const isTextObject: (fabricObject?: FabricObject) => fabricObject is FabricText;
+export declare const isPath: (fabricObject?: FabricObject) => fabricObject is Path;
 export declare const isActiveSelection: (fabricObject?: FabricObject) => fabricObject is ActiveSelection;
 //# sourceMappingURL=typeAssertions.d.ts.map

@@ -464,8 +464,6 @@ class Textbox extends IText {
    * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
    * @return {Object} object representation of an instance
    */
-  // cant use ts-expect-error because of ts 5.3 cross check
-  // @ts-ignore TS this typing limitations
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return super.toObject(['minWidth', 'splitByGrapheme', ...propertiesToInclude]);

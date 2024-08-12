@@ -4,7 +4,7 @@ import type { Group } from './shapes/Group';
 import type { InteractiveFabricObject } from './shapes/Object/InteractiveObject';
 import type { FabricObject } from './shapes/Object/FabricObject';
 export declare const isCollection: (fabricObject?: FabricObject) => fabricObject is Group | ActiveSelection;
-export declare function createCollectionMixin<TBase extends Constructor>(Base: TBase): {
+export declare function createCollectionMixin<TBase extends Constructor>(Base: TBase): ({
     new (...args: any[]): {
         /**
          * @type {FabricObject[]}
@@ -134,8 +134,8 @@ export declare function createCollectionMixin<TBase extends Constructor>(Base: T
          * @returns array of objects contained in the bounding box, ordered from top to bottom stacking wise
          */
         collectObjects({ left, top, width, height }: TBBox, { includeIntersecting }?: {
-            includeIntersecting?: boolean | undefined;
+            includeIntersecting?: boolean;
         }): InteractiveFabricObject<Partial<import("..").FabricObjectProps>, import("..").SerializedObjectProps, import("./EventTypeDefs").ObjectEvents>[];
     };
-} & TBase;
+} & TBase) & TBase;
 //# sourceMappingURL=Collection.d.ts.map

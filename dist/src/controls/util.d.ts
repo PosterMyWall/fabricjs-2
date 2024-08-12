@@ -18,7 +18,7 @@ export declare const getActionFromCorner: (alreadySelected: boolean, corner: str
  */
 export declare function isTransformCentered(transform: Transform): boolean;
 export declare function invertOrigin(origin: TOriginX | TOriginY): number;
-export declare const isLocked: (target: FabricObject, lockingKey: 'lockMovementX' | 'lockMovementY' | 'lockRotation' | 'lockScalingX' | 'lockScalingY' | 'lockSkewingX' | 'lockSkewingY' | 'lockScalingFlip') => boolean;
+export declare const isLocked: (target: FabricObject, lockingKey: "lockMovementX" | "lockMovementY" | "lockRotation" | "lockScalingX" | "lockScalingY" | "lockSkewingX" | "lockSkewingY" | "lockScalingFlip") => boolean;
 export declare const commonEventInfo: TransformAction<Transform, BasicTransformEvent>;
 /**
  * Combine control position and object angle to find the control direction compared

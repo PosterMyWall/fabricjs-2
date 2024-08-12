@@ -181,8 +181,6 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgStyles(skipShadow) {
-    // cant use ts-expect-error because of ts 5.3 cross check
-    // @ts-ignore TS doesn't respect this type casting
     return "".concat(super.getSvgStyles(skipShadow), " white-space: pre;");
   }
 

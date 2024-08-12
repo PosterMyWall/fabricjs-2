@@ -6,6 +6,7 @@
  */
 function parseStyleString(style, oStyle) {
   style.replace(/;\s*$/, '').split(';').forEach(chunk => {
+    if (!chunk) return;
     const [attr, value] = chunk.split(':');
     oStyle[attr.trim().toLowerCase()] = value.trim();
   });

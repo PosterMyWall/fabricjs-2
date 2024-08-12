@@ -4,6 +4,7 @@ export declare class ClassRegistry {
     [JSON]: Map<string, any>;
     [SVG]: Map<string, any>;
     constructor();
+    has(classType: string): boolean;
     getClass<T>(classType: string): T;
     setClass(classConstructor: any, classType?: string): void;
     getSVGClass(SVGTagName: string): any;

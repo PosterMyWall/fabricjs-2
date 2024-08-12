@@ -61,7 +61,6 @@ export interface GroupEvents extends ObjectEvents, CollectionEvents {
 export interface GroupOwnProps {
   subTargetCheck: boolean;
   interactive: boolean;
-  delegateProperties: boolean;
   caterCacheForTextChildren: boolean;
   selected: boolean;
   useSelectedFlag: boolean;
@@ -81,7 +80,6 @@ export interface GroupProps extends FabricObjectProps, GroupOwnProps {
 export const groupDefaultValues: Partial<TClassProperties<Group>> = {
   strokeWidth: 0,
   subTargetCheck: false,
-  delegateProperties: false,
   caterCacheForTextChildren: false,
   selected: false,
   useSelectedFlag: false,
@@ -107,31 +105,6 @@ export class Group
    * @type boolean
    */
   declare subTargetCheck: boolean;
-
-  /**
-   * *PMW*
-   * Properties that are delegated to group objects when reading/writing
-   */
-  public delegatedProperties: Record<any, any> = {
-    fill: true,
-    opacity: true,
-    fontFamily: true,
-    fontWeight: true,
-    fontSize: true,
-    fontStyle: true,
-    lineHeight: true,
-    letterSpacing: true,
-    charSpacing: true,
-    text: true,
-    textDecoration: true,
-    textAlign: true,
-  };
-
-  /**
-   * *PMW property added*
-   * To delete some properties or not
-   */
-  declare delegateProperties: boolean;
 
   /**
    * *PMW property added*
@@ -244,11 +217,6 @@ export class Group
     }
     return super._getCacheCanvasDimensions();
   }
-
-  isGroup(){
-    return true;
-  }
-
 
   /**
    * *PMW funtion added*
@@ -431,10 +399,7 @@ export class Group
   _set(key: string, value: any) {
     const prev = this[key as keyof this];
     super._set(key, value);
-    if (
-      (this.delegateProperties && this.delegatedProperties[key]) ||
-      (key === 'canvas' && prev !== value)
-    ) {
+    if (key === 'canvas' && prev !== value) {
       (this._objects || []).forEach((object) => {
         object._set(key, value);
       });
@@ -654,7 +619,7 @@ export class Group
   setCoords() {
     super.setCoords();
     this._shouldSetNestedCoords() &&
-      this.forEachObject((object) => object.setCoords());
+    this.forEachObject((object) => object.setCoords());
   }
 
   triggerLayout(options: ImperativeLayoutOptions = {}) {
