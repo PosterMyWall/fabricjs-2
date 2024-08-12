@@ -353,6 +353,6 @@ export interface CanvasEvents
   // IText
   'text:selection:changed': { target: IText };
   'text:changed': { target: IText };
-  'text:editing:entered': { target: IText };
+  'text:editing:entered': { target: IText } & Partial<TEvent>;
   'text:editing:exited': { target: IText };
 }
