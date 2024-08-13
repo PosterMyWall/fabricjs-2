@@ -104,6 +104,7 @@ interface UniqueTextProps {
   overline: boolean;
   linethrough: boolean;
   squigglyline: boolean;
+  ignoreDelegatedSet: boolean;
   squigglylineColor: string;
   textAlign: string;
   direction: CanvasDirection;
@@ -219,6 +220,10 @@ export class FabricText<
   declare squigglyline: boolean;
   /*PMW*/
   declare squigglylineColor: string;
+
+  //*PMW*
+  /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
+  declare ignoreDelegatedSet: boolean;
 
   /**
    * Text alignment. Possible values: "left", "center", "right", "justify",

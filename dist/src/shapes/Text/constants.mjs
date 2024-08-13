@@ -21,6 +21,7 @@ const textDefaultValues = {
   overline: false,
   linethrough: false,
   squigglyline: false,
+  ignoreDelegatedSet: false,
   squigglylineColor: '',
   textAlign: LEFT,
   fontStyle: 'normal',

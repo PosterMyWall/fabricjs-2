@@ -44,6 +44,7 @@ interface UniqueTextProps {
     overline: boolean;
     linethrough: boolean;
     squigglyline: boolean;
+    ignoreDelegatedSet: boolean;
     squigglylineColor: string;
     textAlign: string;
     direction: CanvasDirection;
@@ -132,6 +133,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     linethrough: boolean;
     squigglyline: boolean;
     squigglylineColor: string;
+    /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
+    ignoreDelegatedSet: boolean;
     /**
      * Text alignment. Possible values: "left", "center", "right", "justify",
      * "justify-left", "justify-center" or "justify-right".
