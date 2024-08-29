@@ -9,7 +9,8 @@ class FitContentLayout extends LayoutStrategy {
   /**
    * @override layout on all triggers
    * Override at will
-   */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   shouldPerformLayout(context) {
     return true;
   }

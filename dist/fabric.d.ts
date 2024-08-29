@@ -6,6 +6,7 @@ export { classRegistry } from './src/ClassRegistry';
 export { runningAnimations } from './src/util/animation/AnimationRegistry';
 export * from './src/typedefs';
 export * from './src/EventTypeDefs';
+export type { ITextEvents } from './src/shapes/IText/ITextBehavior';
 export { Observable } from './src/Observable';
 export type { TCanvasSizeOptions, TSVGExportOptions, } from './src/canvas/StaticCanvas';
 export type { StaticCanvasOptions } from './src/canvas/StaticCanvasOptions';

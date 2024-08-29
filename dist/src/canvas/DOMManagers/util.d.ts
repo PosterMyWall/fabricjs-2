@@ -1,6 +1,5 @@
 import type { TSize } from '../../typedefs';
 export declare const setCanvasDimensions: (el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, { width, height }: TSize, retinaScaling?: number) => void;
-export declare function allowTouchScrolling(element: HTMLElement, allow: boolean): void;
 export type CSSDimensions = {
     width: number | string;
     height: number | string;

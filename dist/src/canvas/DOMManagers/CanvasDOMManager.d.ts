@@ -18,8 +18,9 @@ export declare class CanvasDOMManager extends StaticCanvasDOMManager {
      * @private
      * @param {HTMLCanvasElement} element canvas element to apply styles on
      */
-    protected applyCanvasStyle(element: HTMLCanvasElement, { allowTouchScrolling: allow }: {
-        allowTouchScrolling: boolean;
+    protected applyCanvasStyle(element: HTMLCanvasElement, options: {
+        allowTouchScrolling?: boolean;
+        styles?: Record<string, string>;
     }): void;
     setDimensions(size: TSize, retinaScaling: number): void;
     setCSSDimensions(size: Partial<CSSDimensions>): void;

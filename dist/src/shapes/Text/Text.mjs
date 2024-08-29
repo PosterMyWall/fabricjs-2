@@ -163,7 +163,7 @@ class FabricText extends StyledText {
    * @return Number
    */
 
-  missingNewlineOffset(lineIndex) {
+  missingNewlineOffset(_lineIndex) {
     return 1;
   }
 
@@ -496,7 +496,6 @@ class FabricText extends StyledText {
           break;
         //todo - add support for justify
       }
-
       positionInPath += this.pathStartOffset * (reverse ? -1 : 1);
       for (let i = reverse ? llength - 1 : 0; reverse ? i >= 0 : i < llength; reverse ? i-- : i++) {
         graphemeInfo = lineBounds[i];

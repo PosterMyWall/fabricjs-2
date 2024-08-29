@@ -5,7 +5,9 @@ import { classRegistry } from '../../ClassRegistry.mjs';
 
 // TODO somehow we have to make a tree-shakeable import
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class FabricObject extends InteractiveFabricObject {}
 applyMixins(FabricObject, [FabricObjectSVGExportMixin]);
 classRegistry.setClass(FabricObject);

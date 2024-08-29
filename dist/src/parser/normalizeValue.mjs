@@ -48,7 +48,7 @@ function normalizeValue(attr, value, parentAttributes, fontSize) {
     } else if (fillIndex === -1 && strokeIndex > -1) {
       ouputValue = STROKE;
     }
-  } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font') {
+  } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font' || attr === 'id') {
     return value;
   } else if (attr === 'imageSmoothing') {
     return value === 'optimizeQuality';

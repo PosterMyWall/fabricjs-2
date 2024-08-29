@@ -45,7 +45,6 @@ export type TWebGLProgramCacheItem = {
     attributeLocations: TWebGLAttributeLocationMap;
     uniformLocations: TWebGLUniformLocationMap;
 };
-export type TApplyFilterArgs = {};
 export type TMatColorMatrix = [
     number,
     number,

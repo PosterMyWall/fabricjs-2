@@ -394,7 +394,6 @@ class Resize extends BaseFilter {
             /* eslint-enable max-depth */
           }
         }
-
         data2[x2] = gxR / weights;
         data2[x2 + 1] = gxG / weights;
         data2[x2 + 2] = gxB / weights;

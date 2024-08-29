@@ -44,7 +44,7 @@ export declare class Pattern {
      * @type Array
      * @default
      */
-    patternTransform: TMat2D | null;
+    patternTransform?: TMat2D;
     /**
      * The actual pixel source of the pattern
      */
@@ -94,6 +94,6 @@ export declare class Pattern {
      * Returns SVG representation of a pattern
      */
     toSVG({ width, height }: TSize): string;
-    static fromObject({ type, source, ...serialized }: SerializedPatternOptions, options?: Abortable): Promise<Pattern>;
+    static fromObject({ type, source, patternTransform, ...otherOptions }: SerializedPatternOptions, options?: Abortable): Promise<Pattern>;
 }
 //# sourceMappingURL=Pattern.d.ts.map

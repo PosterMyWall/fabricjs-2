@@ -148,7 +148,7 @@ export class Configuration extends BaseConfiguration {
    * Map<fontFamily, pathToFile> of font files
    */
   addFonts(
-    paths: Record</** fontFamily */ string, /** pathToFile */ string> = {}
+    paths: Record</** fontFamily */ string, /** pathToFile */ string> = {},
   ) {
     this.fontPaths = {
       ...this.fontPaths,

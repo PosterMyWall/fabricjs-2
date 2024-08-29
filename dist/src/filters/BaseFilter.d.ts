@@ -90,7 +90,7 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
      * @param {Object} options.programCache A map of compiled shader programs, keyed by filter type.
      */
     applyTo(options: TWebGLPipelineState | T2DPipelineState): void;
-    applyTo2d(options: T2DPipelineState): void;
+    applyTo2d(_options: T2DPipelineState): void;
     /**
      * Returns a string that represent the current selected shader code for the filter.
      * Used to force recompilation when parameters change or to retrieve the shader from cache
@@ -125,10 +125,10 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
      *
      * Intended to be overridden by subclasses.
      *
-     * @param {WebGLRenderingContext} gl The canvas context used to compile the shader program.
-     * @param {Object} uniformLocations A map of shader uniform names to their locations.
+     * @param {WebGLRenderingContext} _gl The canvas context used to compile the shader program.
+     * @param {Object} _uniformLocations A map of shader uniform names to their locations.
      */
-    sendUniformData(gl: WebGLRenderingContext, uniformLocations: TWebGLUniformLocationMap): void;
+    sendUniformData(_gl: WebGLRenderingContext, _uniformLocations: TWebGLUniformLocationMap): void;
     /**
      * If needed by a 2d filter, this functions can create an helper canvas to be used
      * remember that options.targetCanvas is available for use till end of chain.
@@ -148,6 +148,6 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
     toJSON(): {
         type: Name;
     } & OwnProps;
-    static fromObject({ type, ...filterOptions }: Record<string, any>, options: Abortable): Promise<BaseFilter<string, object>>;
+    static fromObject({ type, ...filterOptions }: Record<string, any>, _options: Abortable): Promise<BaseFilter<string, object>>;
 }
 //# sourceMappingURL=BaseFilter.d.ts.map

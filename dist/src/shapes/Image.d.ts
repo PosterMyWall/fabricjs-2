@@ -295,7 +295,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
      * @returns {Promise<FabricImage>}
      */
-    static fromObject<T extends TOptions<SerializedImageProps>>({ filters: f, resizeFilter: rf, src, crossOrigin, type, ...object }: T, options?: Abortable): Promise<FabricImage<Omit<T, "type" | "crossOrigin" | "filters" | "resizeFilter" | "src"> & {
+    static fromObject<T extends TOptions<SerializedImageProps>>({ filters: f, resizeFilter: rf, src, crossOrigin, type, ...object }: T, options?: Abortable): Promise<FabricImage<Omit<T, "type" | "filters" | "resizeFilter" | "src" | "crossOrigin"> & {
         src: string | undefined;
         filters: BaseFilter<string, object>[];
         resizeFilter: any;

@@ -79,7 +79,7 @@ const IMAGE_PROPS = ['cropX', 'cropY'] as const;
 export class FabricImage<
     Props extends TOptions<ImageProps> = Partial<ImageProps>,
     SProps extends SerializedImageProps = SerializedImageProps,
-    EventSpec extends ObjectEvents = ObjectEvents
+    EventSpec extends ObjectEvents = ObjectEvents,
   >
   extends FabricObject<Props, SProps, EventSpec>
   implements ImageProps
@@ -214,7 +214,7 @@ export class FabricImage<
             getFabricDocument()
           ).getElementById(arg0) as ImageSource)
         : arg0,
-      options
+      options,
     );
   }
 
@@ -332,7 +332,7 @@ export class FabricImage<
    */
   toObject<
     T extends Omit<Props & TClassProperties<this>, keyof SProps>,
-    K extends keyof T = never
+    K extends keyof T = never,
   >(propertiesToInclude: K[] = []): Pick<T, K> & SProps {
     const filters: Record<string, any>[] = [];
     this.filters.forEach((filterObj) => {
@@ -392,7 +392,7 @@ export class FabricImage<
           '" height="' +
           this.height +
           '" />\n',
-        '</clipPath>\n'
+        '</clipPath>\n',
       );
       clipPath = ' clip-path="url(#imageCrop_' + clipPathId + ')" ';
     }
@@ -411,7 +411,7 @@ export class FabricImage<
         element.width || (element as HTMLImageElement).naturalWidth
       }" height="${
         element.height || (element as HTMLImageElement).naturalHeight
-      }"${imageRendering}${clipPath}></image>\n`
+      }"${imageRendering}${clipPath}></image>\n`,
     );
 
     if (this.stroke || this.strokeDashArray) {
@@ -515,7 +515,7 @@ export class FabricImage<
       elementToFilter,
       sourceWidth,
       sourceHeight,
-      this._element
+      this._element,
     );
     this._filterScalingX = canvasEl.width / this._originalElement.width;
     this._filterScalingY = canvasEl.height / this._originalElement.height;
@@ -528,7 +528,7 @@ export class FabricImage<
    * @param {Boolean} forResizing specify if the filter operation is a resize operation
    */
   applyFilters(
-    filters: BaseFilter<string, Record<string, any>>[] = this.filters || []
+    filters: BaseFilter<string, Record<string, any>>[] = this.filters || [],
   ) {
     filters = filters.filter((filter) => filter && !filter.isNeutralState());
     this.set('dirty', true);
@@ -582,7 +582,7 @@ export class FabricImage<
       this._originalElement,
       sourceWidth,
       sourceHeight,
-      this._element as HTMLCanvasElement
+      this._element as HTMLCanvasElement,
     );
     if (
       this._originalElement.width !== this._element.width ||
@@ -614,7 +614,7 @@ export class FabricImage<
    */
   drawCacheOnCanvas(
     this: TCachedFabricObject<FabricImage>,
-    ctx: CanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D,
   ) {
     ctx.imageSmoothingEnabled = this.imageSmoothing;
     super.drawCacheOnCanvas(ctx);
@@ -765,7 +765,7 @@ export class FabricImage<
    */
   parsePreserveAspectRatioAttribute() {
     const pAR = parsePreserveAspectRatioAttribute(
-        this.preserveAspectRatio || ''
+        this.preserveAspectRatio || '',
       ),
       pWidth = this.width,
       pHeight = this.height,
@@ -868,7 +868,7 @@ export class FabricImage<
    */
   static fromObject<T extends TOptions<SerializedImageProps>>(
     { filters: f, resizeFilter: rf, src, crossOrigin, type, ...object }: T,
-    options?: Abortable
+    options?: Abortable,
   ) {
     return Promise.all([
       loadImage(src!, { ...options, crossOrigin }),
@@ -898,10 +898,10 @@ export class FabricImage<
   static fromURL<T extends TOptions<ImageProps>>(
     url: string,
     { crossOrigin = null, signal }: LoadImageOptions = {},
-    imageOptions?: T
+    imageOptions?: T,
   ): Promise<FabricImage> {
     return loadImage(url, { crossOrigin, signal }).then(
-      (img) => new this(img, imageOptions)
+      (img) => new this(img, imageOptions),
     );
   }
 
@@ -916,17 +916,17 @@ export class FabricImage<
   static async fromElement(
     element: HTMLElement,
     options: Abortable = {},
-    cssRules?: CSSRules
+    cssRules?: CSSRules,
   ) {
     const parsedAttributes = parseAttributes(
       element,
       this.ATTRIBUTE_NAMES,
-      cssRules
+      cssRules,
     );
     return this.fromURL(
       parsedAttributes['xlink:href'],
       options,
-      parsedAttributes
+      parsedAttributes,
     ).catch((err) => {
       log('log', 'Unable to parse Image', err);
       return null;

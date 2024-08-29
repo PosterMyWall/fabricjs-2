@@ -1,5 +1,6 @@
-import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { getFabricDocument, getEnv } from '../../env/index.mjs';
+import { NONE } from '../../constants.mjs';
 import '../../util/misc/vectors.mjs';
 import '../../Point.mjs';
 import '../../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
@@ -11,7 +12,7 @@ import '../../util/path/regex.mjs';
 import '../../parser/constants.mjs';
 import { setStyle } from '../../util/dom_style.mjs';
 import '../../util/animation/AnimationRegistry.mjs';
-import { makeElementUnselectable, allowTouchScrolling, setCanvasDimensions, setCSSDimensions } from './util.mjs';
+import { makeElementUnselectable, setCanvasDimensions, setCSSDimensions } from './util.mjs';
 import { StaticCanvasDOMManager } from './StaticCanvasDOMManager.mjs';
 
 class CanvasDOMManager extends StaticCanvasDOMManager {
@@ -35,7 +36,12 @@ class CanvasDOMManager extends StaticCanvasDOMManager {
       allowTouchScrolling
     });
     this.applyCanvasStyle(upperCanvasEl, {
-      allowTouchScrolling
+      allowTouchScrolling,
+      styles: {
+        position: 'absolute',
+        left: '0',
+        top: '0'
+      }
     });
     const container = this.createContainerElement();
     container.classList.add(containerClass);
@@ -75,16 +81,14 @@ class CanvasDOMManager extends StaticCanvasDOMManager {
    * @private
    * @param {HTMLCanvasElement} element canvas element to apply styles on
    */
-  applyCanvasStyle(element, _ref) {
-    let {
-      allowTouchScrolling: allow
-    } = _ref;
-    setStyle(element, {
-      position: 'absolute',
-      left: '0',
-      top: '0'
-    });
-    allowTouchScrolling(element, allow);
+  applyCanvasStyle(element, options) {
+    const {
+      styles,
+      allowTouchScrolling
+    } = options;
+    setStyle(element, _objectSpread2(_objectSpread2({}, styles), {}, {
+      'touch-action': allowTouchScrolling ? 'manipulation' : NONE
+    }));
     makeElementUnselectable(element);
   }
   setDimensions(size, retinaScaling) {

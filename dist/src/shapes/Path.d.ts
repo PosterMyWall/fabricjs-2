@@ -147,8 +147,8 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         evented: boolean;
         activeOn: "down" | "up";
         clipPath: import("./Object/Object").FabricObject;
-        fill: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
-        stroke: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../Pattern").Pattern | null;
+        fill: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../..").Pattern | null;
+        stroke: string | import("../gradient").Gradient<"linear", "linear"> | import("../gradient").Gradient<"radial", "radial"> | import("../..").Pattern | null;
         shadow: import("../Shadow").Shadow | null;
         canvas: import("../..").StaticCanvas | import("../..").Canvas;
         minScaleLimit: number;

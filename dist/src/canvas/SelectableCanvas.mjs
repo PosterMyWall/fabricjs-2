@@ -617,7 +617,6 @@ class SelectableCanvas extends StaticCanvas {
       // the idea behind this is that outside target check we don't need ot know
       // where those coords are
     }
-
     return Intersection.isPointInPolygon(point, coords);
   }
 

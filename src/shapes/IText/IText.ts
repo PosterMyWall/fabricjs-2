@@ -113,7 +113,7 @@ export interface ITextProps extends TextProps, UniqueITextProps {}
 export class IText<
     Props extends TOptions<ITextProps> = Partial<ITextProps>,
     SProps extends SerializedITextProps = SerializedITextProps,
-    EventSpec extends ITextEvents = ITextEvents
+    EventSpec extends ITextEvents = ITextEvents,
   >
   extends ITextClickBehavior<Props, SProps, EventSpec>
   implements UniqueITextProps
@@ -276,7 +276,7 @@ export class IText<
    */
   protected _updateAndFire(
     property: 'selectionStart' | 'selectionEnd',
-    index: number
+    index: number,
   ) {
     if (this[property] !== index) {
       this._fireSelectionChanged();
@@ -375,7 +375,7 @@ export class IText<
   getSelectionStyles(
     startIndex: number = this.selectionStart || 0,
     endIndex: number = this.selectionEnd,
-    complete?: boolean
+    complete?: boolean,
   ) {
     return super.getSelectionStyles(startIndex, endIndex, complete);
   }
@@ -389,7 +389,7 @@ export class IText<
   setSelectionStyles(
     styles: object,
     startIndex: number = this.selectionStart || 0,
-    endIndex: number = this.selectionEnd
+    endIndex: number = this.selectionEnd,
   ) {
     return super.setSelectionStyles(styles, startIndex, endIndex);
   }
@@ -401,7 +401,7 @@ export class IText<
    */
   get2DCursorLocation(
     selectionStart = this.selectionStart,
-    skipWrapping?: boolean
+    skipWrapping?: boolean,
   ) {
     return super.get2DCursorLocation(selectionStart, skipWrapping);
   }
@@ -462,7 +462,7 @@ export class IText<
    */
   _getCursorBoundaries(
     index: number = this.selectionStart,
-    skipCaching?: boolean
+    skipCaching?: boolean,
   ): CursorBoundaries {
     const left = this._getLeftOffset(),
       top = this._getTopOffset(),
@@ -483,7 +483,7 @@ export class IText<
    */
   _getCursorBoundariesOffsets(
     index: number,
-    skipCaching?: boolean
+    skipCaching?: boolean,
   ): { left: number; top: number } {
     if (skipCaching) {
       return this.__getCursorBoundariesOffsets(index);
@@ -561,7 +561,7 @@ export class IText<
   _renderCursor(
     ctx: CanvasRenderingContext2D,
     boundaries: CursorBoundaries,
-    selectionStart: number
+    selectionStart: number,
   ) {
     const cursorLocation = this.get2DCursorLocation(selectionStart),
       lineIndex = cursorLocation.lineIndex,
@@ -590,7 +590,7 @@ export class IText<
       boundaries.left + boundaries.leftOffset - cursorWidth / 2,
       topOffset + boundaries.top + dy,
       cursorWidth,
-      charHeight
+      charHeight,
     );
   }
 
@@ -620,7 +620,7 @@ export class IText<
     this._renderSelection(
       this.canvas!.contextTop,
       dragStartSelection,
-      this._getCursorBoundaries(dragStartSelection.selectionStart, true)
+      this._getCursorBoundaries(dragStartSelection.selectionStart, true),
     );
   }
 
@@ -639,7 +639,7 @@ export class IText<
   _renderSelection(
     ctx: CanvasRenderingContext2D,
     selection: { selectionStart: number; selectionEnd: number },
-    boundaries: CursorBoundaries
+    boundaries: CursorBoundaries,
   ) {
     const selectionStart = selection.selectionStart,
       selectionEnd = selection.selectionEnd,
@@ -712,7 +712,7 @@ export class IText<
         drawStart,
         boundaries.top + boundaries.topOffset + extraTop,
         drawWidth,
-        drawHeight
+        drawHeight,
       );
       boundaries.topOffset += realLineHeight;
     }

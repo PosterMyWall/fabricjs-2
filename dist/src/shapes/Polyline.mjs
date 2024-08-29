@@ -11,7 +11,6 @@ import { projectStrokeOnPoints } from '../util/misc/projectStroke/index.mjs';
 import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { toFixed } from '../util/misc/toFixed.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
-import { cloneDeep } from '../util/internals/cloneDeep.mjs';
 import { LEFT, TOP, CENTER, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
@@ -228,7 +227,16 @@ class Polyline extends FabricObject {
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return _objectSpread2(_objectSpread2({}, super.toObject(propertiesToInclude)), {}, {
-      points: cloneDeep(this.points)
+      points: this.points.map(_ref => {
+        let {
+          x,
+          y
+        } = _ref;
+        return {
+          x,
+          y
+        };
+      })
     });
   }
 

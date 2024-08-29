@@ -104,6 +104,7 @@ class Rect extends FabricObject {
    */
 
   /* _FROM_SVG_START_ */
+
   /**
    * Returns {@link Rect} instance from an SVG element
    * @static

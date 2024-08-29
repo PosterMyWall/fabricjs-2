@@ -7,10 +7,10 @@
  */
 function setStyle(element, styles) {
   const elementStyle = element.style;
-  if (!elementStyle) {
+  if (!elementStyle || !styles) {
     return;
   } else if (typeof styles === 'string') {
-    element.style.cssText += ';' + styles;
+    elementStyle.cssText += ';' + styles;
   } else {
     Object.entries(styles).forEach(_ref => {
       let [property, value] = _ref;

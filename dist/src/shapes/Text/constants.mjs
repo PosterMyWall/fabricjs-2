@@ -31,13 +31,11 @@ const textDefaultValues = {
     // fontSize factor
     baseline: -0.35 // baseline-shift factor (upwards)
   },
-
   subscript: {
     size: 0.6,
     // fontSize factor
     baseline: 0.11 // baseline-shift factor (downwards)
   },
-
   textBackgroundColor: '',
   stroke: null,
   shadow: null,

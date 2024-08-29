@@ -1,88 +1,72 @@
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    enumerableOnly && (symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    })), keys.push.apply(keys, symbols);
-  }
-  return keys;
+function _defineProperty(e, r, t) {
+  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: !0,
+    configurable: !0,
+    writable: !0
+  }) : e[r] = t, e;
 }
-function _objectSpread2(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = null != arguments[i] ? arguments[i] : {};
-    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-      _defineProperty(target, key, source[key]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
-      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+function ownKeys(e, r) {
+  var t = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r && (o = o.filter(function (r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), t.push.apply(t, o);
+  }
+  return t;
+}
+function _objectSpread2(e) {
+  for (var r = 1; r < arguments.length; r++) {
+    var t = null != arguments[r] ? arguments[r] : {};
+    r % 2 ? ownKeys(Object(t), !0).forEach(function (r) {
+      _defineProperty(e, r, t[r]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
     });
   }
-  return target;
+  return e;
 }
-function _defineProperty(obj, key, value) {
-  key = _toPropertyKey(key);
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-  return target;
-}
-function _objectWithoutProperties(source, excluded) {
-  if (source == null) return {};
-  var target = _objectWithoutPropertiesLoose(source, excluded);
-  var key, i;
+function _objectWithoutProperties(e, t) {
+  if (null == e) return {};
+  var o,
+    r,
+    i = _objectWithoutPropertiesLoose(e, t);
   if (Object.getOwnPropertySymbols) {
-    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-    for (i = 0; i < sourceSymbolKeys.length; i++) {
-      key = sourceSymbolKeys[i];
-      if (excluded.indexOf(key) >= 0) continue;
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      target[key] = source[key];
-    }
+    var s = Object.getOwnPropertySymbols(e);
+    for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
   }
-  return target;
+  return i;
 }
-function _taggedTemplateLiteral(strings, raw) {
-  if (!raw) {
-    raw = strings.slice(0);
+function _objectWithoutPropertiesLoose(r, e) {
+  if (null == r) return {};
+  var t = {};
+  for (var n in r) if ({}.hasOwnProperty.call(r, n)) {
+    if (e.includes(n)) continue;
+    t[n] = r[n];
   }
-  return Object.freeze(Object.defineProperties(strings, {
+  return t;
+}
+function _taggedTemplateLiteral(e, t) {
+  return t || (t = e.slice(0)), Object.freeze(Object.defineProperties(e, {
     raw: {
-      value: Object.freeze(raw)
+      value: Object.freeze(t)
     }
   }));
 }
-function _toPrimitive(input, hint) {
-  if (typeof input !== "object" || input === null) return input;
-  var prim = input[Symbol.toPrimitive];
-  if (prim !== undefined) {
-    var res = prim.call(input, hint || "default");
-    if (typeof res !== "object") return res;
+function _toPrimitive(t, r) {
+  if ("object" != typeof t || !t) return t;
+  var e = t[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t, r || "default");
+    if ("object" != typeof i) return i;
     throw new TypeError("@@toPrimitive must return a primitive value.");
   }
-  return (hint === "string" ? String : Number)(input);
+  return ("string" === r ? String : Number)(t);
 }
-function _toPropertyKey(arg) {
-  var key = _toPrimitive(arg, "string");
-  return typeof key === "symbol" ? key : String(key);
+function _toPropertyKey(t) {
+  var i = _toPrimitive(t, "string");
+  return "symbol" == typeof i ? i : i + "";
 }
 
 class BaseConfiguration {
@@ -434,7 +418,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.2.0-pmw-18";
+var version = "6.3.0-pmw-18";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -729,33 +713,6 @@ class Observable {
     }
   }
 }
-
-const findIndexRight = (array, predicate) => {
-  for (let index = array.length - 1; index >= 0; index--) {
-    if (predicate(array[index], index, array)) {
-      return index;
-    }
-  }
-  return -1;
-};
-
-/**
- * Returns random number between 2 specified ones.
- * @param {Number} min lower limit
- * @param {Number} max upper limit
- * @return {Number} random value (between min and max)
- */
-const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-/**
- *
- * @param value value to check if NaN
- * @param [valueIfNaN]
- * @returns `fallback` is `value is NaN
- */
-const ifNaN = (value, valueIfNaN) => {
-  return isNaN(value) && typeof valueIfNaN === 'number' ? valueIfNaN : value;
-};
 
 /**
  * Removes value from an array.
@@ -2433,6 +2390,7 @@ class Color {
     return color === 'transparent' ? [255, 255, 255, 0] : Color.sourceFromHex(color) || Color.sourceFromRgb(color) || Color.sourceFromHsl(color) ||
     // color is not recognized
     // we default to black as canvas does
+    // eslint-disable-next-line no-constant-binary-expression
     (this.isUnrecognised = true) && [0, 0, 0, 1];
   }
 
@@ -2912,27 +2870,6 @@ const getWindowFromElement = el => {
   return ((_el$ownerDocument = el.ownerDocument) === null || _el$ownerDocument === void 0 ? void 0 : _el$ownerDocument.defaultView) || null;
 };
 
-// TODO this file needs to go away, cross browser style support is not fabricjs domain.
-
-/**
- * wrapper for setting element's style
- * @param {HTMLElement} element
- * @param {Object | string} styles
- */
-function setStyle(element, styles) {
-  const elementStyle = element.style;
-  if (!elementStyle) {
-    return;
-  } else if (typeof styles === 'string') {
-    element.style.cssText += ';' + styles;
-  } else {
-    Object.entries(styles).forEach(_ref => {
-      let [property, value] = _ref;
-      return elementStyle.setProperty(property, value);
-    });
-  }
-}
-
 const setCanvasDimensions = function (el, ctx, _ref) {
   let {
     width,
@@ -2947,13 +2884,6 @@ const setCanvasDimensions = function (el, ctx, _ref) {
     ctx.scale(retinaScaling, retinaScaling);
   }
 };
-function allowTouchScrolling(element, allow) {
-  const touchAction = allow ? 'manipulation' : NONE;
-  setStyle(element, {
-    'touch-action': touchAction,
-    '-ms-touch-action': touchAction
-  });
-}
 const setCSSDimensions = (el, _ref2) => {
   let {
     width,
@@ -3113,7 +3043,8 @@ const staticCanvasDefaults = {
  * @fires canvas:cleared
  * @fires object:added
  * @fires object:removed
- */ // TODO: fix `EventSpec` inheritance https://github.com/microsoft/TypeScript/issues/26154#issuecomment-1366616260
+ */
+// TODO: fix `EventSpec` inheritance https://github.com/microsoft/TypeScript/issues/26154#issuecomment-1366616260
 class StaticCanvas extends createCollectionMixin(CommonMethods) {
   // background
 
@@ -3511,7 +3442,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       this.nextRenderHandle = 0;
     }
   }
-  drawControls(ctx) {
+  drawControls(_ctx) {
     // Static canvas has no controls
   }
 
@@ -4810,7 +4741,7 @@ class FabricObjectSVGExportMixin {
    * @return {Array} an array of strings with the specific svg representation
    * of the instance
    */
-  _toSVG(reviver) {
+  _toSVG(_reviver) {
     return [''];
   }
 
@@ -4904,6 +4835,389 @@ class FabricObjectSVGExportMixin {
     return this.paintFirst !== FILL ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
   }
 }
+
+function getSvgRegex(arr) {
+  return new RegExp('^(' + arr.join('|') + ')\\b', 'i');
+}
+
+var _templateObject$2, _templateObject2$1;
+const reNum = String.raw(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["(?:[-+]?(?:d*.d+|d+.?)(?:[eE][-+]?d+)?)"], ["(?:[-+]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE][-+]?\\d+)?)"])));
+const svgNS = 'http://www.w3.org/2000/svg';
+String.raw(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["(?:s+,?s*|,s*|$)"], ["(?:\\s+,?\\s*|,\\s*|$)"])));
+const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
+const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
+  svgViewBoxElements = ['symbol', 'image', 'marker', 'pattern', 'view', 'svg'],
+  svgInvalidAncestors = ['pattern', 'defs', 'symbol', 'metadata', 'clipPath', 'mask', 'desc'],
+  svgValidParents = ['symbol', 'g', 'a', 'svg', 'clipPath', 'defs'],
+  attributesMap = {
+    cx: LEFT,
+    x: LEFT,
+    r: 'radius',
+    cy: TOP,
+    y: TOP,
+    display: 'visible',
+    visibility: 'visible',
+    transform: 'transformMatrix',
+    'fill-opacity': 'fillOpacity',
+    'fill-rule': 'fillRule',
+    'font-family': 'fontFamily',
+    'font-size': 'fontSize',
+    'font-style': 'fontStyle',
+    'font-weight': 'fontWeight',
+    'letter-spacing': 'charSpacing',
+    'paint-order': 'paintFirst',
+    'stroke-dasharray': 'strokeDashArray',
+    'stroke-dashoffset': 'strokeDashOffset',
+    'stroke-linecap': 'strokeLineCap',
+    'stroke-linejoin': 'strokeLineJoin',
+    'stroke-miterlimit': 'strokeMiterLimit',
+    'stroke-opacity': 'strokeOpacity',
+    'stroke-width': 'strokeWidth',
+    'text-decoration': 'textDecoration',
+    'text-anchor': 'textAnchor',
+    opacity: 'opacity',
+    'clip-path': 'clipPath',
+    'clip-rule': 'clipRule',
+    'vector-effect': 'strokeUniform',
+    'image-rendering': 'imageSmoothing'
+  },
+  fSize = 'font-size',
+  cPath = 'clip-path';
+const svgValidTagNamesRegEx = getSvgRegex(svgValidTagNames);
+const svgViewBoxElementsRegEx = getSvgRegex(svgViewBoxElements);
+const svgValidParentsRegEx = getSvgRegex(svgValidParents);
+
+// http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute
+// matches, e.g.: +14.56e-12, etc.
+const reViewBoxAttrValue = new RegExp('^' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*' + '$');
+
+const unitVectorX = new Point(1, 0);
+const zero = new Point();
+
+/**
+ * Rotates `vector` with `radians`
+ * @param {Point} vector The vector to rotate (x and y)
+ * @param {Number} radians The radians of the angle for the rotation
+ * @return {Point} The new rotated point
+ */
+const rotateVector = (vector, radians) => vector.rotate(radians);
+
+/**
+ * Creates a vector from points represented as a point
+ *
+ * @param {Point} from
+ * @param {Point} to
+ * @returns {Point} vector
+ */
+const createVector = (from, to) => new Point(to).subtract(from);
+
+/**
+ * return the magnitude of a vector
+ * @return {number}
+ */
+const magnitude = point => point.distanceFrom(zero);
+
+/**
+ * Calculates the angle between 2 vectors
+ * @param {Point} a
+ * @param {Point} b
+ * @returns the angle in radians from `a` to `b`
+ */
+const calcAngleBetweenVectors = (a, b) => Math.atan2(crossProduct(a, b), dotProduct(a, b));
+
+/**
+ * Calculates the angle between the x axis and the vector
+ * @param {Point} v
+ * @returns the angle in radians of `v`
+ */
+const calcVectorRotation = v => calcAngleBetweenVectors(unitVectorX, v);
+
+/**
+ * @param {Point} v
+ * @returns {Point} vector representing the unit vector pointing to the direction of `v`
+ */
+const getUnitVector = v => v.eq(zero) ? v : v.scalarDivide(magnitude(v));
+
+/**
+ * @param {Point} v
+ * @param {Boolean} [counterClockwise] the direction of the orthogonal vector, defaults to `true`
+ * @returns {Point} the unit orthogonal vector
+ */
+const getOrthonormalVector = function (v) {
+  let counterClockwise = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+  return getUnitVector(new Point(-v.y, v.x).scalarMultiply(counterClockwise ? 1 : -1));
+};
+
+/**
+ * Cross product of two vectors in 2D
+ * @param {Point} a
+ * @param {Point} b
+ * @returns {number} the magnitude of Z vector
+ */
+const crossProduct = (a, b) => a.x * b.y - a.y * b.x;
+
+/**
+ * Dot product of two vectors in 2D
+ * @param {Point} a
+ * @param {Point} b
+ * @returns {number}
+ */
+const dotProduct = (a, b) => a.x * b.x + a.y * b.y;
+
+/**
+ * Checks if the vector is between two others. It is considered
+ * to be inside when the vector to be tested is between the
+ * initial vector and the final vector (included) in a counterclockwise direction.
+ * @param {Point} t vector to be tested
+ * @param {Point} a initial vector
+ * @param {Point} b final vector
+ * @returns {boolean} true if the vector is among the others
+ */
+const isBetweenVectors = (t, a, b) => {
+  if (t.eq(a) || t.eq(b)) return true;
+  const AxB = crossProduct(a, b),
+    AxT = crossProduct(a, t),
+    BxT = crossProduct(b, t);
+  return AxB >= 0 ? AxT >= 0 && BxT <= 0 : !(AxT <= 0 && BxT >= 0);
+};
+
+/**
+   * Regex matching shadow offsetX, offsetY and blur (ex: "2px 2px 10px rgba(0,0,0,0.2)", "rgb(0,255,0) 2px 2px")
+   * - (?:\s|^): This part captures either a whitespace character (\s) or the beginning of a line (^). It's non-capturing (due to (?:...)), meaning it doesn't create a capturing group.
+   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: This captures the first component of the shadow, which is the horizontal offset. Breaking it down:
+   *   - (-?\d+): Captures an optional minus sign followed by one or more digits (integer part of the number).
+   *   - (?:\.\d*)?: Optionally captures a decimal point followed by zero or more digits (decimal part of the number).
+   *   - (?:px)?: Optionally captures the "px" unit.
+   *   - (?:\s?|$): Captures either an optional whitespace or the end of the line. This whole part is wrapped in a non-capturing group and marked as optional with ?.
+   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: Similar to the previous step, this captures the vertical offset.
+
+(\d+(?:\.\d*)?(?:px)?)?: This captures the blur radius. It's similar to the horizontal offset but without the optional minus sign.
+
+(?:\s+(-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?){0,1}: This captures an optional part for the color. It allows for whitespace followed by a component with an optional minus sign, digits, decimal point, and "px" unit.
+
+(?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
+   */
+// eslint-disable-next-line max-len
+
+const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
+const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
+const shadowDefaultValues = {
+  color: 'rgb(0,0,0)',
+  blur: 0,
+  offsetX: 0,
+  offsetY: 0,
+  affectStroke: false,
+  includeDefaultValues: true,
+  nonScaling: false
+};
+class Shadow {
+  /**
+   * @see {@link http://fabricjs.com/shadows|Shadow demo}
+   * @param {Object|String} [options] Options object with any of color, blur, offsetX, offsetY properties or string (e.g. "rgba(0,0,0,0.2) 2px 2px 10px")
+   */
+
+  constructor(arg0) {
+    const options = typeof arg0 === 'string' ? Shadow.parseShadow(arg0) : arg0;
+    Object.assign(this, Shadow.ownDefaults, options);
+    this.id = uid();
+  }
+
+  /**
+   * @param {String} value Shadow value to parse
+   * @return {Object} Shadow object with color, offsetX, offsetY and blur
+   */
+  static parseShadow(value) {
+    const shadowStr = value.trim(),
+      [, offsetX = 0, offsetY = 0, blur = 0] = (reOffsetsAndBlur.exec(shadowStr) || []).map(value => parseFloat(value) || 0),
+      color = (shadowStr.replace(reOffsetsAndBlur, '') || 'rgb(0,0,0)').trim();
+    return {
+      color,
+      offsetX,
+      offsetY,
+      blur
+    };
+  }
+
+  /**
+   * Returns a string representation of an instance
+   * @see http://www.w3.org/TR/css-text-decor-3/#text-shadow
+   * @return {String} Returns CSS3 text-shadow declaration
+   */
+  toString() {
+    return [this.offsetX, this.offsetY, this.blur, this.color].join('px ');
+  }
+
+  /**
+   * Returns SVG representation of a shadow
+   * @param {FabricObject} object
+   * @return {String} SVG representation of a shadow
+   */
+  toSVG(object) {
+    const offset = rotateVector(new Point(this.offsetX, this.offsetY), degreesToRadians(-object.angle)),
+      BLUR_BOX = 20,
+      color = new Color(this.color);
+    let fBoxX = 40,
+      fBoxY = 40;
+    if (object.width && object.height) {
+      //http://www.w3.org/TR/SVG/filters.html#FilterEffectsRegion
+      // we add some extra space to filter box to contain the blur ( 20 )
+      fBoxX = toFixed((Math.abs(offset.x) + this.blur) / object.width, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
+      fBoxY = toFixed((Math.abs(offset.y) + this.blur) / object.height, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
+    }
+    if (object.flipX) {
+      offset.x *= -1;
+    }
+    if (object.flipY) {
+      offset.y *= -1;
+    }
+    return "<filter id=\"SVGID_".concat(this.id, "\" y=\"-").concat(fBoxY, "%\" height=\"").concat(100 + 2 * fBoxY, "%\" x=\"-").concat(fBoxX, "%\" width=\"").concat(100 + 2 * fBoxX, "%\" >\n\t<feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"").concat(toFixed(this.blur ? this.blur / 2 : 0, config.NUM_FRACTION_DIGITS), "\"></feGaussianBlur>\n\t<feOffset dx=\"").concat(toFixed(offset.x, config.NUM_FRACTION_DIGITS), "\" dy=\"").concat(toFixed(offset.y, config.NUM_FRACTION_DIGITS), "\" result=\"oBlur\" ></feOffset>\n\t<feFlood flood-color=\"").concat(color.toRgb(), "\" flood-opacity=\"").concat(color.getAlpha(), "\"/>\n\t<feComposite in2=\"oBlur\" operator=\"in\" />\n\t<feMerge>\n\t\t<feMergeNode></feMergeNode>\n\t\t<feMergeNode in=\"SourceGraphic\"></feMergeNode>\n\t</feMerge>\n</filter>\n");
+  }
+
+  /**
+   * Returns object representation of a shadow
+   * @return {Object} Object representation of a shadow instance
+   */
+  toObject() {
+    const data = {
+      color: this.color,
+      blur: this.blur,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+      affectStroke: this.affectStroke,
+      nonScaling: this.nonScaling,
+      type: this.constructor.type
+    };
+    const defaults = Shadow.ownDefaults;
+    return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
+  }
+  static async fromObject(options) {
+    return new this(options);
+  }
+}
+/**
+ * Shadow color
+ * @type String
+ * @default
+ */
+/**
+ * Shadow blur
+ * @type Number
+ */
+/**
+ * Shadow horizontal offset
+ * @type Number
+ * @default
+ */
+/**
+ * Shadow vertical offset
+ * @type Number
+ * @default
+ */
+/**
+ * Whether the shadow should affect stroke operations
+ * @type Boolean
+ * @default
+ */
+/**
+ * Indicates whether toObject should include default values
+ * @type Boolean
+ * @default
+ */
+/**
+ * When `false`, the shadow will scale with the object.
+ * When `true`, the shadow's offsetX, offsetY, and blur will not be affected by the object's scale.
+ * default to false
+ * @type Boolean
+ * @default
+ */
+_defineProperty(Shadow, "ownDefaults", shadowDefaultValues);
+_defineProperty(Shadow, "type", 'shadow');
+classRegistry.setClass(Shadow, 'shadow');
+
+const capValue = (min, value, max) => Math.max(min, Math.min(value, max));
+
+const stateProperties = [TOP, LEFT, SCALE_X, SCALE_Y, 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', SKEW_X, SKEW_Y];
+const cacheProperties = [FILL, STROKE, 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
+const fabricObjectDefaultValues = {
+  // see composeMatrix() to see order of transforms. First defaults listed based on this
+  top: 0,
+  left: 0,
+  width: 0,
+  height: 0,
+  angle: 0,
+  flipX: false,
+  flipY: false,
+  scaleX: 1,
+  scaleY: 1,
+  minScaleLimit: 0,
+  skewX: 0,
+  skewY: 0,
+  originX: LEFT,
+  originY: TOP,
+  strokeWidth: 1,
+  strokeUniform: false,
+  padding: 0,
+  opacity: 1,
+  paintFirst: FILL,
+  fill: 'rgb(0,0,0)',
+  fillRule: 'nonzero',
+  __PMWID: '',
+  erasable: false,
+  stroke: null,
+  strokeDashArray: null,
+  leanBackground: false,
+  leanBackgroundOffset: 0,
+  strokeDashOffset: 0,
+  strokeLineCap: 'butt',
+  strokeLineJoin: 'miter',
+  pmwBmBtnText: '',
+  pmwBmBtnIcon: '',
+  strokeMiterLimit: 4,
+  globalCompositeOperation: 'source-over',
+  backgroundColor: '',
+  shadow: null,
+  visible: true,
+  includeDefaultValues: true,
+  excludeFromExport: false,
+  objectCaching: true,
+  clipPath: undefined,
+  inverted: false,
+  absolutePositioned: false,
+  centeredRotation: true,
+  centeredScaling: false,
+  dirty: true
+};
+const interactiveObjectDefaultValues = {
+  noScaleCache: true,
+  lockMovementX: false,
+  lockMovementY: false,
+  lockRotation: false,
+  lockScalingX: false,
+  lockScalingY: false,
+  lockSkewingX: false,
+  lockSkewingY: false,
+  lockScalingFlip: false,
+  cornerSize: 13,
+  touchCornerSize: 24,
+  transparentCorners: true,
+  cornerColor: 'rgb(178,204,255)',
+  cornerStrokeColor: '',
+  cornerStyle: 'rect',
+  cornerDashArray: null,
+  hasControls: true,
+  borderColor: 'rgb(178,204,255)',
+  borderDashArray: null,
+  borderOpacityWhenMoving: 0.4,
+  borderScaleFactor: 1,
+  hasBorders: true,
+  selectionBackgroundColor: '',
+  selectable: true,
+  evented: true,
+  perPixelTargetFind: false,
+  activeOn: 'down',
+  hoverCursor: null,
+  moveCursor: null
+};
 
 /**
  * Easing functions
@@ -5415,8 +5729,6 @@ class ArrayAnimation extends AnimationBase {
   }
 }
 
-const capValue = (min, value, max) => Math.max(min, Math.min(value, max));
-
 const _excluded$f = ["startValue", "endValue", "easing", "onChange", "onComplete", "abort"];
 const defaultColorEasing = (timeElapsed, startValue, byValue, duration) => {
   const durationProgress = 1 - Math.cos(timeElapsed / duration * halfPI);
@@ -5498,96 +5810,6 @@ function animateColor(options) {
   animation.start();
   return animation;
 }
-
-const unitVectorX = new Point(1, 0);
-const zero = new Point();
-
-/**
- * Rotates `vector` with `radians`
- * @param {Point} vector The vector to rotate (x and y)
- * @param {Number} radians The radians of the angle for the rotation
- * @return {Point} The new rotated point
- */
-const rotateVector = (vector, radians) => vector.rotate(radians);
-
-/**
- * Creates a vector from points represented as a point
- *
- * @param {Point} from
- * @param {Point} to
- * @returns {Point} vector
- */
-const createVector = (from, to) => new Point(to).subtract(from);
-
-/**
- * return the magnitude of a vector
- * @return {number}
- */
-const magnitude = point => point.distanceFrom(zero);
-
-/**
- * Calculates the angle between 2 vectors
- * @param {Point} a
- * @param {Point} b
- * @returns the angle in radians from `a` to `b`
- */
-const calcAngleBetweenVectors = (a, b) => Math.atan2(crossProduct(a, b), dotProduct(a, b));
-
-/**
- * Calculates the angle between the x axis and the vector
- * @param {Point} v
- * @returns the angle in radians of `v`
- */
-const calcVectorRotation = v => calcAngleBetweenVectors(unitVectorX, v);
-
-/**
- * @param {Point} v
- * @returns {Point} vector representing the unit vector pointing to the direction of `v`
- */
-const getUnitVector = v => v.eq(zero) ? v : v.scalarDivide(magnitude(v));
-
-/**
- * @param {Point} v
- * @param {Boolean} [counterClockwise] the direction of the orthogonal vector, defaults to `true`
- * @returns {Point} the unit orthogonal vector
- */
-const getOrthonormalVector = function (v) {
-  let counterClockwise = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-  return getUnitVector(new Point(-v.y, v.x).scalarMultiply(counterClockwise ? 1 : -1));
-};
-
-/**
- * Cross product of two vectors in 2D
- * @param {Point} a
- * @param {Point} b
- * @returns {number} the magnitude of Z vector
- */
-const crossProduct = (a, b) => a.x * b.y - a.y * b.x;
-
-/**
- * Dot product of two vectors in 2D
- * @param {Point} a
- * @param {Point} b
- * @returns {number}
- */
-const dotProduct = (a, b) => a.x * b.x + a.y * b.y;
-
-/**
- * Checks if the vector is between two others. It is considered
- * to be inside when the vector to be tested is between the
- * initial vector and the final vector (included) in a counterclockwise direction.
- * @param {Point} t vector to be tested
- * @param {Point} a initial vector
- * @param {Point} b final vector
- * @returns {boolean} true if the vector is among the others
- */
-const isBetweenVectors = (t, a, b) => {
-  if (t.eq(a) || t.eq(b)) return true;
-  const AxB = crossProduct(a, b),
-    AxT = crossProduct(a, t),
-    BxT = crossProduct(b, t);
-  return AxB >= 0 ? AxT >= 0 && BxT <= 0 : !(AxT <= 0 && BxT >= 0);
-};
 
 /* Adaptation of work of Kevin Lindsey (kevin@kevlindev.com) */
 
@@ -5849,161 +6071,9 @@ class Intersection {
   }
 }
 
-class ObjectOrigin extends CommonMethods {
-  /**
-   * Object containing this object.
-   * can influence its size and position
-   */
+class ObjectGeometry extends CommonMethods {
+  // #region Geometry
 
-  /**
-   * Calculate object bounding box dimensions from its properties scale, skew.
-   * This bounding box is aligned with object angle and not with canvas axis or screen.
-   * @param {Object} [options]
-   * @param {Number} [options.scaleX]
-   * @param {Number} [options.scaleY]
-   * @param {Number} [options.skewX]
-   * @param {Number} [options.skewY]
-   * @private
-   * @returns {Point} dimensions
-   */
-  _getTransformedDimensions() {
-    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    const dimOptions = _objectSpread2({
-      // if scaleX or scaleY are negative numbers,
-      // this will return dimensions that are negative.
-      // and this will break assumptions around the codebase
-      scaleX: this.scaleX,
-      scaleY: this.scaleY,
-      skewX: this.skewX,
-      skewY: this.skewY,
-      width: this.width,
-      height: this.height,
-      strokeWidth: this.strokeWidth
-    }, options);
-    // stroke is applied before/after transformations are applied according to `strokeUniform`
-    const strokeWidth = dimOptions.strokeWidth;
-    let preScalingStrokeValue = strokeWidth,
-      postScalingStrokeValue = 0;
-    if (this.strokeUniform) {
-      preScalingStrokeValue = 0;
-      postScalingStrokeValue = strokeWidth;
-    }
-    const dimX = dimOptions.width + preScalingStrokeValue,
-      dimY = dimOptions.height + preScalingStrokeValue,
-      noSkew = dimOptions.skewX === 0 && dimOptions.skewY === 0;
-    let finalDimensions;
-    if (noSkew) {
-      finalDimensions = new Point(dimX * dimOptions.scaleX, dimY * dimOptions.scaleY);
-    } else {
-      finalDimensions = sizeAfterTransform(dimX, dimY, calcDimensionsMatrix(dimOptions));
-    }
-    return finalDimensions.scalarAdd(postScalingStrokeValue);
-  }
-
-  /**
-   * Translates the coordinates from a set of origin to another (based on the object's dimensions)
-   * @param {Point} point The point which corresponds to the originX and originY params
-   * @param {TOriginX} fromOriginX Horizontal origin: 'left', 'center' or 'right'
-   * @param {TOriginY} fromOriginY Vertical origin: 'top', 'center' or 'bottom'
-   * @param {TOriginX} toOriginX Horizontal origin: 'left', 'center' or 'right'
-   * @param {TOriginY} toOriginY Vertical origin: 'top', 'center' or 'bottom'
-   * @return {Point}
-   */
-  translateToGivenOrigin(point, fromOriginX, fromOriginY, toOriginX, toOriginY) {
-    let x = point.x,
-      y = point.y;
-    const offsetX = resolveOrigin(toOriginX) - resolveOrigin(fromOriginX),
-      offsetY = resolveOrigin(toOriginY) - resolveOrigin(fromOriginY);
-    if (offsetX || offsetY) {
-      const dim = this._getTransformedDimensions();
-      x += offsetX * dim.x;
-      y += offsetY * dim.y;
-    }
-    return new Point(x, y);
-  }
-
-  /**
-   * Translates the coordinates from origin to center coordinates (based on the object's dimensions)
-   * @param {Point} point The point which corresponds to the originX and originY params
-   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
-   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
-   * @return {Point}
-   */
-  translateToCenterPoint(point, originX, originY) {
-    const p = this.translateToGivenOrigin(point, originX, originY, CENTER, CENTER);
-    if (this.angle) {
-      return p.rotate(degreesToRadians(this.angle), point);
-    }
-    return p;
-  }
-
-  /**
-   * Translates the coordinates from center to origin coordinates (based on the object's dimensions)
-   * @param {Point} center The point which corresponds to center of the object
-   * @param {OriginX} originX Horizontal origin: 'left', 'center' or 'right'
-   * @param {OriginY} originY Vertical origin: 'top', 'center' or 'bottom'
-   * @return {Point}
-   */
-  translateToOriginPoint(center, originX, originY) {
-    const p = this.translateToGivenOrigin(center, CENTER, CENTER, originX, originY);
-    if (this.angle) {
-      return p.rotate(degreesToRadians(this.angle), center);
-    }
-    return p;
-  }
-
-  /**
-   * Returns the center coordinates of the object relative to canvas
-   * @return {Point}
-   */
-  getCenterPoint() {
-    const relCenter = this.getRelativeCenterPoint();
-    return this.group ? transformPoint(relCenter, this.group.calcTransformMatrix()) : relCenter;
-  }
-
-  /**
-   * Returns the center coordinates of the object relative to it's parent
-   * @return {Point}
-   */
-  getRelativeCenterPoint() {
-    return this.translateToCenterPoint(new Point(this.left, this.top), this.originX, this.originY);
-  }
-
-  /**
-   * Returns the coordinates of the object as if it has a different origin
-   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
-   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
-   * @return {Point}
-   */
-  getPointByOrigin(originX, originY) {
-    return this.translateToOriginPoint(this.getRelativeCenterPoint(), originX, originY);
-  }
-
-  /**
-   * Sets the position of the object taking into consideration the object's origin
-   * @param {Point} pos The new position of the object
-   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
-   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
-   * @return {void}
-   */
-  setPositionByOrigin(pos, originX, originY) {
-    const center = this.translateToCenterPoint(pos, originX, originY),
-      position = this.translateToOriginPoint(center, this.originX, this.originY);
-    this.set({
-      left: position.x,
-      top: position.y
-    });
-  }
-
-  /**
-   * @private
-   */
-  _getLeftTopCoords() {
-    return this.translateToOriginPoint(this.getRelativeCenterPoint(), LEFT, TOP);
-  }
-}
-
-class ObjectGeometry extends ObjectOrigin {
   /**
    * Describe object's corner position in scene coordinates.
    * The coordinates are derived from the following:
@@ -6472,505 +6542,161 @@ class ObjectGeometry extends ObjectOrigin {
   _calculateCurrentDimensions(options) {
     return this._getTransformedDimensions(options).transform(this.getViewportTransform(), true).scalarAdd(2 * this.padding);
   }
-}
 
-class StackedObject extends ObjectGeometry {
+  // #region Origin
+
   /**
-   * A reference to the parent of the object
-   * Used to keep the original parent ref when the object has been added to an ActiveSelection, hence loosing the `group` ref
+   * Object containing this object.
+   * can influence its size and position
    */
 
   /**
-   * Checks if object is descendant of target
-   * Should be used instead of {@link Group.contains} or {@link StaticCanvas.contains} for performance reasons
-   * @param {TAncestor} target
-   * @returns {boolean}
+   * Calculate object bounding box dimensions from its properties scale, skew.
+   * This bounding box is aligned with object angle and not with canvas axis or screen.
+   * @param {Object} [options]
+   * @param {Number} [options.scaleX]
+   * @param {Number} [options.scaleY]
+   * @param {Number} [options.skewX]
+   * @param {Number} [options.skewY]
+   * @private
+   * @returns {Point} dimensions
    */
-  isDescendantOf(target) {
-    const {
-      parent,
-      group
-    } = this;
-    return parent === target || group === target || this.canvas === target ||
-    // walk up
-    !!parent && parent.isDescendantOf(target) || !!group && group !== parent && group.isDescendantOf(target);
+  _getTransformedDimensions() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    const dimOptions = _objectSpread2({
+      // if scaleX or scaleY are negative numbers,
+      // this will return dimensions that are negative.
+      // and this will break assumptions around the codebase
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      skewX: this.skewX,
+      skewY: this.skewY,
+      width: this.width,
+      height: this.height,
+      strokeWidth: this.strokeWidth
+    }, options);
+    // stroke is applied before/after transformations are applied according to `strokeUniform`
+    const strokeWidth = dimOptions.strokeWidth;
+    let preScalingStrokeValue = strokeWidth,
+      postScalingStrokeValue = 0;
+    if (this.strokeUniform) {
+      preScalingStrokeValue = 0;
+      postScalingStrokeValue = strokeWidth;
+    }
+    const dimX = dimOptions.width + preScalingStrokeValue,
+      dimY = dimOptions.height + preScalingStrokeValue,
+      noSkew = dimOptions.skewX === 0 && dimOptions.skewY === 0;
+    let finalDimensions;
+    if (noSkew) {
+      finalDimensions = new Point(dimX * dimOptions.scaleX, dimY * dimOptions.scaleY);
+    } else {
+      finalDimensions = sizeAfterTransform(dimX, dimY, calcDimensionsMatrix(dimOptions));
+    }
+    return finalDimensions.scalarAdd(postScalingStrokeValue);
   }
 
   /**
-   * @returns {Ancestors} ancestors (excluding `ActiveSelection`) from bottom to top
+   * Translates the coordinates from a set of origin to another (based on the object's dimensions)
+   * @param {Point} point The point which corresponds to the originX and originY params
+   * @param {TOriginX} fromOriginX Horizontal origin: 'left', 'center' or 'right'
+   * @param {TOriginY} fromOriginY Vertical origin: 'top', 'center' or 'bottom'
+   * @param {TOriginX} toOriginX Horizontal origin: 'left', 'center' or 'right'
+   * @param {TOriginY} toOriginY Vertical origin: 'top', 'center' or 'bottom'
+   * @return {Point}
    */
-  getAncestors() {
-    const ancestors = [];
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    let parent = this;
-    do {
-      parent = parent instanceof StackedObject ? parent.parent : undefined;
-      parent && ancestors.push(parent);
-    } while (parent);
-    return ancestors;
+  translateToGivenOrigin(point, fromOriginX, fromOriginY, toOriginX, toOriginY) {
+    let x = point.x,
+      y = point.y;
+    const offsetX = resolveOrigin(toOriginX) - resolveOrigin(fromOriginX),
+      offsetY = resolveOrigin(toOriginY) - resolveOrigin(fromOriginY);
+    if (offsetX || offsetY) {
+      const dim = this._getTransformedDimensions();
+      x += offsetX * dim.x;
+      y += offsetY * dim.y;
+    }
+    return new Point(x, y);
   }
 
   /**
-   * Compare ancestors
-   *
-   * @param {StackedObject} other
-   * @returns {AncestryComparison} an object that represent the ancestry situation.
+   * Translates the coordinates from origin to center coordinates (based on the object's dimensions)
+   * @param {Point} point The point which corresponds to the originX and originY params
+   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
+   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
+   * @return {Point}
    */
-  findCommonAncestors(other) {
-    if (this === other) {
-      return {
-        fork: [],
-        otherFork: [],
-        common: [this, ...this.getAncestors()]
-      };
+  translateToCenterPoint(point, originX, originY) {
+    const p = this.translateToGivenOrigin(point, originX, originY, CENTER, CENTER);
+    if (this.angle) {
+      return p.rotate(degreesToRadians(this.angle), point);
     }
-    const ancestors = this.getAncestors();
-    const otherAncestors = other.getAncestors();
-    //  if `this` has no ancestors and `this` is top ancestor of `other` we must handle the following case
-    if (ancestors.length === 0 && otherAncestors.length > 0 && this === otherAncestors[otherAncestors.length - 1]) {
-      return {
-        fork: [],
-        otherFork: [other, ...otherAncestors.slice(0, otherAncestors.length - 1)],
-        common: [this]
-      };
-    }
-    //  compare ancestors
-    for (let i = 0, ancestor; i < ancestors.length; i++) {
-      ancestor = ancestors[i];
-      if (ancestor === other) {
-        return {
-          fork: [this, ...ancestors.slice(0, i)],
-          otherFork: [],
-          common: ancestors.slice(i)
-        };
-      }
-      for (let j = 0; j < otherAncestors.length; j++) {
-        if (this === otherAncestors[j]) {
-          return {
-            fork: [],
-            otherFork: [other, ...otherAncestors.slice(0, j)],
-            common: [this, ...ancestors]
-          };
-        }
-        if (ancestor === otherAncestors[j]) {
-          return {
-            fork: [this, ...ancestors.slice(0, i)],
-            otherFork: [other, ...otherAncestors.slice(0, j)],
-            common: ancestors.slice(i)
-          };
-        }
-      }
-    }
-    // nothing shared
-    return {
-      fork: [this, ...ancestors],
-      otherFork: [other, ...otherAncestors],
-      common: []
-    };
+    return p;
   }
 
   /**
-   *
-   * @param {StackedObject} other
-   * @returns {boolean}
+   * Translates the coordinates from center to origin coordinates (based on the object's dimensions)
+   * @param {Point} center The point which corresponds to center of the object
+   * @param {OriginX} originX Horizontal origin: 'left', 'center' or 'right'
+   * @param {OriginY} originY Vertical origin: 'top', 'center' or 'bottom'
+   * @return {Point}
    */
-  hasCommonAncestors(other) {
-    const commonAncestors = this.findCommonAncestors(other);
-    return commonAncestors && !!commonAncestors.common.length;
+  translateToOriginPoint(center, originX, originY) {
+    const p = this.translateToGivenOrigin(center, CENTER, CENTER, originX, originY);
+    if (this.angle) {
+      return p.rotate(degreesToRadians(this.angle), center);
+    }
+    return p;
   }
 
   /**
-   *
-   * @param {FabricObject} other object to compare against
-   * @returns {boolean | undefined} if objects do not share a common ancestor or they are strictly equal it is impossible to determine which is in front of the other; in such cases the function returns `undefined`
+   * Returns the center coordinates of the object relative to canvas
+   * @return {Point}
    */
-  isInFrontOf(other) {
-    if (this === other) {
-      return undefined;
-    }
-    const ancestorData = this.findCommonAncestors(other);
-    if (ancestorData.fork.includes(other)) {
-      return true;
-    }
-    if (ancestorData.otherFork.includes(this)) {
-      return false;
-    }
-    // if there isn't a common ancestor, we take the canvas.
-    // if there is no canvas, there is nothing to compare
-    const firstCommonAncestor = ancestorData.common[0] || this.canvas;
-    if (!firstCommonAncestor) {
-      return undefined;
-    }
-    const headOfFork = ancestorData.fork.pop(),
-      headOfOtherFork = ancestorData.otherFork.pop(),
-      thisIndex = firstCommonAncestor._objects.indexOf(headOfFork),
-      otherIndex = firstCommonAncestor._objects.indexOf(headOfOtherFork);
-    return thisIndex > -1 && thisIndex > otherIndex;
+  getCenterPoint() {
+    const relCenter = this.getRelativeCenterPoint();
+    return this.group ? transformPoint(relCenter, this.group.calcTransformMatrix()) : relCenter;
   }
-}
 
-class AnimatableObject extends StackedObject {
   /**
-   * Animates object's properties
-   * @param {Record<string, number | number[] | TColorArg>} animatable map of keys and end values
-   * @param {Partial<AnimationOptions<T>>} options
-   * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#animation}
-   * @return {Record<string, TAnimation<T>>} map of animation contexts
-   *
-   * As object — multiple properties
-   *
-   * object.animate({ left: ..., top: ... });
-   * object.animate({ left: ..., top: ... }, { duration: ... });
+   * Returns the center coordinates of the object relative to it's parent
+   * @return {Point}
    */
-  animate(animatable, options) {
-    return Object.entries(animatable).reduce((acc, _ref) => {
-      let [key, endValue] = _ref;
-      acc[key] = this._animate(key, endValue, options);
-      return acc;
-    }, {});
+  getRelativeCenterPoint() {
+    return this.translateToCenterPoint(new Point(this.left, this.top), this.originX, this.originY);
+  }
+
+  /**
+   * Returns the coordinates of the object as if it has a different origin
+   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
+   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
+   * @return {Point}
+   */
+  getPointByOrigin(originX, originY) {
+    return this.translateToOriginPoint(this.getRelativeCenterPoint(), originX, originY);
+  }
+
+  /**
+   * Sets the position of the object taking into consideration the object's origin
+   * @param {Point} pos The new position of the object
+   * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
+   * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
+   * @return {void}
+   */
+  setPositionByOrigin(pos, originX, originY) {
+    const center = this.translateToCenterPoint(pos, originX, originY),
+      position = this.translateToOriginPoint(center, this.originX, this.originY);
+    this.set({
+      left: position.x,
+      top: position.y
+    });
   }
 
   /**
    * @private
-   * @param {String} key Property to animate
-   * @param {String} to Value to animate to
-   * @param {Object} [options] Options object
    */
-  _animate(key, endValue) {
-    let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    const path = key.split('.');
-    const propIsColor = this.constructor.colorProperties.includes(path[path.length - 1]);
-    const {
-      abort,
-      startValue,
-      onChange,
-      onComplete
-    } = options;
-    const animationOptions = _objectSpread2(_objectSpread2({}, options), {}, {
-      target: this,
-      // path.reduce... is the current value in case start value isn't provided
-      startValue: startValue !== null && startValue !== void 0 ? startValue : path.reduce((deep, key) => deep[key], this),
-      endValue,
-      abort: abort === null || abort === void 0 ? void 0 : abort.bind(this),
-      onChange: (value, valueProgress, durationProgress) => {
-        path.reduce((deep, key, index) => {
-          if (index === path.length - 1) {
-            deep[key] = value;
-          }
-          return deep[key];
-        }, this);
-        onChange &&
-        // @ts-expect-error generic callback arg0 is wrong
-        onChange(value, valueProgress, durationProgress);
-      },
-      onComplete: (value, valueProgress, durationProgress) => {
-        this.setCoords();
-        onComplete &&
-        // @ts-expect-error generic callback arg0 is wrong
-        onComplete(value, valueProgress, durationProgress);
-      }
-    });
-    return propIsColor ? animateColor(animationOptions) : animate(animationOptions);
+  _getLeftTopCoords() {
+    return this.translateToOriginPoint(this.getRelativeCenterPoint(), LEFT, TOP);
   }
 }
-/**
- * List of properties to consider for animating colors.
- * @type String[]
- */
-_defineProperty(AnimatableObject, "colorProperties", [FILL, STROKE, 'backgroundColor']);
-
-function getSvgRegex(arr) {
-  return new RegExp('^(' + arr.join('|') + ')\\b', 'i');
-}
-
-var _templateObject$2, _templateObject2$1;
-const reNum = String.raw(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["(?:[-+]?(?:d*.d+|d+.?)(?:[eE][-+]?d+)?)"], ["(?:[-+]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE][-+]?\\d+)?)"])));
-const svgNS = 'http://www.w3.org/2000/svg';
-String.raw(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["(?:s+,?s*|,s*|$)"], ["(?:\\s+,?\\s*|,\\s*|$)"])));
-const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
-const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
-  svgViewBoxElements = ['symbol', 'image', 'marker', 'pattern', 'view', 'svg'],
-  svgInvalidAncestors = ['pattern', 'defs', 'symbol', 'metadata', 'clipPath', 'mask', 'desc'],
-  svgValidParents = ['symbol', 'g', 'a', 'svg', 'clipPath', 'defs'],
-  attributesMap = {
-    cx: LEFT,
-    x: LEFT,
-    r: 'radius',
-    cy: TOP,
-    y: TOP,
-    display: 'visible',
-    visibility: 'visible',
-    transform: 'transformMatrix',
-    'fill-opacity': 'fillOpacity',
-    'fill-rule': 'fillRule',
-    'font-family': 'fontFamily',
-    'font-size': 'fontSize',
-    'font-style': 'fontStyle',
-    'font-weight': 'fontWeight',
-    'letter-spacing': 'charSpacing',
-    'paint-order': 'paintFirst',
-    'stroke-dasharray': 'strokeDashArray',
-    'stroke-dashoffset': 'strokeDashOffset',
-    'stroke-linecap': 'strokeLineCap',
-    'stroke-linejoin': 'strokeLineJoin',
-    'stroke-miterlimit': 'strokeMiterLimit',
-    'stroke-opacity': 'strokeOpacity',
-    'stroke-width': 'strokeWidth',
-    'text-decoration': 'textDecoration',
-    'text-anchor': 'textAnchor',
-    opacity: 'opacity',
-    'clip-path': 'clipPath',
-    'clip-rule': 'clipRule',
-    'vector-effect': 'strokeUniform',
-    'image-rendering': 'imageSmoothing'
-  },
-  fSize = 'font-size',
-  cPath = 'clip-path';
-const svgValidTagNamesRegEx = getSvgRegex(svgValidTagNames);
-const svgViewBoxElementsRegEx = getSvgRegex(svgViewBoxElements);
-const svgValidParentsRegEx = getSvgRegex(svgValidParents);
-
-// http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute
-// matches, e.g.: +14.56e-12, etc.
-const reViewBoxAttrValue = new RegExp('^' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*' + '$');
-
-/**
-   * Regex matching shadow offsetX, offsetY and blur (ex: "2px 2px 10px rgba(0,0,0,0.2)", "rgb(0,255,0) 2px 2px")
-   * - (?:\s|^): This part captures either a whitespace character (\s) or the beginning of a line (^). It's non-capturing (due to (?:...)), meaning it doesn't create a capturing group.
-   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: This captures the first component of the shadow, which is the horizontal offset. Breaking it down:
-   *   - (-?\d+): Captures an optional minus sign followed by one or more digits (integer part of the number).
-   *   - (?:\.\d*)?: Optionally captures a decimal point followed by zero or more digits (decimal part of the number).
-   *   - (?:px)?: Optionally captures the "px" unit.
-   *   - (?:\s?|$): Captures either an optional whitespace or the end of the line. This whole part is wrapped in a non-capturing group and marked as optional with ?.
-   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: Similar to the previous step, this captures the vertical offset.
-
-(\d+(?:\.\d*)?(?:px)?)?: This captures the blur radius. It's similar to the horizontal offset but without the optional minus sign.
-
-(?:\s+(-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?){0,1}: This captures an optional part for the color. It allows for whitespace followed by a component with an optional minus sign, digits, decimal point, and "px" unit.
-
-(?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
-   */
-// eslint-disable-next-line max-len
-
-const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
-const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
-const shadowDefaultValues = {
-  color: 'rgb(0,0,0)',
-  blur: 0,
-  offsetX: 0,
-  offsetY: 0,
-  affectStroke: false,
-  includeDefaultValues: true,
-  nonScaling: false
-};
-class Shadow {
-  /**
-   * @see {@link http://fabricjs.com/shadows|Shadow demo}
-   * @param {Object|String} [options] Options object with any of color, blur, offsetX, offsetY properties or string (e.g. "rgba(0,0,0,0.2) 2px 2px 10px")
-   */
-
-  constructor(arg0) {
-    const options = typeof arg0 === 'string' ? Shadow.parseShadow(arg0) : arg0;
-    Object.assign(this, Shadow.ownDefaults, options);
-    this.id = uid();
-  }
-
-  /**
-   * @param {String} value Shadow value to parse
-   * @return {Object} Shadow object with color, offsetX, offsetY and blur
-   */
-  static parseShadow(value) {
-    const shadowStr = value.trim(),
-      [, offsetX = 0, offsetY = 0, blur = 0] = (reOffsetsAndBlur.exec(shadowStr) || []).map(value => parseFloat(value) || 0),
-      color = (shadowStr.replace(reOffsetsAndBlur, '') || 'rgb(0,0,0)').trim();
-    return {
-      color,
-      offsetX,
-      offsetY,
-      blur
-    };
-  }
-
-  /**
-   * Returns a string representation of an instance
-   * @see http://www.w3.org/TR/css-text-decor-3/#text-shadow
-   * @return {String} Returns CSS3 text-shadow declaration
-   */
-  toString() {
-    return [this.offsetX, this.offsetY, this.blur, this.color].join('px ');
-  }
-
-  /**
-   * Returns SVG representation of a shadow
-   * @param {FabricObject} object
-   * @return {String} SVG representation of a shadow
-   */
-  toSVG(object) {
-    const offset = rotateVector(new Point(this.offsetX, this.offsetY), degreesToRadians(-object.angle)),
-      BLUR_BOX = 20,
-      color = new Color(this.color);
-    let fBoxX = 40,
-      fBoxY = 40;
-    if (object.width && object.height) {
-      //http://www.w3.org/TR/SVG/filters.html#FilterEffectsRegion
-      // we add some extra space to filter box to contain the blur ( 20 )
-      fBoxX = toFixed((Math.abs(offset.x) + this.blur) / object.width, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
-      fBoxY = toFixed((Math.abs(offset.y) + this.blur) / object.height, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
-    }
-    if (object.flipX) {
-      offset.x *= -1;
-    }
-    if (object.flipY) {
-      offset.y *= -1;
-    }
-    return "<filter id=\"SVGID_".concat(this.id, "\" y=\"-").concat(fBoxY, "%\" height=\"").concat(100 + 2 * fBoxY, "%\" x=\"-").concat(fBoxX, "%\" width=\"").concat(100 + 2 * fBoxX, "%\" >\n\t<feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"").concat(toFixed(this.blur ? this.blur / 2 : 0, config.NUM_FRACTION_DIGITS), "\"></feGaussianBlur>\n\t<feOffset dx=\"").concat(toFixed(offset.x, config.NUM_FRACTION_DIGITS), "\" dy=\"").concat(toFixed(offset.y, config.NUM_FRACTION_DIGITS), "\" result=\"oBlur\" ></feOffset>\n\t<feFlood flood-color=\"").concat(color.toRgb(), "\" flood-opacity=\"").concat(color.getAlpha(), "\"/>\n\t<feComposite in2=\"oBlur\" operator=\"in\" />\n\t<feMerge>\n\t\t<feMergeNode></feMergeNode>\n\t\t<feMergeNode in=\"SourceGraphic\"></feMergeNode>\n\t</feMerge>\n</filter>\n");
-  }
-
-  /**
-   * Returns object representation of a shadow
-   * @return {Object} Object representation of a shadow instance
-   */
-  toObject() {
-    const data = {
-      color: this.color,
-      blur: this.blur,
-      offsetX: this.offsetX,
-      offsetY: this.offsetY,
-      affectStroke: this.affectStroke,
-      nonScaling: this.nonScaling,
-      type: this.constructor.type
-    };
-    const defaults = Shadow.ownDefaults;
-    return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
-  }
-  static async fromObject(options) {
-    return new this(options);
-  }
-}
-/**
- * Shadow color
- * @type String
- * @default
- */
-/**
- * Shadow blur
- * @type Number
- */
-/**
- * Shadow horizontal offset
- * @type Number
- * @default
- */
-/**
- * Shadow vertical offset
- * @type Number
- * @default
- */
-/**
- * Whether the shadow should affect stroke operations
- * @type Boolean
- * @default
- */
-/**
- * Indicates whether toObject should include default values
- * @type Boolean
- * @default
- */
-/**
- * When `false`, the shadow will scale with the object.
- * When `true`, the shadow's offsetX, offsetY, and blur will not be affected by the object's scale.
- * default to false
- * @type Boolean
- * @default
- */
-_defineProperty(Shadow, "ownDefaults", shadowDefaultValues);
-_defineProperty(Shadow, "type", 'shadow');
-classRegistry.setClass(Shadow, 'shadow');
-
-const cloneDeep = object => JSON.parse(JSON.stringify(object));
-
-const stateProperties = [TOP, LEFT, SCALE_X, SCALE_Y, 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', SKEW_X, SKEW_Y];
-const cacheProperties = [FILL, STROKE, 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
-const fabricObjectDefaultValues = {
-  // see composeMatrix() to see order of transforms. First defaults listed based on this
-  top: 0,
-  left: 0,
-  width: 0,
-  height: 0,
-  angle: 0,
-  flipX: false,
-  flipY: false,
-  scaleX: 1,
-  scaleY: 1,
-  minScaleLimit: 0,
-  skewX: 0,
-  skewY: 0,
-  originX: LEFT,
-  originY: TOP,
-  strokeWidth: 1,
-  strokeUniform: false,
-  padding: 0,
-  opacity: 1,
-  paintFirst: FILL,
-  fill: 'rgb(0,0,0)',
-  fillRule: 'nonzero',
-  __PMWID: '',
-  erasable: false,
-  stroke: null,
-  strokeDashArray: null,
-  leanBackground: false,
-  leanBackgroundOffset: 0,
-  strokeDashOffset: 0,
-  strokeLineCap: 'butt',
-  strokeLineJoin: 'miter',
-  pmwBmBtnText: '',
-  pmwBmBtnIcon: '',
-  strokeMiterLimit: 4,
-  globalCompositeOperation: 'source-over',
-  backgroundColor: '',
-  shadow: null,
-  visible: true,
-  includeDefaultValues: true,
-  excludeFromExport: false,
-  objectCaching: true,
-  clipPath: undefined,
-  inverted: false,
-  absolutePositioned: false,
-  centeredRotation: true,
-  centeredScaling: false,
-  dirty: true
-};
-const interactiveObjectDefaultValues = {
-  noScaleCache: true,
-  lockMovementX: false,
-  lockMovementY: false,
-  lockRotation: false,
-  lockScalingX: false,
-  lockScalingY: false,
-  lockSkewingX: false,
-  lockSkewingY: false,
-  lockScalingFlip: false,
-  cornerSize: 13,
-  touchCornerSize: 24,
-  transparentCorners: true,
-  cornerColor: 'rgb(178,204,255)',
-  cornerStrokeColor: '',
-  cornerStyle: 'rect',
-  cornerDashArray: null,
-  hasControls: true,
-  borderColor: 'rgb(178,204,255)',
-  borderDashArray: null,
-  borderOpacityWhenMoving: 0.4,
-  borderScaleFactor: 1,
-  hasBorders: true,
-  selectionBackgroundColor: '',
-  selectable: true,
-  evented: true,
-  perPixelTargetFind: false,
-  activeOn: 'down',
-  hoverCursor: null,
-  moveCursor: null
-};
 
 const _excluded$e = ["type"],
   _excluded2$4 = ["extraParam"];
@@ -7002,7 +6728,7 @@ const _excluded$e = ["type"],
  * @fires dragleave
  * @fires drop
  */
-let FabricObject$1 = class FabricObject extends AnimatableObject {
+let FabricObject$1 = class FabricObject extends ObjectGeometry {
   static getDefaults() {
     return FabricObject.ownDefaults;
   }
@@ -7146,7 +6872,8 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
       y: neededY
     };
   }
-
+  eqqwe() {}
+  eqqwe2() {}
   /**
    * Update width and height of the canvas for cache
    * returns true or false if canvas needed resize.
@@ -7231,95 +6958,6 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     const needFullTransform = this.group && !this.group._transformDone || this.group && this.canvas && ctx === this.canvas.contextTop;
     const m = this.calcTransformMatrix(!needFullTransform);
     ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-  }
-
-  /**
-   * Returns an object representation of an instance
-   * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
-   * @return {Object} Object representation of an instance
-   */
-  toObject() {
-    let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    const NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS,
-      clipPathData = this.clipPath && !this.clipPath.excludeFromExport ? _objectSpread2(_objectSpread2({}, this.clipPath.toObject(propertiesToInclude)), {}, {
-        inverted: this.clipPath.inverted,
-        absolutePositioned: this.clipPath.absolutePositioned
-      }) : null,
-      object = _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
-        type: this.constructor.type,
-        version: VERSION,
-        originX: this.originX,
-        originY: this.originY,
-        left: toFixed(this.left, NUM_FRACTION_DIGITS),
-        top: toFixed(this.top, NUM_FRACTION_DIGITS),
-        width: toFixed(this.width, NUM_FRACTION_DIGITS),
-        height: toFixed(this.height, NUM_FRACTION_DIGITS),
-        fill: isSerializableFiller(this.fill) ? this.fill.toObject() : this.fill,
-        stroke: isSerializableFiller(this.stroke) ? this.stroke.toObject() : this.stroke,
-        strokeWidth: toFixed(this.strokeWidth, NUM_FRACTION_DIGITS),
-        strokeDashArray: this.strokeDashArray ? this.strokeDashArray.concat() : this.strokeDashArray,
-        strokeLineCap: this.strokeLineCap,
-        strokeDashOffset: this.strokeDashOffset,
-        strokeLineJoin: this.strokeLineJoin,
-        strokeUniform: this.strokeUniform,
-        strokeMiterLimit: toFixed(this.strokeMiterLimit, NUM_FRACTION_DIGITS),
-        scaleX: toFixed(this.scaleX, NUM_FRACTION_DIGITS),
-        scaleY: toFixed(this.scaleY, NUM_FRACTION_DIGITS),
-        angle: toFixed(this.angle, NUM_FRACTION_DIGITS),
-        flipX: this.flipX,
-        flipY: this.flipY,
-        opacity: toFixed(this.opacity, NUM_FRACTION_DIGITS),
-        shadow: this.shadow && this.shadow.toObject ? this.shadow.toObject() : this.shadow,
-        visible: this.visible,
-        backgroundColor: this.backgroundColor,
-        fillRule: this.fillRule,
-        paintFirst: this.paintFirst,
-        globalCompositeOperation: this.globalCompositeOperation,
-        skewX: toFixed(this.skewX, NUM_FRACTION_DIGITS),
-        skewY: toFixed(this.skewY, NUM_FRACTION_DIGITS)
-      }, clipPathData ? {
-        clipPath: clipPathData
-      } : null);
-    return !this.includeDefaultValues ? this._removeDefaultValues(object) : object;
-  }
-
-  /**
-   * Returns (dataless) object representation of an instance
-   * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
-   * @return {Object} Object representation of an instance
-   */
-  toDatalessObject(propertiesToInclude) {
-    // will be overwritten by subclasses
-    return this.toObject(propertiesToInclude);
-  }
-
-  /**
-   * @private
-   * @param {Object} object
-   */
-  _removeDefaultValues(object) {
-    // getDefaults() ( get from static ownDefaults ) should win over prototype since anyway they get assigned to instance
-    // ownDefault vs prototype is swappable only if you change all the fabric objects consistently.
-    const defaults = this.constructor.getDefaults();
-    const hasStaticDefaultValues = Object.keys(defaults).length > 0;
-    const baseValues = hasStaticDefaultValues ? defaults : Object.getPrototypeOf(this);
-    return pickBy(object, (value, key) => {
-      if (key === LEFT || key === TOP || key === 'type') {
-        return true;
-      }
-      const baseValue = baseValues[key];
-      return value !== baseValue &&
-      // basically a check for [] === []
-      !(Array.isArray(value) && Array.isArray(baseValue) && value.length === 0 && baseValue.length === 0);
-    });
-  }
-
-  /**
-   * Returns a string representation of an instance
-   * @return {String}
-   */
-  toString() {
-    return "#<".concat(this.constructor.type, ">");
   }
 
   /**
@@ -7457,7 +7095,7 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     }
     ctx.restore();
   }
-  drawSelectionBackground(ctx) {
+  drawSelectionBackground(_ctx) {
     /* no op */
   }
   renderCache(options) {
@@ -7841,9 +7479,9 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
    * function that actually render something on the context.
    * empty here to allow Obects to work on tests to benchmark fabric functionalites
    * not related to rendering
-   * @param {CanvasRenderingContext2D} ctx Context to render on
+   * @param {CanvasRenderingContext2D} _ctx Context to render on
    */
-  _render(ctx) {
+  _render(_ctx) {
     // placeholder to be overridden
   }
 
@@ -8224,6 +7862,339 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
     this._cacheContext = null;
   }
 
+  // #region Animation methods
+  /**
+   * List of properties to consider for animating colors.
+   * @type String[]
+   */
+
+  /**
+   * Animates object's properties
+   * @param {Record<string, number | number[] | TColorArg>} animatable map of keys and end values
+   * @param {Partial<AnimationOptions<T>>} options
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#animation}
+   * @return {Record<string, TAnimation<T>>} map of animation contexts
+   *
+   * As object — multiple properties
+   *
+   * object.animate({ left: ..., top: ... });
+   * object.animate({ left: ..., top: ... }, { duration: ... });
+   */
+  animate(animatable, options) {
+    return Object.entries(animatable).reduce((acc, _ref2) => {
+      let [key, endValue] = _ref2;
+      acc[key] = this._animate(key, endValue, options);
+      return acc;
+    }, {});
+  }
+
+  /**
+   * @private
+   * @param {String} key Property to animate
+   * @param {String} to Value to animate to
+   * @param {Object} [options] Options object
+   */
+  _animate(key, endValue) {
+    let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    const path = key.split('.');
+    const propIsColor = this.constructor.colorProperties.includes(path[path.length - 1]);
+    const {
+      abort,
+      startValue,
+      onChange,
+      onComplete
+    } = options;
+    const animationOptions = _objectSpread2(_objectSpread2({}, options), {}, {
+      target: this,
+      // path.reduce... is the current value in case start value isn't provided
+      startValue: startValue !== null && startValue !== void 0 ? startValue : path.reduce((deep, key) => deep[key], this),
+      endValue,
+      abort: abort === null || abort === void 0 ? void 0 : abort.bind(this),
+      onChange: (value, valueProgress, durationProgress) => {
+        path.reduce((deep, key, index) => {
+          if (index === path.length - 1) {
+            deep[key] = value;
+          }
+          return deep[key];
+        }, this);
+        onChange &&
+        // @ts-expect-error generic callback arg0 is wrong
+        onChange(value, valueProgress, durationProgress);
+      },
+      onComplete: (value, valueProgress, durationProgress) => {
+        this.setCoords();
+        onComplete &&
+        // @ts-expect-error generic callback arg0 is wrong
+        onComplete(value, valueProgress, durationProgress);
+      }
+    });
+    return propIsColor ? animateColor(animationOptions) : animate(animationOptions);
+  }
+
+  // #region Object stacking methods
+
+  /**
+   * A reference to the parent of the object
+   * Used to keep the original parent ref when the object has been added to an ActiveSelection, hence loosing the `group` ref
+   */
+
+  /**
+   * Checks if object is descendant of target
+   * Should be used instead of {@link Group.contains} or {@link StaticCanvas.contains} for performance reasons
+   * @param {TAncestor} target
+   * @returns {boolean}
+   */
+  isDescendantOf(target) {
+    const {
+      parent,
+      group
+    } = this;
+    return parent === target || group === target ||
+    // walk up
+    !!parent && parent.isDescendantOf(target) || !!group && group !== parent && group.isDescendantOf(target);
+  }
+
+  /**
+   * @returns {Ancestors} ancestors (excluding `ActiveSelection`) from bottom to top
+   */
+  getAncestors() {
+    const ancestors = [];
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let parent = this;
+    do {
+      parent = parent.parent;
+      parent && ancestors.push(parent);
+    } while (parent);
+    return ancestors;
+  }
+
+  /**
+   * Compare ancestors
+   *
+   * @param {StackedObject} other
+   * @returns {AncestryComparison} an object that represent the ancestry situation.
+   */
+  findCommonAncestors(other) {
+    if (this === other) {
+      return {
+        fork: [],
+        otherFork: [],
+        common: [this, ...this.getAncestors()]
+      };
+    }
+    const ancestors = this.getAncestors();
+    const otherAncestors = other.getAncestors();
+    //  if `this` has no ancestors and `this` is top ancestor of `other` we must handle the following case
+    if (ancestors.length === 0 && otherAncestors.length > 0 && this === otherAncestors[otherAncestors.length - 1]) {
+      return {
+        fork: [],
+        otherFork: [other, ...otherAncestors.slice(0, otherAncestors.length - 1)],
+        common: [this]
+      };
+    }
+    //  compare ancestors
+    for (let i = 0, ancestor; i < ancestors.length; i++) {
+      ancestor = ancestors[i];
+      if (ancestor === other) {
+        return {
+          fork: [this, ...ancestors.slice(0, i)],
+          otherFork: [],
+          common: ancestors.slice(i)
+        };
+      }
+      for (let j = 0; j < otherAncestors.length; j++) {
+        if (this === otherAncestors[j]) {
+          return {
+            fork: [],
+            otherFork: [other, ...otherAncestors.slice(0, j)],
+            common: [this, ...ancestors]
+          };
+        }
+        if (ancestor === otherAncestors[j]) {
+          return {
+            fork: [this, ...ancestors.slice(0, i)],
+            otherFork: [other, ...otherAncestors.slice(0, j)],
+            common: ancestors.slice(i)
+          };
+        }
+      }
+    }
+    // nothing shared
+    return {
+      fork: [this, ...ancestors],
+      otherFork: [other, ...otherAncestors],
+      common: []
+    };
+  }
+
+  /**
+   *
+   * @param {StackedObject} other
+   * @returns {boolean}
+   */
+  hasCommonAncestors(other) {
+    const commonAncestors = this.findCommonAncestors(other);
+    return commonAncestors && !!commonAncestors.common.length;
+  }
+
+  /**
+   *
+   * @param {FabricObject} other object to compare against
+   * @returns {boolean | undefined} if objects do not share a common ancestor or they are strictly equal it is impossible to determine which is in front of the other; in such cases the function returns `undefined`
+   */
+  isInFrontOf(other) {
+    if (this === other) {
+      return undefined;
+    }
+    const ancestorData = this.findCommonAncestors(other);
+    if (ancestorData.fork.includes(other)) {
+      return true;
+    }
+    if (ancestorData.otherFork.includes(this)) {
+      return false;
+    }
+    // if there isn't a common ancestor, we take the canvas.
+    // if there is no canvas, there is nothing to compare
+    const firstCommonAncestor = ancestorData.common[0] || this.canvas;
+    if (!firstCommonAncestor) {
+      return undefined;
+    }
+    const headOfFork = ancestorData.fork.pop(),
+      headOfOtherFork = ancestorData.otherFork.pop(),
+      thisIndex = firstCommonAncestor._objects.indexOf(headOfFork),
+      otherIndex = firstCommonAncestor._objects.indexOf(headOfOtherFork);
+    return thisIndex > -1 && thisIndex > otherIndex;
+  }
+
+  // #region Serialization
+  /**
+   * Define a list of custom properties that will be serialized when
+   * instance.toObject() gets called
+   */
+
+  /**
+   * Returns an object representation of an instance
+   * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
+   * @return {Object} Object representation of an instance
+   */
+  toObject() {
+    let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    const propertiesToSerialize = propertiesToInclude.concat(FabricObject.customProperties, this.constructor.customProperties || []);
+    let clipPathData;
+    const NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS;
+    const {
+      clipPath,
+      fill,
+      stroke,
+      shadow,
+      strokeDashArray,
+      left,
+      top,
+      originX,
+      originY,
+      width,
+      height,
+      strokeWidth,
+      strokeLineCap,
+      strokeDashOffset,
+      strokeLineJoin,
+      strokeUniform,
+      strokeMiterLimit,
+      scaleX,
+      scaleY,
+      angle,
+      flipX,
+      flipY,
+      opacity,
+      visible,
+      backgroundColor,
+      fillRule,
+      paintFirst,
+      globalCompositeOperation,
+      skewX,
+      skewY
+    } = this;
+    if (clipPath && !clipPath.excludeFromExport) {
+      clipPathData = clipPath.toObject(propertiesToSerialize.concat('inverted', 'absolutePositioned'));
+    }
+    const toFixedBound = val => toFixed(val, NUM_FRACTION_DIGITS);
+    const object = _objectSpread2(_objectSpread2({}, pick(this, propertiesToSerialize)), {}, {
+      type: this.constructor.type,
+      version: VERSION,
+      originX,
+      originY,
+      left: toFixedBound(left),
+      top: toFixedBound(top),
+      width: toFixedBound(width),
+      height: toFixedBound(height),
+      fill: isSerializableFiller(fill) ? fill.toObject() : fill,
+      stroke: isSerializableFiller(stroke) ? stroke.toObject() : stroke,
+      strokeWidth: toFixedBound(strokeWidth),
+      strokeDashArray: strokeDashArray ? strokeDashArray.concat() : strokeDashArray,
+      strokeLineCap,
+      strokeDashOffset,
+      strokeLineJoin,
+      strokeUniform,
+      strokeMiterLimit: toFixedBound(strokeMiterLimit),
+      scaleX: toFixedBound(scaleX),
+      scaleY: toFixedBound(scaleY),
+      angle: toFixedBound(angle),
+      flipX,
+      flipY,
+      opacity: toFixedBound(opacity),
+      shadow: shadow ? shadow.toObject() : shadow,
+      visible,
+      backgroundColor,
+      fillRule,
+      paintFirst,
+      globalCompositeOperation,
+      skewX: toFixedBound(skewX),
+      skewY: toFixedBound(skewY)
+    }, clipPathData ? {
+      clipPath: clipPathData
+    } : null);
+    return !this.includeDefaultValues ? this._removeDefaultValues(object) : object;
+  }
+
+  /**
+   * Returns (dataless) object representation of an instance
+   * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
+   * @return {Object} Object representation of an instance
+   */
+  toDatalessObject(propertiesToInclude) {
+    // will be overwritten by subclasses
+    return this.toObject(propertiesToInclude);
+  }
+
+  /**
+   * @private
+   * @param {Object} object
+   */
+  _removeDefaultValues(object) {
+    // getDefaults() ( get from static ownDefaults ) should win over prototype since anyway they get assigned to instance
+    // ownDefault vs prototype is swappable only if you change all the fabric objects consistently.
+    const defaults = this.constructor.getDefaults();
+    const hasStaticDefaultValues = Object.keys(defaults).length > 0;
+    const baseValues = hasStaticDefaultValues ? defaults : Object.getPrototypeOf(this);
+    return pickBy(object, (value, key) => {
+      if (key === LEFT || key === TOP || key === 'type') {
+        return true;
+      }
+      const baseValue = baseValues[key];
+      return value !== baseValue &&
+      // basically a check for [] === []
+      !(Array.isArray(value) && Array.isArray(baseValue) && value.length === 0 && baseValue.length === 0);
+    });
+  }
+
+  /**
+   * Returns a string representation of an instance
+   * @return {String}
+   */
+  toString() {
+    return "#<".concat(this.constructor.type, ">");
+  }
+
   /**
    *
    * @param {Function} klass
@@ -8233,26 +8204,23 @@ let FabricObject$1 = class FabricObject extends AnimatableObject {
    * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
    * @returns {Promise<FabricObject>}
    */
-  static _fromObject(_ref2) {
-    let object = _objectWithoutProperties(_ref2, _excluded$e);
-    let _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+  static _fromObject(_ref3) {
+    let serializedObjectOptions = _objectWithoutProperties(_ref3, _excluded$e);
+    let _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       {
         extraParam
-      } = _ref3,
-      options = _objectWithoutProperties(_ref3, _excluded2$4);
-    return enlivenObjectEnlivables(cloneDeep(object), options).then(enlivedMap => {
-      const allOptions = _objectSpread2(_objectSpread2({}, options), enlivedMap);
+      } = _ref4,
+      options = _objectWithoutProperties(_ref4, _excluded2$4);
+    return enlivenObjectEnlivables(serializedObjectOptions, options).then(enlivedObjectOptions => {
       // from the resulting enlived options, extract options.extraParam to arg0
       // to avoid accidental overrides later
       if (extraParam) {
-        const {
-            [extraParam]: arg0
-          } = allOptions,
-          rest = _objectWithoutProperties(allOptions, [extraParam].map(_toPropertyKey));
+        delete enlivedObjectOptions[extraParam];
+        return new this(serializedObjectOptions[extraParam],
         // @ts-expect-error different signature
-        return new this(arg0, rest);
+        enlivedObjectOptions);
       } else {
-        return new this(allOptions);
+        return new this(enlivedObjectOptions);
       }
     });
   }
@@ -8303,6 +8271,8 @@ _defineProperty(FabricObject$1, "stateProperties", stateProperties);
 _defineProperty(FabricObject$1, "cacheProperties", cacheProperties);
 _defineProperty(FabricObject$1, "ownDefaults", fabricObjectDefaultValues);
 _defineProperty(FabricObject$1, "type", 'FabricObject');
+_defineProperty(FabricObject$1, "colorProperties", [FILL, STROKE, 'backgroundColor']);
+_defineProperty(FabricObject$1, "customProperties", []);
 classRegistry.setClass(FabricObject$1);
 classRegistry.setClass(FabricObject$1, 'object');
 
@@ -9084,7 +9054,7 @@ function skewObject(axis, _ref, pointer) {
       scaleY: 1
     }).y;
   const shearing = 2 * offset * skewingSide /
-  // we max out fractions to safeguard from asymptotic behavior
+   // we max out fractions to safeguard from asymptotic behavior
   Math.max(b, 1) +
   // add starting state
   shearingStart;
@@ -9756,12 +9726,12 @@ class InteractiveFabricObject extends FabricObject$1 {
   /**
    * This callback function is called every time _discardActiveObject or _setActiveObject
    * try to to deselect this object. If the function returns true, the process is cancelled
-   * @param {Object} [options] options sent from the upper functions
+   * @param {Object} [_options] options sent from the upper functions
    * @param {TPointerEvent} [options.e] event if the process is generated by an event
    * @param {FabricObject} [options.object] next object we are setting as active, and reason why
    * this is being deselected
    */
-  onDeselect(options) {
+  onDeselect(_options) {
     // implemented by sub-classes, as needed.
     return false;
   }
@@ -9769,10 +9739,10 @@ class InteractiveFabricObject extends FabricObject$1 {
   /**
    * This callback function is called every time _discardActiveObject or _setActiveObject
    * try to to select this object. If the function returns true, the process is cancelled
-   * @param {Object} [options] options sent from the upper functions
-   * @param {Event} [options.e] event if the process is generated by an event
+   * @param {Object} [_options] options sent from the upper functions
+   * @param {Event} [_options.e] event if the process is generated by an event
    */
-  onSelect(options) {
+  onSelect(_options) {
     // implemented by sub-classes, as needed.
     return false;
   }
@@ -9782,7 +9752,7 @@ class InteractiveFabricObject extends FabricObject$1 {
    * Fired from {@link Canvas#_onMouseMove}
    * @returns true in order for the window to start a drag session
    */
-  shouldStartDragging(e) {
+  shouldStartDragging(_e) {
     return false;
   }
 
@@ -9791,17 +9761,17 @@ class InteractiveFabricObject extends FabricObject$1 {
    * Fired once a drag session has started
    * @returns true to handle the drag event
    */
-  onDragStart(e) {
+  onDragStart(_e) {
     return false;
   }
 
   /**
    * Override to customize drag and drop behavior
    * @public
-   * @param {DragEvent} e
+   * @param {DragEvent} _e
    * @returns {boolean} true if the object currently dragged can be dropped on the target
    */
-  canDrop(e) {
+  canDrop(_e) {
     return false;
   }
 
@@ -9810,9 +9780,9 @@ class InteractiveFabricObject extends FabricObject$1 {
    * render a specific effect when an object is the source of a drag event
    * example: render the selection status for the part of text that is being dragged from a text object
    * @public
-   * @param {DragEvent} e
+   * @param {DragEvent} _e
    */
-  renderDragSourceEffect(e) {
+  renderDragSourceEffect(_e) {
     // for subclasses
   }
 
@@ -9822,9 +9792,9 @@ class InteractiveFabricObject extends FabricObject$1 {
    * used to show that the underly object can receive a drop, or to show how the
    * object will change when dropping. example: show the cursor where the text is about to be dropped
    * @public
-   * @param {DragEvent} e
+   * @param {DragEvent} _e
    */
-  renderDropTargetEffect(e) {
+  renderDropTargetEffect(_e) {
     // for subclasses
   }
 }
@@ -9879,7 +9849,9 @@ function applyMixins(derivedCtor, constructors) {
 
 // TODO somehow we have to make a tree-shakeable import
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class FabricObject extends InteractiveFabricObject {}
 applyMixins(FabricObject, [FabricObjectSVGExportMixin]);
 classRegistry.setClass(FabricObject);
@@ -9921,6 +9893,15 @@ const isTransparent = (ctx, x, y, tolerance) => {
  * @return {Point} The new rotated point
  */
 const rotatePoint = (point, origin, radians) => point.rotate(radians, origin);
+
+const findIndexRight = (array, predicate) => {
+  for (let index = array.length - 1; index >= 0; index--) {
+    if (predicate(array[index], index, array)) {
+      return index;
+    }
+  }
+  return -1;
+};
 
 /**
  * @see https://github.com/fabricjs/fabric.js/pull/8344
@@ -10338,6 +10319,17 @@ const projectStrokeOnPoints = function (points, options) {
   return projections;
 };
 
+const cloneStyles = style => {
+  const newObj = {};
+  Object.keys(style).forEach(key => {
+    newObj[key] = {};
+    Object.keys(style[key]).forEach(keyInner => {
+      newObj[key][keyInner] = _objectSpread2({}, style[key][keyInner]);
+    });
+  });
+  return newObj;
+};
+
 /**
  * Capitalizes a string
  * @param {String} string String to capitalize
@@ -10380,7 +10372,6 @@ const getWholeChar = (str, i) => {
   if (isNaN(code)) {
     return ''; // Position not found
   }
-
   if (code < 0xd800 || code > 0xdfff) {
     return str.charAt(i);
   }
@@ -10445,7 +10436,7 @@ const stylesToArray = (styles, text) => {
   let charIndex = -1,
     prevStyle = {};
   // clone style structure to prevent mutation
-  styles = cloneDeep(styles);
+  styles = cloneStyles(styles);
 
   //loop through each textLine
   for (let i = 0; i < textLines.length; i++) {
@@ -10490,7 +10481,7 @@ const stylesToArray = (styles, text) => {
 const stylesFromArray = (styles, text) => {
   if (!Array.isArray(styles)) {
     // clone to prevent mutation
-    return cloneDeep(styles);
+    return cloneStyles(styles);
   }
   const textLines = text.split(reNewline),
     stylesObject = {};
@@ -10728,7 +10719,7 @@ function normalizeValue(attr, value, parentAttributes, fontSize) {
     } else if (fillIndex === -1 && strokeIndex > -1) {
       ouputValue = STROKE;
     }
-  } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font') {
+  } else if (attr === 'href' || attr === 'xlink:href' || attr === 'font' || attr === 'id') {
     return value;
   } else if (attr === 'imageSmoothing') {
     return value === 'optimizeQuality';
@@ -11008,6 +10999,7 @@ class Rect extends FabricObject {
    */
 
   /* _FROM_SVG_START_ */
+
   /**
    * Returns {@link Rect} instance from an SVG element
    * @static
@@ -11178,7 +11170,8 @@ class FitContentLayout extends LayoutStrategy {
   /**
    * @override layout on all triggers
    * Override at will
-   */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   shouldPerformLayout(context) {
     return true;
   }
@@ -11255,7 +11248,7 @@ class LayoutManager {
   /**
    * unsubscribe object layout triggers
    */
-  unsubscribe(object, context) {
+  unsubscribe(object, _context) {
     (this._subscriptions.get(object) || []).forEach(d => d());
     this._subscriptions.delete(object);
   }
@@ -12886,7 +12879,6 @@ const getPointOnPath = function (path, distance) {
     // throw Error('Invalid command');
   }
 };
-
 const rePathCmdAll = new RegExp(rePathCommand, 'gi');
 const rePathCmd = new RegExp(rePathCommand, 'i');
 
@@ -13064,6 +13056,27 @@ const joinPath = (pathData, fractionDigits) => pathData.map(segment => {
   }).join(' ');
 }).join(' ');
 
+// TODO this file needs to go away, cross browser style support is not fabricjs domain.
+
+/**
+ * wrapper for setting element's style
+ * @param {HTMLElement} element
+ * @param {Object | string} styles
+ */
+function setStyle(element, styles) {
+  const elementStyle = element.style;
+  if (!elementStyle || !styles) {
+    return;
+  } else if (typeof styles === 'string') {
+    elementStyle.cssText += ';' + styles;
+  } else {
+    Object.entries(styles).forEach(_ref => {
+      let [property, value] = _ref;
+      return elementStyle.setProperty(property, value);
+    });
+  }
+}
+
 /**
  * Merges 2 clip paths into one visually equal clip path
  *
@@ -13105,6 +13118,14 @@ const mergeClipPaths = (c1, c2) => {
     inverted
   });
 };
+
+/**
+ * Returns random number between 2 specified ones.
+ * @param {Number} min lower limit
+ * @param {Number} max upper limit
+ * @return {Number} random value (between min and max)
+ */
+const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 /**
  * Cross-browser abstraction for sending XMLHttpRequest
@@ -13309,7 +13330,12 @@ class CanvasDOMManager extends StaticCanvasDOMManager {
       allowTouchScrolling
     });
     this.applyCanvasStyle(upperCanvasEl, {
-      allowTouchScrolling
+      allowTouchScrolling,
+      styles: {
+        position: 'absolute',
+        left: '0',
+        top: '0'
+      }
     });
     const container = this.createContainerElement();
     container.classList.add(containerClass);
@@ -13349,16 +13375,14 @@ class CanvasDOMManager extends StaticCanvasDOMManager {
    * @private
    * @param {HTMLCanvasElement} element canvas element to apply styles on
    */
-  applyCanvasStyle(element, _ref) {
-    let {
-      allowTouchScrolling: allow
-    } = _ref;
-    setStyle(element, {
-      position: 'absolute',
-      left: '0',
-      top: '0'
-    });
-    allowTouchScrolling(element, allow);
+  applyCanvasStyle(element, options) {
+    const {
+      styles,
+      allowTouchScrolling
+    } = options;
+    setStyle(element, _objectSpread2(_objectSpread2({}, styles), {}, {
+      'touch-action': allowTouchScrolling ? 'manipulation' : NONE
+    }));
     makeElementUnselectable(element);
   }
   setDimensions(size, retinaScaling) {
@@ -14018,7 +14042,6 @@ class SelectableCanvas extends StaticCanvas {
       // the idea behind this is that outside target check we don't need ot know
       // where those coords are
     }
-
     return Intersection.isPointInPolygon(point, coords);
   }
 
@@ -14670,6 +14693,7 @@ class Canvas extends SelectableCanvas {
     // '_onLongPress',
     // '_onOrientationChange',
     '_onMouseWheel', '_onMouseOut', '_onMouseEnter', '_onContextMenu', '_onDoubleClick', '_onDragStart', '_onDragEnd', '_onDragProgress', '_onDragOver', '_onDragEnter', '_onDragLeave', '_onDrop'].forEach(eventHandler => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       this[eventHandler] = this[eventHandler].bind(this);
     });
     // register event handlers
@@ -14683,7 +14707,7 @@ class Canvas extends SelectableCanvas {
   _getEventPrefix() {
     return this.enablePointerEvents ? 'pointer' : 'mouse';
   }
-  addOrRemove(functor, eventjsFunctor) {
+  addOrRemove(functor, _eventjsFunctor) {
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
     functor(getWindowFromElement(canvasElement), 'resize', this._onResize);
@@ -15937,6 +15961,16 @@ const radialDefaultCoords = _objectSpread2(_objectSpread2({}, linearDefaultCoord
   r2: 0
 });
 
+/**
+ *
+ * @param value value to check if NaN
+ * @param [valueIfNaN]
+ * @returns `fallback` is `value is NaN
+ */
+const ifNaN = (value, valueIfNaN) => {
+  return isNaN(value) && typeof valueIfNaN === 'number' ? valueIfNaN : value;
+};
+
 const RE_PERCENT = /^(\d+\.\d+)%|(\d+)%$/;
 function isPercent(value) {
   return value && RE_PERCENT.test(value);
@@ -16061,8 +16095,8 @@ function parseCoords(el, size) {
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#gradients}
  */
 class Gradient {
-  constructor(_ref) {
-    let {
+  constructor(options) {
+    const {
       type = 'linear',
       gradientUnits = 'pixels',
       coords = {},
@@ -16071,20 +16105,18 @@ class Gradient {
       offsetY = 0,
       gradientTransform,
       id
-    } = _ref;
-    this.id = id ? "".concat(id, "_").concat(uid()) : uid();
-    this.type = type;
-    this.gradientUnits = gradientUnits;
-    this.gradientTransform = gradientTransform;
-    this.offsetX = offsetX;
-    this.offsetY = offsetY;
-    this.coords = _objectSpread2(_objectSpread2({}, this.type === 'radial' ? radialDefaultCoords : linearDefaultCoords), coords);
-    this.colorStops = colorStops.slice();
+    } = options || {};
+    Object.assign(this, {
+      type,
+      gradientUnits,
+      coords: _objectSpread2(_objectSpread2({}, type === 'radial' ? radialDefaultCoords : linearDefaultCoords), coords),
+      colorStops,
+      offsetX,
+      offsetY,
+      gradientTransform,
+      id: id ? "".concat(id, "_").concat(uid()) : uid()
+    });
   }
-
-  // isType<S extends GradientType>(type: S): this is Gradient<S> {
-  //   return (this.type as GradientType) === type;
-  // }
 
   /**
    * Adds another colorStop
@@ -16111,8 +16143,8 @@ class Gradient {
   toObject(propertiesToInclude) {
     return _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
       type: this.type,
-      coords: this.coords,
-      colorStops: this.colorStops,
+      coords: _objectSpread2({}, this.coords),
+      colorStops: this.colorStops.map(colorStop => _objectSpread2({}, colorStop)),
       offsetX: this.offsetX,
       offsetY: this.offsetY,
       gradientUnits: this.gradientUnits,
@@ -16191,12 +16223,12 @@ class Gradient {
         });
       }
     }
-    colorStops.forEach(_ref2 => {
+    colorStops.forEach(_ref => {
       let {
         color,
         offset,
         opacity
-      } = _ref2;
+      } = _ref;
       markup.push('<stop ', 'offset="', offset * 100 + '%', '" style="stop-color:', color, typeof opacity !== 'undefined' ? ';stop-opacity: ' + opacity : ';', '"/>\n');
     });
     markup.push(this.type === 'linear' ? '</linearGradient>' : '</radialGradient>', '\n');
@@ -16210,20 +16242,34 @@ class Gradient {
    * @return {CanvasGradient}
    */
   toLive(ctx) {
-    const coords = this.coords;
-    const gradient = this.type === 'linear' ? ctx.createLinearGradient(coords.x1, coords.y1, coords.x2, coords.y2) : ctx.createRadialGradient(coords.x1, coords.y1, coords.r1, coords.x2, coords.y2, coords.r2);
-    this.colorStops.forEach(_ref3 => {
+    const {
+      x1,
+      y1,
+      x2,
+      y2,
+      r1,
+      r2
+    } = this.coords;
+    const gradient = this.type === 'linear' ? ctx.createLinearGradient(x1, y1, x2, y2) : ctx.createRadialGradient(x1, y1, r1, x2, y2, r2);
+    this.colorStops.forEach(_ref2 => {
       let {
         color,
         opacity,
         offset
-      } = _ref3;
+      } = _ref2;
       gradient.addColorStop(offset, typeof opacity !== 'undefined' ? new Color(color).setAlpha(opacity).toRgba() : color);
     });
     return gradient;
   }
   static async fromObject(options) {
-    return new this(options);
+    const {
+      colorStops,
+      gradientTransform
+    } = options;
+    return new this(_objectSpread2(_objectSpread2({}, options), {}, {
+      colorStops: colorStops ? colorStops.map(colorStop => _objectSpread2({}, colorStop)) : undefined,
+      gradientTransform: gradientTransform ? [...gradientTransform] : undefined
+    }));
   }
 
   /* _FROM_SVG_START_ */
@@ -16348,7 +16394,7 @@ classRegistry.setClass(Gradient, 'gradient');
 classRegistry.setClass(Gradient, 'linear');
 classRegistry.setClass(Gradient, 'radial');
 
-const _excluded$8 = ["type", "source"];
+const _excluded$8 = ["type", "source", "patternTransform"];
 
 /**
  * @see {@link http://fabricjs.com/patterns demo}
@@ -16373,6 +16419,13 @@ class Pattern {
   /**
    * @type PatternRepeat
    * @defaults
+   */
+
+  /**
+   * transform matrix to change the pattern, imported from svgs.
+   * @todo verify if using the identity matrix as default makes the rest of the code more easy
+   * @type Array
+   * @default
    */
 
   /**
@@ -16413,13 +16466,6 @@ class Pattern {
      * @default
      */
     _defineProperty(this, "crossOrigin", '');
-    /**
-     * transform matrix to change the pattern, imported from svgs.
-     * @todo verify if using the identity matrix as default makes the rest of the code more easy
-     * @type Array
-     * @default
-     */
-    _defineProperty(this, "patternTransform", null);
     this.id = uid();
     Object.assign(this, options);
   }
@@ -16504,13 +16550,15 @@ class Pattern {
   static async fromObject(_ref2, options) {
     let {
         type,
-        source
+        source,
+        patternTransform
       } = _ref2,
-      serialized = _objectWithoutProperties(_ref2, _excluded$8);
+      otherOptions = _objectWithoutProperties(_ref2, _excluded$8);
     const img = await loadImage(source, _objectSpread2(_objectSpread2({}, options), {}, {
-      crossOrigin: serialized.crossOrigin
+      crossOrigin: otherOptions.crossOrigin
     }));
-    return new this(_objectSpread2(_objectSpread2({}, serialized), {}, {
+    return new this(_objectSpread2(_objectSpread2({}, otherOptions), {}, {
+      patternTransform: patternTransform && patternTransform.slice(0),
       source: img
     }));
   }
@@ -18449,7 +18497,16 @@ class Polyline extends FabricObject {
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return _objectSpread2(_objectSpread2({}, super.toObject(propertiesToInclude)), {}, {
-      points: cloneDeep(this.points)
+      points: this.points.map(_ref => {
+        let {
+          x,
+          y
+        } = _ref;
+        return {
+          x,
+          y
+        };
+      })
     });
   }
 
@@ -18927,13 +18984,11 @@ const textDefaultValues = {
     // fontSize factor
     baseline: -0.35 // baseline-shift factor (upwards)
   },
-
   subscript: {
     size: 0.6,
     // fontSize factor
     baseline: 0.11 // baseline-shift factor (downwards)
   },
-
   textBackgroundColor: '',
   stroke: null,
   shadow: null,
@@ -19587,7 +19642,7 @@ class FabricText extends StyledText {
    * @return Number
    */
 
-  missingNewlineOffset(lineIndex) {
+  missingNewlineOffset(_lineIndex) {
     return 1;
   }
 
@@ -19920,7 +19975,6 @@ class FabricText extends StyledText {
           break;
         //todo - add support for justify
       }
-
       positionInPath += this.pathStartOffset * (reverse ? -1 : 1);
       for (let i = reverse ? llength - 1 : 0; reverse ? i >= 0 : i < llength; reverse ? i-- : i++) {
         graphemeInfo = lineBounds[i];
@@ -20963,7 +21017,7 @@ class DraggableTextDelegate {
     const offset = correction.add(diff).transform(vpt, true);
     //  prepare instance for drag image snapshot by making all non selected text invisible
     const bgc = target.backgroundColor;
-    const styles = cloneDeep(target.styles);
+    const styles = cloneStyles(target.styles);
     target.backgroundColor = '';
     const styleOverride = {
       stroke: 'transparent',
@@ -21218,7 +21272,8 @@ class DraggableTextDelegate {
  *  - `!`      Matches a "!" character (char code 33).
  *  - `\?`     Matches a "?" character (char code 63).
  *  - `\-`     Matches a "-" character (char code 45).
- */ // eslint-disable-next-line no-useless-escape
+ */
+// eslint-disable-next-line no-useless-escape
 const reNonWord = /[ \n\.,;!\?\-]/;
 class ITextBehavior extends FabricText {
   constructor() {
@@ -25614,12 +25669,10 @@ function applyViewboxTransform(element) {
       scaleY = scaleX = scaleX > scaleY ? scaleY : scaleX;
       // calculate additional translation to move the viewbox
     }
-
     if (preserveAspectRatio.meetOrSlice === 'slice') {
       scaleY = scaleX = scaleX > scaleY ? scaleX : scaleY;
       // calculate additional translation to move the viewbox
     }
-
     widthDiff = parsedDim.width - viewBoxWidth * scaleX;
     heightDiff = parsedDim.height - viewBoxHeight * scaleX;
     if (preserveAspectRatio.alignX === 'Mid') {
@@ -26041,7 +26094,6 @@ async function parseSVGDocument(doc, reviver) {
     applyViewboxTransform(el);
     return isValidSvgTag(el) && !hasInvalidAncestor(el); // http://www.w3.org/TR/SVG/struct.html#DefsElement
   });
-
   if (!elements || elements && !elements.length) {
     return _objectSpread2(_objectSpread2({}, createEmptyResponse()), {}, {
       options,
@@ -26596,7 +26648,7 @@ class BaseFilter {
       this.applyTo2d(options);
     }
   }
-  applyTo2d(options) {
+  applyTo2d(_options) {
     // override by subclass
   }
 
@@ -26669,10 +26721,10 @@ class BaseFilter {
    *
    * Intended to be overridden by subclasses.
    *
-   * @param {WebGLRenderingContext} gl The canvas context used to compile the shader program.
-   * @param {Object} uniformLocations A map of shader uniform names to their locations.
+   * @param {WebGLRenderingContext} _gl The canvas context used to compile the shader program.
+   * @param {Object} _uniformLocations A map of shader uniform names to their locations.
    */
-  sendUniformData(gl, uniformLocations) {
+  sendUniformData(_gl, _uniformLocations) {
     // override by subclass
   }
 
@@ -26711,7 +26763,7 @@ class BaseFilter {
     // delegate, not alias
     return this.toObject();
   }
-  static async fromObject(_ref2, options) {
+  static async fromObject(_ref2, _options) {
     let filterOptions = _objectWithoutProperties(_ref2, _excluded2);
     return new this(filterOptions);
   }
@@ -28051,7 +28103,7 @@ _defineProperty(Noise, "defaults", noiseDefaultValues);
 _defineProperty(Noise, "uniformLocations", ['uNoise', 'uSeed']);
 classRegistry.setClass(Noise);
 
-const fragmentSource$2 = "\n  precision highp float;\n  uniform sampler2D uTexture;\n  uniform float uBlocksize;\n  uniform float uStepW;\n  uniform float uStepH;\n  varying vec2 vTexCoord;\n  void main() {\n    float blockW = uBlocksize * uStepW;\n    float blockH = uBlocksize * uStepW;\n    int posX = int(vTexCoord.x / blockW);\n    int posY = int(vTexCoord.y / blockH);\n    float fposX = float(posX);\n    float fposY = float(posY);\n    vec2 squareCoords = vec2(fposX * blockW, fposY * blockH);\n    vec4 color = texture2D(uTexture, squareCoords);\n    gl_FragColor = color;\n  }\n";
+const fragmentSource$2 = "\n  precision highp float;\n  uniform sampler2D uTexture;\n  uniform float uBlocksize;\n  uniform float uStepW;\n  uniform float uStepH;\n  varying vec2 vTexCoord;\n  void main() {\n    float blockW = uBlocksize * uStepW;\n    float blockH = uBlocksize * uStepH;\n    int posX = int(vTexCoord.x / blockW);\n    int posY = int(vTexCoord.y / blockH);\n    float fposX = float(posX);\n    float fposY = float(posY);\n    vec2 squareCoords = vec2(fposX * blockW, fposY * blockH);\n    vec4 color = texture2D(uTexture, squareCoords);\n    gl_FragColor = color;\n  }\n";
 
 const pixelateDefaultValues = {
   blocksize: 4
@@ -28596,7 +28648,6 @@ class Resize extends BaseFilter {
             /* eslint-enable max-depth */
           }
         }
-
         data2[x2] = gxR / weights;
         data2[x2 + 1] = gxG / weights;
         data2[x2 + 2] = gxB / weights;

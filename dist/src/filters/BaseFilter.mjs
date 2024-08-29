@@ -193,7 +193,7 @@ class BaseFilter {
       this.applyTo2d(options);
     }
   }
-  applyTo2d(options) {
+  applyTo2d(_options) {
     // override by subclass
   }
 
@@ -266,10 +266,10 @@ class BaseFilter {
    *
    * Intended to be overridden by subclasses.
    *
-   * @param {WebGLRenderingContext} gl The canvas context used to compile the shader program.
-   * @param {Object} uniformLocations A map of shader uniform names to their locations.
+   * @param {WebGLRenderingContext} _gl The canvas context used to compile the shader program.
+   * @param {Object} _uniformLocations A map of shader uniform names to their locations.
    */
-  sendUniformData(gl, uniformLocations) {
+  sendUniformData(_gl, _uniformLocations) {
     // override by subclass
   }
 
@@ -308,7 +308,7 @@ class BaseFilter {
     // delegate, not alias
     return this.toObject();
   }
-  static async fromObject(_ref2, options) {
+  static async fromObject(_ref2, _options) {
     let filterOptions = _objectWithoutProperties(_ref2, _excluded2);
     return new this(filterOptions);
   }

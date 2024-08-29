@@ -1,7 +1,7 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../../Point.mjs';
 import { setStyle } from '../../util/dom_style.mjs';
-import { cloneDeep } from '../../util/internals/cloneDeep.mjs';
+import { cloneStyles } from '../../util/internals/cloneStyles.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
 import { NONE, CHANGED } from '../../constants.mjs';
 
@@ -98,7 +98,7 @@ class DraggableTextDelegate {
     const offset = correction.add(diff).transform(vpt, true);
     //  prepare instance for drag image snapshot by making all non selected text invisible
     const bgc = target.backgroundColor;
-    const styles = cloneDeep(target.styles);
+    const styles = cloneStyles(target.styles);
     target.backgroundColor = '';
     const styleOverride = {
       stroke: 'transparent',

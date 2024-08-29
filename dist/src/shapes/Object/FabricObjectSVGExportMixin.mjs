@@ -66,7 +66,7 @@ class FabricObjectSVGExportMixin {
    * @return {Array} an array of strings with the specific svg representation
    * of the instance
    */
-  _toSVG(reviver) {
+  _toSVG(_reviver) {
     return [''];
   }
 

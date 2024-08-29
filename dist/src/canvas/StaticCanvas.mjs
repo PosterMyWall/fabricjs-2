@@ -32,7 +32,8 @@ import { getDevicePixelRatio } from '../env/index.mjs';
  * @fires canvas:cleared
  * @fires object:added
  * @fires object:removed
- */ // TODO: fix `EventSpec` inheritance https://github.com/microsoft/TypeScript/issues/26154#issuecomment-1366616260
+ */
+// TODO: fix `EventSpec` inheritance https://github.com/microsoft/TypeScript/issues/26154#issuecomment-1366616260
 class StaticCanvas extends createCollectionMixin(CommonMethods) {
   // background
 
@@ -430,7 +431,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       this.nextRenderHandle = 0;
     }
   }
-  drawControls(ctx) {
+  drawControls(_ctx) {
     // Static canvas has no controls
   }
 

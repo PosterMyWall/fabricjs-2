@@ -18,8 +18,8 @@ import { isPath } from '../util/typeAssertions.mjs';
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#gradients}
  */
 class Gradient {
-  constructor(_ref) {
-    let {
+  constructor(options) {
+    const {
       type = 'linear',
       gradientUnits = 'pixels',
       coords = {},
@@ -28,20 +28,18 @@ class Gradient {
       offsetY = 0,
       gradientTransform,
       id
-    } = _ref;
-    this.id = id ? "".concat(id, "_").concat(uid()) : uid();
-    this.type = type;
-    this.gradientUnits = gradientUnits;
-    this.gradientTransform = gradientTransform;
-    this.offsetX = offsetX;
-    this.offsetY = offsetY;
-    this.coords = _objectSpread2(_objectSpread2({}, this.type === 'radial' ? radialDefaultCoords : linearDefaultCoords), coords);
-    this.colorStops = colorStops.slice();
+    } = options || {};
+    Object.assign(this, {
+      type,
+      gradientUnits,
+      coords: _objectSpread2(_objectSpread2({}, type === 'radial' ? radialDefaultCoords : linearDefaultCoords), coords),
+      colorStops,
+      offsetX,
+      offsetY,
+      gradientTransform,
+      id: id ? "".concat(id, "_").concat(uid()) : uid()
+    });
   }
-
-  // isType<S extends GradientType>(type: S): this is Gradient<S> {
-  //   return (this.type as GradientType) === type;
-  // }
 
   /**
    * Adds another colorStop
@@ -68,8 +66,8 @@ class Gradient {
   toObject(propertiesToInclude) {
     return _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
       type: this.type,
-      coords: this.coords,
-      colorStops: this.colorStops,
+      coords: _objectSpread2({}, this.coords),
+      colorStops: this.colorStops.map(colorStop => _objectSpread2({}, colorStop)),
       offsetX: this.offsetX,
       offsetY: this.offsetY,
       gradientUnits: this.gradientUnits,
@@ -148,12 +146,12 @@ class Gradient {
         });
       }
     }
-    colorStops.forEach(_ref2 => {
+    colorStops.forEach(_ref => {
       let {
         color,
         offset,
         opacity
-      } = _ref2;
+      } = _ref;
       markup.push('<stop ', 'offset="', offset * 100 + '%', '" style="stop-color:', color, typeof opacity !== 'undefined' ? ';stop-opacity: ' + opacity : ';', '"/>\n');
     });
     markup.push(this.type === 'linear' ? '</linearGradient>' : '</radialGradient>', '\n');
@@ -167,20 +165,34 @@ class Gradient {
    * @return {CanvasGradient}
    */
   toLive(ctx) {
-    const coords = this.coords;
-    const gradient = this.type === 'linear' ? ctx.createLinearGradient(coords.x1, coords.y1, coords.x2, coords.y2) : ctx.createRadialGradient(coords.x1, coords.y1, coords.r1, coords.x2, coords.y2, coords.r2);
-    this.colorStops.forEach(_ref3 => {
+    const {
+      x1,
+      y1,
+      x2,
+      y2,
+      r1,
+      r2
+    } = this.coords;
+    const gradient = this.type === 'linear' ? ctx.createLinearGradient(x1, y1, x2, y2) : ctx.createRadialGradient(x1, y1, r1, x2, y2, r2);
+    this.colorStops.forEach(_ref2 => {
       let {
         color,
         opacity,
         offset
-      } = _ref3;
+      } = _ref2;
       gradient.addColorStop(offset, typeof opacity !== 'undefined' ? new Color(color).setAlpha(opacity).toRgba() : color);
     });
     return gradient;
   }
   static async fromObject(options) {
-    return new this(options);
+    const {
+      colorStops,
+      gradientTransform
+    } = options;
+    return new this(_objectSpread2(_objectSpread2({}, options), {}, {
+      colorStops: colorStops ? colorStops.map(colorStop => _objectSpread2({}, colorStop)) : undefined,
+      gradientTransform: gradientTransform ? [...gradientTransform] : undefined
+    }));
   }
 
   /* _FROM_SVG_START_ */

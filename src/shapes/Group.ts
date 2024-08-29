@@ -94,7 +94,7 @@ export const groupDefaultValues: Partial<TClassProperties<Group>> = {
  */
 export class Group
   extends createCollectionMixin(
-    FabricObject<GroupProps, SerializedGroupProps, GroupEvents>
+    FabricObject<GroupProps, SerializedGroupProps, GroupEvents>,
   )
   implements GroupProps
 {
@@ -255,17 +255,17 @@ export class Group
       layoutManager?: LayoutManager;
       top?: number;
       left?: number;
-    }
+    },
   ) {
     this._objects = [...objects]; // Avoid unwanted mutations of Collection to affect the caller
 
     this.__objectSelectionTracker = this.__objectSelectionMonitor.bind(
       this,
-      true
+      true,
     );
     this.__objectSelectionDisposer = this.__objectSelectionMonitor.bind(
       this,
-      false
+      false,
     );
 
     this.forEachObject((object) => {
@@ -297,14 +297,14 @@ export class Group
       //  prevent circular object tree
       log(
         'error',
-        'Group: circular object trees are not supported, this call has no effect'
+        'Group: circular object trees are not supported, this call has no effect',
       );
       return false;
     } else if (this._objects.indexOf(object) !== -1) {
       // is already in the objects array
       log(
         'error',
-        'Group: duplicate objects are not supported inside group, this call has no effect'
+        'Group: duplicate objects are not supported inside group, this call has no effect',
       );
       return false;
     }
@@ -429,7 +429,9 @@ export class Group
    */
   __objectSelectionMonitor<T extends boolean>(
     selected: T,
-    { target: object }: ObjectEvents[T extends true ? 'selected' : 'deselected']
+    {
+      target: object,
+    }: ObjectEvents[T extends true ? 'selected' : 'deselected'],
   ) {
     const activeObjects = this._activeObjects;
     if (selected) {
@@ -484,8 +486,8 @@ export class Group
         object,
         multiplyTransformMatrices(
           invertTransform(this.calcTransformMatrix()),
-          object.calcTransformMatrix()
-        )
+          object.calcTransformMatrix(),
+        ),
       );
     }
     this._shouldSetNestedCoords() && object.setCoords();
@@ -532,8 +534,8 @@ export class Group
         object,
         multiplyTransformMatrices(
           this.calcTransformMatrix(),
-          object.calcTransformMatrix()
-        )
+          object.calcTransformMatrix(),
+        ),
       );
       object.setCoords();
     }
@@ -653,7 +655,7 @@ export class Group
    */
   __serializeObjects(
     method: 'toObject' | 'toDatalessObject',
-    propertiesToInclude?: string[]
+    propertiesToInclude?: string[],
   ) {
     const _includeDefaultValues = this.includeDefaultValues;
     return this._objects
@@ -680,7 +682,7 @@ export class Group
       GroupProps & TClassProperties<this>,
       keyof SerializedGroupProps
     >,
-    K extends keyof T = never
+    K extends keyof T = never,
   >(propertiesToInclude: K[] = []): Pick<T, K> & SerializedGroupProps {
     const layoutManager = this.layoutManager.toObject();
 
@@ -695,7 +697,7 @@ export class Group
         : {}),
       objects: this.__serializeObjects(
         'toObject',
-        propertiesToInclude as string[]
+        propertiesToInclude as string[],
       ),
     };
   }
@@ -882,7 +884,7 @@ export class Group
    */
   static fromObject<T extends TOptions<SerializedGroupProps>>(
     { type, objects = [], layoutManager, ...options }: T,
-    abortable?: Abortable
+    abortable?: Abortable,
   ) {
     return Promise.all([
       enlivenObjects<FabricObject>(objects, abortable),
@@ -895,10 +897,10 @@ export class Group
       });
       if (layoutManager) {
         const layoutClass = classRegistry.getClass<typeof LayoutManager>(
-          layoutManager.type
+          layoutManager.type,
         );
         const strategyClass = classRegistry.getClass<typeof FitContentLayout>(
-          layoutManager.strategy
+          layoutManager.strategy,
         );
         group.layoutManager = new layoutClass(new strategyClass());
       } else {

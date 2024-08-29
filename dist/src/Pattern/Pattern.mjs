@@ -8,7 +8,7 @@ import { toFixed } from '../util/misc/toFixed.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { log } from '../util/internals/console.mjs';
 
-const _excluded = ["type", "source"];
+const _excluded = ["type", "source", "patternTransform"];
 
 /**
  * @see {@link http://fabricjs.com/patterns demo}
@@ -33,6 +33,13 @@ class Pattern {
   /**
    * @type PatternRepeat
    * @defaults
+   */
+
+  /**
+   * transform matrix to change the pattern, imported from svgs.
+   * @todo verify if using the identity matrix as default makes the rest of the code more easy
+   * @type Array
+   * @default
    */
 
   /**
@@ -73,13 +80,6 @@ class Pattern {
      * @default
      */
     _defineProperty(this, "crossOrigin", '');
-    /**
-     * transform matrix to change the pattern, imported from svgs.
-     * @todo verify if using the identity matrix as default makes the rest of the code more easy
-     * @type Array
-     * @default
-     */
-    _defineProperty(this, "patternTransform", null);
     this.id = uid();
     Object.assign(this, options);
   }
@@ -164,13 +164,15 @@ class Pattern {
   static async fromObject(_ref2, options) {
     let {
         type,
-        source
+        source,
+        patternTransform
       } = _ref2,
-      serialized = _objectWithoutProperties(_ref2, _excluded);
+      otherOptions = _objectWithoutProperties(_ref2, _excluded);
     const img = await loadImage(source, _objectSpread2(_objectSpread2({}, options), {}, {
-      crossOrigin: serialized.crossOrigin
+      crossOrigin: otherOptions.crossOrigin
     }));
-    return new this(_objectSpread2(_objectSpread2({}, serialized), {}, {
+    return new this(_objectSpread2(_objectSpread2({}, otherOptions), {}, {
+      patternTransform: patternTransform && patternTransform.slice(0),
       source: img
     }));
   }

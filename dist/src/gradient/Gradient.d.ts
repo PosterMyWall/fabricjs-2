@@ -66,7 +66,7 @@ export declare class Gradient<S, T extends GradientType = S extends GradientType
      */
     readonly id: string | number;
     static type: string;
-    constructor({ type, gradientUnits, coords, colorStops, offsetX, offsetY, gradientTransform, id, }: GradientOptions<T>);
+    constructor(options: GradientOptions<T>);
     /**
      * Adds another colorStop
      * @param {Record<string, string>} colorStop Object with offset and color
@@ -81,7 +81,11 @@ export declare class Gradient<S, T extends GradientType = S extends GradientType
     toObject(propertiesToInclude?: (keyof this | string)[]): Partial<this> & {
         type: T;
         coords: GradientCoords<T>;
-        colorStops: ColorStop[];
+        colorStops: {
+            color: string;
+            offset: number;
+            opacity?: number;
+        }[];
         offsetX: number;
         offsetY: number;
         gradientUnits: GradientUnits;
@@ -92,7 +96,7 @@ export declare class Gradient<S, T extends GradientType = S extends GradientType
      * @param {FabricObject} object Object to create a gradient for
      * @return {String} SVG representation of an gradient (linear/radial)
      */
-    toSVG(object: FabricObject, { additionalTransform: preTransform }?: {
+    toSVG(object: FabricObject, { additionalTransform: preTransform, }?: {
         additionalTransform?: string;
     }): string;
     /**

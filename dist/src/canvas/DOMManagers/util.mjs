@@ -1,6 +1,5 @@
 import { NONE } from '../../constants.mjs';
 import { getDocumentFromElement, getWindowFromElement, getScrollLeftTop } from '../../util/dom_misc.mjs';
-import { setStyle } from '../../util/dom_style.mjs';
 
 const setCanvasDimensions = function (el, ctx, _ref) {
   let {
@@ -16,13 +15,6 @@ const setCanvasDimensions = function (el, ctx, _ref) {
     ctx.scale(retinaScaling, retinaScaling);
   }
 };
-function allowTouchScrolling(element, allow) {
-  const touchAction = allow ? 'manipulation' : NONE;
-  setStyle(element, {
-    'touch-action': touchAction,
-    '-ms-touch-action': touchAction
-  });
-}
 const setCSSDimensions = (el, _ref2) => {
   let {
     width,
@@ -80,5 +72,5 @@ function makeElementUnselectable(element) {
   return element;
 }
 
-export { allowTouchScrolling, getElementOffset, makeElementUnselectable, setCSSDimensions, setCanvasDimensions };
+export { getElementOffset, makeElementUnselectable, setCSSDimensions, setCanvasDimensions };
 //# sourceMappingURL=util.mjs.map

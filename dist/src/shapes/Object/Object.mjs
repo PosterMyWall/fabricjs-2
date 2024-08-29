@@ -1,13 +1,11 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties, toPropertyKey as _toPropertyKey } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
-import { ALIASING_LIMIT, VERSION, SCALE_X, SCALE_Y, STROKE, iMatrix, CENTER, LEFT, TOP } from '../../constants.mjs';
-import { AnimatableObject } from './AnimatableObject.mjs';
+import { ALIASING_LIMIT, SCALE_X, SCALE_Y, STROKE, iMatrix, CENTER, VERSION, FILL, LEFT, TOP } from '../../constants.mjs';
 import { Point } from '../../Point.mjs';
 import { Shadow } from '../../Shadow.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { runningAnimations } from '../../util/animation/AnimationRegistry.mjs';
-import { cloneDeep } from '../../util/internals/cloneDeep.mjs';
 import { capValue } from '../../util/misc/capValue.mjs';
 import { createCanvasElement, toDataURL } from '../../util/misc/dom.mjs';
 import { qrDecompose, invertTransform } from '../../util/misc/matrix.mjs';
@@ -17,10 +15,12 @@ import { sendObjectToPlane } from '../../util/misc/planeChange.mjs';
 import { pick, pickBy } from '../../util/misc/pick.mjs';
 import { toFixed } from '../../util/misc/toFixed.mjs';
 import { StaticCanvas } from '../../canvas/StaticCanvas.mjs';
-import { isTextObject, isSerializableFiller, isFiller } from '../../util/typeAssertions.mjs';
+import { isTextObject, isFiller, isSerializableFiller } from '../../util/typeAssertions.mjs';
 import { stateProperties, cacheProperties, fabricObjectDefaultValues } from './defaultValues.mjs';
 import { getDevicePixelRatio, getEnv } from '../../env/index.mjs';
 import { log } from '../../util/internals/console.mjs';
+import { animateColor, animate } from '../../util/animation/animate.mjs';
+import { ObjectGeometry } from './ObjectGeometry.mjs';
 import { degreesToRadians } from '../../util/misc/radiansDegreesConversion.mjs';
 
 const _excluded = ["type"],
@@ -53,7 +53,7 @@ const _excluded = ["type"],
  * @fires dragleave
  * @fires drop
  */
-class FabricObject extends AnimatableObject {
+class FabricObject extends ObjectGeometry {
   static getDefaults() {
     return FabricObject.ownDefaults;
   }
@@ -197,7 +197,8 @@ class FabricObject extends AnimatableObject {
       y: neededY
     };
   }
-
+  eqqwe() {}
+  eqqwe2() {}
   /**
    * Update width and height of the canvas for cache
    * returns true or false if canvas needed resize.
@@ -282,95 +283,6 @@ class FabricObject extends AnimatableObject {
     const needFullTransform = this.group && !this.group._transformDone || this.group && this.canvas && ctx === this.canvas.contextTop;
     const m = this.calcTransformMatrix(!needFullTransform);
     ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-  }
-
-  /**
-   * Returns an object representation of an instance
-   * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
-   * @return {Object} Object representation of an instance
-   */
-  toObject() {
-    let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    const NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS,
-      clipPathData = this.clipPath && !this.clipPath.excludeFromExport ? _objectSpread2(_objectSpread2({}, this.clipPath.toObject(propertiesToInclude)), {}, {
-        inverted: this.clipPath.inverted,
-        absolutePositioned: this.clipPath.absolutePositioned
-      }) : null,
-      object = _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
-        type: this.constructor.type,
-        version: VERSION,
-        originX: this.originX,
-        originY: this.originY,
-        left: toFixed(this.left, NUM_FRACTION_DIGITS),
-        top: toFixed(this.top, NUM_FRACTION_DIGITS),
-        width: toFixed(this.width, NUM_FRACTION_DIGITS),
-        height: toFixed(this.height, NUM_FRACTION_DIGITS),
-        fill: isSerializableFiller(this.fill) ? this.fill.toObject() : this.fill,
-        stroke: isSerializableFiller(this.stroke) ? this.stroke.toObject() : this.stroke,
-        strokeWidth: toFixed(this.strokeWidth, NUM_FRACTION_DIGITS),
-        strokeDashArray: this.strokeDashArray ? this.strokeDashArray.concat() : this.strokeDashArray,
-        strokeLineCap: this.strokeLineCap,
-        strokeDashOffset: this.strokeDashOffset,
-        strokeLineJoin: this.strokeLineJoin,
-        strokeUniform: this.strokeUniform,
-        strokeMiterLimit: toFixed(this.strokeMiterLimit, NUM_FRACTION_DIGITS),
-        scaleX: toFixed(this.scaleX, NUM_FRACTION_DIGITS),
-        scaleY: toFixed(this.scaleY, NUM_FRACTION_DIGITS),
-        angle: toFixed(this.angle, NUM_FRACTION_DIGITS),
-        flipX: this.flipX,
-        flipY: this.flipY,
-        opacity: toFixed(this.opacity, NUM_FRACTION_DIGITS),
-        shadow: this.shadow && this.shadow.toObject ? this.shadow.toObject() : this.shadow,
-        visible: this.visible,
-        backgroundColor: this.backgroundColor,
-        fillRule: this.fillRule,
-        paintFirst: this.paintFirst,
-        globalCompositeOperation: this.globalCompositeOperation,
-        skewX: toFixed(this.skewX, NUM_FRACTION_DIGITS),
-        skewY: toFixed(this.skewY, NUM_FRACTION_DIGITS)
-      }, clipPathData ? {
-        clipPath: clipPathData
-      } : null);
-    return !this.includeDefaultValues ? this._removeDefaultValues(object) : object;
-  }
-
-  /**
-   * Returns (dataless) object representation of an instance
-   * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
-   * @return {Object} Object representation of an instance
-   */
-  toDatalessObject(propertiesToInclude) {
-    // will be overwritten by subclasses
-    return this.toObject(propertiesToInclude);
-  }
-
-  /**
-   * @private
-   * @param {Object} object
-   */
-  _removeDefaultValues(object) {
-    // getDefaults() ( get from static ownDefaults ) should win over prototype since anyway they get assigned to instance
-    // ownDefault vs prototype is swappable only if you change all the fabric objects consistently.
-    const defaults = this.constructor.getDefaults();
-    const hasStaticDefaultValues = Object.keys(defaults).length > 0;
-    const baseValues = hasStaticDefaultValues ? defaults : Object.getPrototypeOf(this);
-    return pickBy(object, (value, key) => {
-      if (key === LEFT || key === TOP || key === 'type') {
-        return true;
-      }
-      const baseValue = baseValues[key];
-      return value !== baseValue &&
-      // basically a check for [] === []
-      !(Array.isArray(value) && Array.isArray(baseValue) && value.length === 0 && baseValue.length === 0);
-    });
-  }
-
-  /**
-   * Returns a string representation of an instance
-   * @return {String}
-   */
-  toString() {
-    return "#<".concat(this.constructor.type, ">");
   }
 
   /**
@@ -508,7 +420,7 @@ class FabricObject extends AnimatableObject {
     }
     ctx.restore();
   }
-  drawSelectionBackground(ctx) {
+  drawSelectionBackground(_ctx) {
     /* no op */
   }
   renderCache(options) {
@@ -892,9 +804,9 @@ class FabricObject extends AnimatableObject {
    * function that actually render something on the context.
    * empty here to allow Obects to work on tests to benchmark fabric functionalites
    * not related to rendering
-   * @param {CanvasRenderingContext2D} ctx Context to render on
+   * @param {CanvasRenderingContext2D} _ctx Context to render on
    */
-  _render(ctx) {
+  _render(_ctx) {
     // placeholder to be overridden
   }
 
@@ -1275,6 +1187,339 @@ class FabricObject extends AnimatableObject {
     this._cacheContext = null;
   }
 
+  // #region Animation methods
+  /**
+   * List of properties to consider for animating colors.
+   * @type String[]
+   */
+
+  /**
+   * Animates object's properties
+   * @param {Record<string, number | number[] | TColorArg>} animatable map of keys and end values
+   * @param {Partial<AnimationOptions<T>>} options
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#animation}
+   * @return {Record<string, TAnimation<T>>} map of animation contexts
+   *
+   * As object — multiple properties
+   *
+   * object.animate({ left: ..., top: ... });
+   * object.animate({ left: ..., top: ... }, { duration: ... });
+   */
+  animate(animatable, options) {
+    return Object.entries(animatable).reduce((acc, _ref2) => {
+      let [key, endValue] = _ref2;
+      acc[key] = this._animate(key, endValue, options);
+      return acc;
+    }, {});
+  }
+
+  /**
+   * @private
+   * @param {String} key Property to animate
+   * @param {String} to Value to animate to
+   * @param {Object} [options] Options object
+   */
+  _animate(key, endValue) {
+    let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    const path = key.split('.');
+    const propIsColor = this.constructor.colorProperties.includes(path[path.length - 1]);
+    const {
+      abort,
+      startValue,
+      onChange,
+      onComplete
+    } = options;
+    const animationOptions = _objectSpread2(_objectSpread2({}, options), {}, {
+      target: this,
+      // path.reduce... is the current value in case start value isn't provided
+      startValue: startValue !== null && startValue !== void 0 ? startValue : path.reduce((deep, key) => deep[key], this),
+      endValue,
+      abort: abort === null || abort === void 0 ? void 0 : abort.bind(this),
+      onChange: (value, valueProgress, durationProgress) => {
+        path.reduce((deep, key, index) => {
+          if (index === path.length - 1) {
+            deep[key] = value;
+          }
+          return deep[key];
+        }, this);
+        onChange &&
+        // @ts-expect-error generic callback arg0 is wrong
+        onChange(value, valueProgress, durationProgress);
+      },
+      onComplete: (value, valueProgress, durationProgress) => {
+        this.setCoords();
+        onComplete &&
+        // @ts-expect-error generic callback arg0 is wrong
+        onComplete(value, valueProgress, durationProgress);
+      }
+    });
+    return propIsColor ? animateColor(animationOptions) : animate(animationOptions);
+  }
+
+  // #region Object stacking methods
+
+  /**
+   * A reference to the parent of the object
+   * Used to keep the original parent ref when the object has been added to an ActiveSelection, hence loosing the `group` ref
+   */
+
+  /**
+   * Checks if object is descendant of target
+   * Should be used instead of {@link Group.contains} or {@link StaticCanvas.contains} for performance reasons
+   * @param {TAncestor} target
+   * @returns {boolean}
+   */
+  isDescendantOf(target) {
+    const {
+      parent,
+      group
+    } = this;
+    return parent === target || group === target ||
+    // walk up
+    !!parent && parent.isDescendantOf(target) || !!group && group !== parent && group.isDescendantOf(target);
+  }
+
+  /**
+   * @returns {Ancestors} ancestors (excluding `ActiveSelection`) from bottom to top
+   */
+  getAncestors() {
+    const ancestors = [];
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let parent = this;
+    do {
+      parent = parent.parent;
+      parent && ancestors.push(parent);
+    } while (parent);
+    return ancestors;
+  }
+
+  /**
+   * Compare ancestors
+   *
+   * @param {StackedObject} other
+   * @returns {AncestryComparison} an object that represent the ancestry situation.
+   */
+  findCommonAncestors(other) {
+    if (this === other) {
+      return {
+        fork: [],
+        otherFork: [],
+        common: [this, ...this.getAncestors()]
+      };
+    }
+    const ancestors = this.getAncestors();
+    const otherAncestors = other.getAncestors();
+    //  if `this` has no ancestors and `this` is top ancestor of `other` we must handle the following case
+    if (ancestors.length === 0 && otherAncestors.length > 0 && this === otherAncestors[otherAncestors.length - 1]) {
+      return {
+        fork: [],
+        otherFork: [other, ...otherAncestors.slice(0, otherAncestors.length - 1)],
+        common: [this]
+      };
+    }
+    //  compare ancestors
+    for (let i = 0, ancestor; i < ancestors.length; i++) {
+      ancestor = ancestors[i];
+      if (ancestor === other) {
+        return {
+          fork: [this, ...ancestors.slice(0, i)],
+          otherFork: [],
+          common: ancestors.slice(i)
+        };
+      }
+      for (let j = 0; j < otherAncestors.length; j++) {
+        if (this === otherAncestors[j]) {
+          return {
+            fork: [],
+            otherFork: [other, ...otherAncestors.slice(0, j)],
+            common: [this, ...ancestors]
+          };
+        }
+        if (ancestor === otherAncestors[j]) {
+          return {
+            fork: [this, ...ancestors.slice(0, i)],
+            otherFork: [other, ...otherAncestors.slice(0, j)],
+            common: ancestors.slice(i)
+          };
+        }
+      }
+    }
+    // nothing shared
+    return {
+      fork: [this, ...ancestors],
+      otherFork: [other, ...otherAncestors],
+      common: []
+    };
+  }
+
+  /**
+   *
+   * @param {StackedObject} other
+   * @returns {boolean}
+   */
+  hasCommonAncestors(other) {
+    const commonAncestors = this.findCommonAncestors(other);
+    return commonAncestors && !!commonAncestors.common.length;
+  }
+
+  /**
+   *
+   * @param {FabricObject} other object to compare against
+   * @returns {boolean | undefined} if objects do not share a common ancestor or they are strictly equal it is impossible to determine which is in front of the other; in such cases the function returns `undefined`
+   */
+  isInFrontOf(other) {
+    if (this === other) {
+      return undefined;
+    }
+    const ancestorData = this.findCommonAncestors(other);
+    if (ancestorData.fork.includes(other)) {
+      return true;
+    }
+    if (ancestorData.otherFork.includes(this)) {
+      return false;
+    }
+    // if there isn't a common ancestor, we take the canvas.
+    // if there is no canvas, there is nothing to compare
+    const firstCommonAncestor = ancestorData.common[0] || this.canvas;
+    if (!firstCommonAncestor) {
+      return undefined;
+    }
+    const headOfFork = ancestorData.fork.pop(),
+      headOfOtherFork = ancestorData.otherFork.pop(),
+      thisIndex = firstCommonAncestor._objects.indexOf(headOfFork),
+      otherIndex = firstCommonAncestor._objects.indexOf(headOfOtherFork);
+    return thisIndex > -1 && thisIndex > otherIndex;
+  }
+
+  // #region Serialization
+  /**
+   * Define a list of custom properties that will be serialized when
+   * instance.toObject() gets called
+   */
+
+  /**
+   * Returns an object representation of an instance
+   * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
+   * @return {Object} Object representation of an instance
+   */
+  toObject() {
+    let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    const propertiesToSerialize = propertiesToInclude.concat(FabricObject.customProperties, this.constructor.customProperties || []);
+    let clipPathData;
+    const NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS;
+    const {
+      clipPath,
+      fill,
+      stroke,
+      shadow,
+      strokeDashArray,
+      left,
+      top,
+      originX,
+      originY,
+      width,
+      height,
+      strokeWidth,
+      strokeLineCap,
+      strokeDashOffset,
+      strokeLineJoin,
+      strokeUniform,
+      strokeMiterLimit,
+      scaleX,
+      scaleY,
+      angle,
+      flipX,
+      flipY,
+      opacity,
+      visible,
+      backgroundColor,
+      fillRule,
+      paintFirst,
+      globalCompositeOperation,
+      skewX,
+      skewY
+    } = this;
+    if (clipPath && !clipPath.excludeFromExport) {
+      clipPathData = clipPath.toObject(propertiesToSerialize.concat('inverted', 'absolutePositioned'));
+    }
+    const toFixedBound = val => toFixed(val, NUM_FRACTION_DIGITS);
+    const object = _objectSpread2(_objectSpread2({}, pick(this, propertiesToSerialize)), {}, {
+      type: this.constructor.type,
+      version: VERSION,
+      originX,
+      originY,
+      left: toFixedBound(left),
+      top: toFixedBound(top),
+      width: toFixedBound(width),
+      height: toFixedBound(height),
+      fill: isSerializableFiller(fill) ? fill.toObject() : fill,
+      stroke: isSerializableFiller(stroke) ? stroke.toObject() : stroke,
+      strokeWidth: toFixedBound(strokeWidth),
+      strokeDashArray: strokeDashArray ? strokeDashArray.concat() : strokeDashArray,
+      strokeLineCap,
+      strokeDashOffset,
+      strokeLineJoin,
+      strokeUniform,
+      strokeMiterLimit: toFixedBound(strokeMiterLimit),
+      scaleX: toFixedBound(scaleX),
+      scaleY: toFixedBound(scaleY),
+      angle: toFixedBound(angle),
+      flipX,
+      flipY,
+      opacity: toFixedBound(opacity),
+      shadow: shadow ? shadow.toObject() : shadow,
+      visible,
+      backgroundColor,
+      fillRule,
+      paintFirst,
+      globalCompositeOperation,
+      skewX: toFixedBound(skewX),
+      skewY: toFixedBound(skewY)
+    }, clipPathData ? {
+      clipPath: clipPathData
+    } : null);
+    return !this.includeDefaultValues ? this._removeDefaultValues(object) : object;
+  }
+
+  /**
+   * Returns (dataless) object representation of an instance
+   * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
+   * @return {Object} Object representation of an instance
+   */
+  toDatalessObject(propertiesToInclude) {
+    // will be overwritten by subclasses
+    return this.toObject(propertiesToInclude);
+  }
+
+  /**
+   * @private
+   * @param {Object} object
+   */
+  _removeDefaultValues(object) {
+    // getDefaults() ( get from static ownDefaults ) should win over prototype since anyway they get assigned to instance
+    // ownDefault vs prototype is swappable only if you change all the fabric objects consistently.
+    const defaults = this.constructor.getDefaults();
+    const hasStaticDefaultValues = Object.keys(defaults).length > 0;
+    const baseValues = hasStaticDefaultValues ? defaults : Object.getPrototypeOf(this);
+    return pickBy(object, (value, key) => {
+      if (key === LEFT || key === TOP || key === 'type') {
+        return true;
+      }
+      const baseValue = baseValues[key];
+      return value !== baseValue &&
+      // basically a check for [] === []
+      !(Array.isArray(value) && Array.isArray(baseValue) && value.length === 0 && baseValue.length === 0);
+    });
+  }
+
+  /**
+   * Returns a string representation of an instance
+   * @return {String}
+   */
+  toString() {
+    return "#<".concat(this.constructor.type, ">");
+  }
+
   /**
    *
    * @param {Function} klass
@@ -1284,26 +1529,23 @@ class FabricObject extends AnimatableObject {
    * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
    * @returns {Promise<FabricObject>}
    */
-  static _fromObject(_ref2) {
-    let object = _objectWithoutProperties(_ref2, _excluded);
-    let _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+  static _fromObject(_ref3) {
+    let serializedObjectOptions = _objectWithoutProperties(_ref3, _excluded);
+    let _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       {
         extraParam
-      } = _ref3,
-      options = _objectWithoutProperties(_ref3, _excluded2);
-    return enlivenObjectEnlivables(cloneDeep(object), options).then(enlivedMap => {
-      const allOptions = _objectSpread2(_objectSpread2({}, options), enlivedMap);
+      } = _ref4,
+      options = _objectWithoutProperties(_ref4, _excluded2);
+    return enlivenObjectEnlivables(serializedObjectOptions, options).then(enlivedObjectOptions => {
       // from the resulting enlived options, extract options.extraParam to arg0
       // to avoid accidental overrides later
       if (extraParam) {
-        const {
-            [extraParam]: arg0
-          } = allOptions,
-          rest = _objectWithoutProperties(allOptions, [extraParam].map(_toPropertyKey));
+        delete enlivedObjectOptions[extraParam];
+        return new this(serializedObjectOptions[extraParam],
         // @ts-expect-error different signature
-        return new this(arg0, rest);
+        enlivedObjectOptions);
       } else {
-        return new this(allOptions);
+        return new this(enlivedObjectOptions);
       }
     });
   }
@@ -1354,6 +1596,8 @@ _defineProperty(FabricObject, "stateProperties", stateProperties);
 _defineProperty(FabricObject, "cacheProperties", cacheProperties);
 _defineProperty(FabricObject, "ownDefaults", fabricObjectDefaultValues);
 _defineProperty(FabricObject, "type", 'FabricObject');
+_defineProperty(FabricObject, "colorProperties", [FILL, STROKE, 'backgroundColor']);
+_defineProperty(FabricObject, "customProperties", []);
 classRegistry.setClass(FabricObject);
 classRegistry.setClass(FabricObject, 'object');
 

@@ -1,6 +1,6 @@
 import { objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { reNewline } from '../../constants.mjs';
-import { cloneDeep } from '../internals/cloneDeep.mjs';
+import { cloneStyles } from '../internals/cloneStyles.mjs';
 import { graphemeSplit } from '../lang_string.mjs';
 
 /**
@@ -28,7 +28,7 @@ const stylesToArray = (styles, text) => {
   let charIndex = -1,
     prevStyle = {};
   // clone style structure to prevent mutation
-  styles = cloneDeep(styles);
+  styles = cloneStyles(styles);
 
   //loop through each textLine
   for (let i = 0; i < textLines.length; i++) {
@@ -73,7 +73,7 @@ const stylesToArray = (styles, text) => {
 const stylesFromArray = (styles, text) => {
   if (!Array.isArray(styles)) {
     // clone to prevent mutation
-    return cloneDeep(styles);
+    return cloneStyles(styles);
   }
   const textLines = text.split(reNewline),
     stylesObject = {};

@@ -76,7 +76,7 @@ class LayoutManager {
   /**
    * unsubscribe object layout triggers
    */
-  unsubscribe(object, context) {
+  unsubscribe(object, _context) {
     (this._subscriptions.get(object) || []).forEach(d => d());
     this._subscriptions.delete(object);
   }

@@ -16,7 +16,8 @@ import { reNewline, MODIFIED, LEFT, RIGHT } from '../../constants.mjs';
  *  - `!`      Matches a "!" character (char code 33).
  *  - `\?`     Matches a "?" character (char code 63).
  *  - `\-`     Matches a "-" character (char code 45).
- */ // eslint-disable-next-line no-useless-escape
+ */
+// eslint-disable-next-line no-useless-escape
 const reNonWord = /[ \n\.,;!\?\-]/;
 class ITextBehavior extends FabricText {
   constructor() {

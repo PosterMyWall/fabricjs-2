@@ -62,11 +62,12 @@ declare const Group_base: {
     stateProperties: string[];
     cacheProperties: string[];
     type: string;
-    _fromObject<S extends import("./Object/Object").FabricObject>({ type, ...object }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
+    colorProperties: string[];
+    customProperties: string[];
+    _fromObject<S extends import("./Object/Object").FabricObject>({ type, ...serializedObjectOptions }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
         extraParam?: string;
     }): Promise<S>;
     fromObject<T extends TOptions<SerializedObjectProps>>(object: T, options?: Abortable): Promise<import("./Object/Object").FabricObject<Partial<import("./Object/types/ObjectProps").ObjectProps>, SerializedObjectProps, ObjectEvents>>;
-    colorProperties: string[];
 };
 /**
  * @fires object:added
@@ -231,7 +232,7 @@ export declare class Group extends Group_base implements GroupProps {
      * keeps track of the selected objects
      * @private
      */
-    __objectSelectionMonitor<T extends boolean>(selected: T, { target: object }: ObjectEvents[T extends true ? 'selected' : 'deselected']): void;
+    __objectSelectionMonitor<T extends boolean>(selected: T, { target: object, }: ObjectEvents[T extends true ? 'selected' : 'deselected']): void;
     /**
      * @private
      * @param {boolean} watch

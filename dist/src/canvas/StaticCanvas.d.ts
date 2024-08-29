@@ -304,7 +304,7 @@ export declare class StaticCanvas<EventSpec extends StaticCanvasEvents = StaticC
      */
     calcViewportBoundaries(): TCornerPoint;
     cancelRequestedRender(): void;
-    drawControls(ctx: CanvasRenderingContext2D): void;
+    drawControls(_ctx: CanvasRenderingContext2D): void;
     /**
      * Renders background, objects, overlay and controls.
      * @param {CanvasRenderingContext2D} ctx

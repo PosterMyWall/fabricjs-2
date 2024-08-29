@@ -40,7 +40,6 @@ const getWholeChar = (str, i) => {
   if (isNaN(code)) {
     return ''; // Position not found
   }
-
   if (code < 0xd800 || code > 0xdfff) {
     return str.charAt(i);
   }

@@ -2,6 +2,21 @@
 
 ## [next]
 
+- fix(SVGImport): Allow parsing of 'id' attribute that starts with a number [#10079](https://github.com/fabricjs/fabric.js/pull/10079)
+- fix(filter): pixelate filter has non square pixels in webgl (#10081)
+- feat(Canvas): Avoid styling the lower canvas with absolute positioning [#10077](https://github.com/fabricjs/fabric.js/pull/10077)
+- chore(TS): Add missing export type for Text events [#10076](https://github.com/fabricjs/fabric.js/pull/10076)
+- chore(CI): Move test actions to Node 20 [#10073](https://github.com/fabricjs/fabric.js/pull/10073)
+- feat(Object): Object serialization for common properties [#10072](https://github.com/fabricjs/fabric.js/pull/10072)
+- feat(): Support easy serialization of custom properties [#10071](https://github.com/fabricjs/fabric.js/pull/10071)
+- chore(): reduce class inheritance, merge some classes together. [#10070](https://github.com/fabricjs/fabric.js/pull/10070)
+
+## [6.3.0]
+
+- chore(): Remove over-protective cloneDeep from fromObject [#9621](https://github.com/fabricjs/fabric.js/pull/9621)
+- chore(): Prettier apply the new standard configuration [#10067](https://github.com/fabricjs/fabric.js/pull/10067)
+- chore(): Update dev dependencies Lint, Prettier, Jest [#10066](https://github.com/fabricjs/fabric.js/pull/10066)
+- fix(): Remove unused code from aligning guidelines [#10056](https://github.com/fabricjs/fabric.js/discussions/10056)
 - feat(): Add v6 aligning guidelines. [#10033](https://github.com/fabricjs/fabric.js/discussions/10033)
 
 ## [6.2.0]

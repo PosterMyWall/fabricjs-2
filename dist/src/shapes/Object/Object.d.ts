@@ -1,5 +1,4 @@
 import type { ObjectEvents } from '../../EventTypeDefs';
-import { AnimatableObject } from './AnimatableObject';
 import type { XY } from '../../Point';
 import { Point } from '../../Point';
 import { Shadow } from '../../Shadow';
@@ -9,6 +8,26 @@ import { StaticCanvas } from '../../canvas/StaticCanvas';
 import type { FabricImage } from '../Image';
 import type { SerializedObjectProps } from './types/SerializedObjectProps';
 import type { ObjectProps } from './types/ObjectProps';
+import type { TColorArg } from '../../color/typedefs';
+import type { TAnimation } from '../../util/animation/animate';
+import type { AnimationOptions } from '../../util/animation/types';
+import { ObjectGeometry } from './ObjectGeometry';
+type TAncestor = FabricObject;
+export type Ancestors = [FabricObject | Group] | [FabricObject | Group, ...Group[]] | Group[];
+export type AncestryComparison = {
+    /**
+     * common ancestors of `this` and`other`(may include`this` | `other`)
+     */
+    common: Ancestors;
+    /**
+     * ancestors that are of `this` only
+     */
+    fork: Ancestors;
+    /**
+     * ancestors that are of `other` only
+     */
+    otherFork: Ancestors;
+};
 export type TCachedFabricObject<T extends FabricObject = FabricObject> = T & Required<Pick<T, 'zoomX' | 'zoomY' | '_cacheCanvas' | '_cacheContext' | 'cacheTranslationX' | 'cacheTranslationY'>> & {
     _cacheContext: CanvasRenderingContext2D;
 };
@@ -73,7 +92,7 @@ interface GetCornerPointsResponse {
  * @fires dragleave
  * @fires drop
  */
-export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<ObjectProps>, SProps extends SerializedObjectProps = SerializedObjectProps, EventSpec extends ObjectEvents = ObjectEvents> extends AnimatableObject<EventSpec> implements ObjectProps {
+export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<ObjectProps>, SProps extends SerializedObjectProps = SerializedObjectProps, EventSpec extends ObjectEvents = ObjectEvents> extends ObjectGeometry<EventSpec> implements ObjectProps {
     minScaleLimit: number;
     opacity: number;
     __PMWTESTPROPERTY: string;
@@ -284,6 +303,8 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
+    eqqwe(): void;
+    eqqwe2(): void;
     /**
      * Update width and height of the canvas for cache
      * returns true or false if canvas needed resize.
@@ -303,28 +324,6 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {CanvasRenderingContext2D} ctx Context
      */
     transform(ctx: CanvasRenderingContext2D): void;
-    /**
-     * Returns an object representation of an instance
-     * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
-     * @return {Object} Object representation of an instance
-     */
-    toObject(propertiesToInclude?: any[]): any;
-    /**
-     * Returns (dataless) object representation of an instance
-     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
-     * @return {Object} Object representation of an instance
-     */
-    toDatalessObject(propertiesToInclude?: any[]): any;
-    /**
-     * @private
-     * @param {Object} object
-     */
-    _removeDefaultValues<T extends object>(object: T): Partial<T>;
-    /**
-     * Returns a string representation of an instance
-     * @return {String}
-     */
-    toString(): string;
     /**
      * Return the object scale factor counting also the group scaling
      * @return {Point}
@@ -361,7 +360,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     render(ctx: CanvasRenderingContext2D): void;
-    drawSelectionBackground(ctx: CanvasRenderingContext2D): void;
+    drawSelectionBackground(_ctx: CanvasRenderingContext2D): void;
     renderCache(options?: any): void;
     /**
      * Remove cacheCanvas and its dimensions from the objects
@@ -494,9 +493,9 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * function that actually render something on the context.
      * empty here to allow Obects to work on tests to benchmark fabric functionalites
      * not related to rendering
-     * @param {CanvasRenderingContext2D} ctx Context to render on
+     * @param {CanvasRenderingContext2D} _ctx Context to render on
      */
-    _render(ctx: CanvasRenderingContext2D): void;
+    _render(_ctx: CanvasRenderingContext2D): void;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
@@ -629,6 +628,93 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      */
     dispose(): void;
     /**
+     * List of properties to consider for animating colors.
+     * @type String[]
+     */
+    static colorProperties: string[];
+    /**
+     * Animates object's properties
+     * @param {Record<string, number | number[] | TColorArg>} animatable map of keys and end values
+     * @param {Partial<AnimationOptions<T>>} options
+     * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#animation}
+     * @return {Record<string, TAnimation<T>>} map of animation contexts
+     *
+     * As object — multiple properties
+     *
+     * object.animate({ left: ..., top: ... });
+     * object.animate({ left: ..., top: ... }, { duration: ... });
+     */
+    animate<T extends number | number[] | TColorArg>(animatable: Record<string, T>, options?: Partial<AnimationOptions<T>>): Record<string, TAnimation<T>>;
+    /**
+     * @private
+     * @param {String} key Property to animate
+     * @param {String} to Value to animate to
+     * @param {Object} [options] Options object
+     */
+    _animate<T extends number | number[] | TColorArg>(key: string, endValue: T, options?: Partial<AnimationOptions<T>>): TAnimation<T>;
+    /**
+     * A reference to the parent of the object
+     * Used to keep the original parent ref when the object has been added to an ActiveSelection, hence loosing the `group` ref
+     */
+    parent?: Group;
+    /**
+     * Checks if object is descendant of target
+     * Should be used instead of {@link Group.contains} or {@link StaticCanvas.contains} for performance reasons
+     * @param {TAncestor} target
+     * @returns {boolean}
+     */
+    isDescendantOf(target: TAncestor): boolean;
+    /**
+     * @returns {Ancestors} ancestors (excluding `ActiveSelection`) from bottom to top
+     */
+    getAncestors(): Ancestors;
+    /**
+     * Compare ancestors
+     *
+     * @param {StackedObject} other
+     * @returns {AncestryComparison} an object that represent the ancestry situation.
+     */
+    findCommonAncestors<T extends this>(other: T): AncestryComparison;
+    /**
+     *
+     * @param {StackedObject} other
+     * @returns {boolean}
+     */
+    hasCommonAncestors<T extends this>(other: T): boolean;
+    /**
+     *
+     * @param {FabricObject} other object to compare against
+     * @returns {boolean | undefined} if objects do not share a common ancestor or they are strictly equal it is impossible to determine which is in front of the other; in such cases the function returns `undefined`
+     */
+    isInFrontOf<T extends this>(other: T): boolean | undefined;
+    /**
+     * Define a list of custom properties that will be serialized when
+     * instance.toObject() gets called
+     */
+    static customProperties: string[];
+    /**
+     * Returns an object representation of an instance
+     * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
+     * @return {Object} Object representation of an instance
+     */
+    toObject(propertiesToInclude?: any[]): any;
+    /**
+     * Returns (dataless) object representation of an instance
+     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
+     * @return {Object} Object representation of an instance
+     */
+    toDatalessObject(propertiesToInclude?: any[]): any;
+    /**
+     * @private
+     * @param {Object} object
+     */
+    _removeDefaultValues<T extends object>(object: T): Partial<T>;
+    /**
+     * Returns a string representation of an instance
+     * @return {String}
+     */
+    toString(): string;
+    /**
      *
      * @param {Function} klass
      * @param {object} object
@@ -637,7 +723,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
      * @returns {Promise<FabricObject>}
      */
-    static _fromObject<S extends FabricObject>({ type, ...object }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
+    static _fromObject<S extends FabricObject>({ type, ...serializedObjectOptions }: Record<string, unknown>, { extraParam, ...options }?: Abortable & {
         extraParam?: string;
     }): Promise<S>;
     /**

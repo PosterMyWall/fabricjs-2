@@ -53,7 +53,6 @@ async function parseSVGDocument(doc, reviver) {
     applyViewboxTransform(el);
     return isValidSvgTag(el) && !hasInvalidAncestor(el); // http://www.w3.org/TR/SVG/struct.html#DefsElement
   });
-
   if (!elements || elements && !elements.length) {
     return _objectSpread2(_objectSpread2({}, createEmptyResponse()), {}, {
       options,

@@ -78,12 +78,10 @@ function applyViewboxTransform(element) {
       scaleY = scaleX = scaleX > scaleY ? scaleY : scaleX;
       // calculate additional translation to move the viewbox
     }
-
     if (preserveAspectRatio.meetOrSlice === 'slice') {
       scaleY = scaleX = scaleX > scaleY ? scaleX : scaleY;
       // calculate additional translation to move the viewbox
     }
-
     widthDiff = parsedDim.width - viewBoxWidth * scaleX;
     heightDiff = parsedDim.height - viewBoxHeight * scaleX;
     if (preserveAspectRatio.alignX === 'Mid') {

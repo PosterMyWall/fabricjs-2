@@ -30,7 +30,7 @@ export declare class LayoutManager {
     /**
      * unsubscribe object layout triggers
      */
-    protected unsubscribe(object: FabricObject, context?: RegistrationContext & Partial<StrictLayoutContext>): void;
+    protected unsubscribe(object: FabricObject, _context?: RegistrationContext & Partial<StrictLayoutContext>): void;
     unsubscribeTargets(context: RegistrationContext & Partial<StrictLayoutContext>): void;
     subscribeTargets(context: RegistrationContext & Partial<StrictLayoutContext>): void;
     protected onBeforeLayout(context: StrictLayoutContext): void;

@@ -87,6 +87,7 @@ class Canvas extends SelectableCanvas {
     // '_onLongPress',
     // '_onOrientationChange',
     '_onMouseWheel', '_onMouseOut', '_onMouseEnter', '_onContextMenu', '_onDoubleClick', '_onDragStart', '_onDragEnd', '_onDragProgress', '_onDragOver', '_onDragEnter', '_onDragLeave', '_onDrop'].forEach(eventHandler => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       this[eventHandler] = this[eventHandler].bind(this);
     });
     // register event handlers
@@ -100,7 +101,7 @@ class Canvas extends SelectableCanvas {
   _getEventPrefix() {
     return this.enablePointerEvents ? 'pointer' : 'mouse';
   }
-  addOrRemove(functor, eventjsFunctor) {
+  addOrRemove(functor, _eventjsFunctor) {
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
     functor(getWindowFromElement(canvasElement), 'resize', this._onResize);

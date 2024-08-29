@@ -489,7 +489,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   _shouldClearSelection(
     e: TPointerEvent,
-    target?: FabricObject
+    target?: FabricObject,
   ): target is undefined {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
@@ -525,7 +525,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   private _shouldCenterTransform(
     target: FabricObject,
     action: string,
-    modifierKeyPressed: boolean
+    modifierKeyPressed: boolean,
   ) {
     if (!target) {
       return;
@@ -556,7 +556,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   _getOriginFromCorner(
     target: FabricObject,
-    controlName: string
+    controlName: string,
   ): { x: TOriginX; y: TOriginY } {
     const origin = {
       x: target.originX,
@@ -593,14 +593,14 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   _setupCurrentTransform(
     e: TPointerEvent,
     target: FabricObject,
-    alreadySelected: boolean
+    alreadySelected: boolean,
   ): void {
     const pointer = target.group
       ? // transform pointer to target's containing coordinate plane
         sendPointToPlane(
           this.getScenePoint(e),
           undefined,
-          target.group.calcTransformMatrix()
+          target.group.calcTransformMatrix(),
         )
       : this.getScenePoint(e);
     const { key: corner = '', control } = target.getActiveControl() || {},
@@ -672,7 +672,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     const { x, y, deltaX, deltaY } = this._groupSelector!,
       start = new Point(x, y).transform(this.viewportTransform),
       extent = new Point(x + deltaX, y + deltaY).transform(
-        this.viewportTransform
+        this.viewportTransform,
       ),
       strokeOffset = this.selectionLineWidth / 2;
     let minX = Math.min(start.x, extent.x),
@@ -700,7 +700,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     FabricObject.prototype._setLineDash.call(
       this,
       ctx,
-      this.selectionDashArray
+      this.selectionDashArray,
     );
     ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
   }
@@ -818,7 +818,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
       obj.evented &&
       this._pointIsInObjectSelectionArea(
         obj,
-        sendPointToPlane(pointer, undefined, this.viewportTransform)
+        sendPointToPlane(pointer, undefined, this.viewportTransform),
       )
     ) {
       if (
@@ -844,7 +844,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   _searchPossibleTargets(
     objects: FabricObject[],
-    pointer: Point
+    pointer: Point,
   ): FabricObject | undefined {
     // Cache all targets where their bounding box contains point.
     let i = objects.length;
@@ -856,7 +856,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         if (isCollection(target) && target.subTargetCheck) {
           const subTarget = this._searchPossibleTargets(
             target._objects as FabricObject[],
-            pointer
+            pointer,
           );
           subTarget && this.targets.push(subTarget);
         }
@@ -874,7 +874,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   searchPossibleTargets(
     objects: FabricObject[],
-    pointer: Point
+    pointer: Point,
   ): FabricObject | undefined {
     const target = this._searchPossibleTargets(objects, pointer);
 
@@ -989,7 +989,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         ? new Point(1, 1)
         : new Point(
             upperCanvasEl.width / boundsWidth,
-            upperCanvasEl.height / boundsHeight
+            upperCanvasEl.height / boundsHeight,
           );
 
     return pointer.multiply(cssScale);
@@ -1001,7 +1001,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   protected _setDimensionsImpl(
     dimensions: TSize,
-    options?: TCanvasSizeOptions
+    options?: TCanvasSizeOptions,
   ) {
     // @ts-expect-error this method exists in the subclass - should be moved or declared as abstract
     this._resetTransformEventData();
@@ -1062,8 +1062,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     return isActiveSelection(active)
       ? active.getObjects()
       : active
-      ? [active]
-      : [];
+        ? [active]
+        : [];
   }
 
   /**
@@ -1181,7 +1181,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   _discardActiveObject(
     e?: TPointerEvent,
-    object?: FabricObject
+    object?: FabricObject,
   ): this is { _activeObject: undefined } {
     const obj = this._activeObject;
     if (obj) {
@@ -1331,7 +1331,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   protected _toObject(
     instance: FabricObject,
     methodName: 'toObject' | 'toDatalessObject',
-    propertiesToInclude: string[]
+    propertiesToInclude: string[],
   ): Record<string, any> {
     // If the object is part of the current selection group, it should
     // be transformed appropriately
@@ -1351,7 +1351,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    * @returns the original values of instance which were changed
    */
   private _realizeGroupTransformOnObject(
-    instance: FabricObject
+    instance: FabricObject,
   ): Partial<typeof instance> {
     const { group } = instance;
     if (group && isActiveSelection(group) && this._activeObject === group) {
@@ -1380,7 +1380,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   _setSVGObject(
     markup: string[],
     instance: FabricObject,
-    reviver?: TSVGReviver
+    reviver?: TSVGReviver,
   ) {
     // If the object is in a selection group, simulate what would happen to that
     // object when the group is deselected

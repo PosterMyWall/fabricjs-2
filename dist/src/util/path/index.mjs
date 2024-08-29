@@ -637,7 +637,6 @@ const getPointOnPath = function (path, distance) {
     // throw Error('Invalid command');
   }
 };
-
 const rePathCmdAll = new RegExp(rePathCommand, 'gi');
 const rePathCmd = new RegExp(rePathCommand, 'i');
 

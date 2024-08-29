@@ -42,7 +42,7 @@ export type ITextEvents = ObjectEvents & {
 export abstract class ITextBehavior<
   Props extends TOptions<TextProps> = Partial<TextProps>,
   SProps extends SerializedTextProps = SerializedTextProps,
-  EventSpec extends ITextEvents = ITextEvents
+  EventSpec extends ITextEvents = ITextEvents,
 > extends FabricText<Props, SProps, EventSpec> {
   declare abstract isEditing: boolean;
   declare abstract cursorDelay: number;
@@ -92,7 +92,7 @@ export abstract class ITextBehavior<
   abstract getSelectionStartFromPointer(e: TPointerEvent): number;
   abstract _getCursorBoundaries(
     index: number,
-    skipCaching?: boolean
+    skipCaching?: boolean,
   ): {
     left: number;
     top: number;
@@ -190,7 +190,7 @@ export abstract class ITextBehavior<
           shouldClear = true;
           cursorAnimation.abort();
         }
-      }
+      },
     );
 
     this._currentCursorOpacity = 1;
@@ -208,7 +208,7 @@ export abstract class ITextBehavior<
   restartCursorIfNeeded() {
     if (
       [this._currentTickState, this._currentTickCompleteState].some(
-        (cursorAnimation) => !cursorAnimation || cursorAnimation.isDone()
+        (cursorAnimation) => !cursorAnimation || cursorAnimation.isDone(),
       )
     ) {
       this.initDelayedCursor();
@@ -355,7 +355,7 @@ export abstract class ITextBehavior<
       // search forward
       newSelectionEnd = Math.max(
         newSelectionStart,
-        this.searchWordBoundary(selectionStart, 1)
+        this.searchWordBoundary(selectionStart, 1),
       );
 
     this.selectionStart = newSelectionStart;
@@ -493,7 +493,7 @@ export abstract class ITextBehavior<
   fromGraphemeToStringSelection(
     start: number,
     end: number,
-    graphemes: string[]
+    graphemes: string[],
   ) {
     const smallerTextStart = graphemes.slice(0, start),
       graphemeStart = smallerTextStart.join('').length;
@@ -520,7 +520,7 @@ export abstract class ITextBehavior<
       const newSelection = this.fromGraphemeToStringSelection(
         this.selectionStart,
         this.selectionEnd,
-        this._text
+        this._text,
       );
       this.hiddenTextarea.selectionStart = newSelection.selectionStart;
       this.hiddenTextarea.selectionEnd = newSelection.selectionEnd;
@@ -544,7 +544,7 @@ export abstract class ITextBehavior<
     const newSelection = this.fromStringToGraphemeSelection(
       textarea.selectionStart,
       textarea.selectionEnd,
-      textarea.value
+      textarea.value,
     );
     this.selectionEnd = this.selectionStart = newSelection.selectionEnd;
     if (!this.inCompositionMode) {
@@ -592,15 +592,15 @@ export abstract class ITextBehavior<
 
     const p = new Point(
       boundaries.left + leftOffset,
-      boundaries.top + boundaries.topOffset + charHeight
+      boundaries.top + boundaries.topOffset + charHeight,
     )
       .transform(this.calcTransformMatrix())
       .transform(this.canvas.viewportTransform)
       .multiply(
         new Point(
           upperCanvas.clientWidth / upperCanvasWidth,
-          upperCanvas.clientHeight / upperCanvasHeight
-        )
+          upperCanvas.clientHeight / upperCanvasHeight,
+        ),
       );
 
     if (p.x < 0) {
@@ -732,7 +732,7 @@ export abstract class ITextBehavior<
         this.get2DCursorLocation(start, true),
       { lineIndex: lineEnd, charIndex: charEnd } = this.get2DCursorLocation(
         end,
-        true
+        true,
       );
     if (lineStart !== lineEnd) {
       // step1 remove the trailing of lineStart
@@ -816,7 +816,7 @@ export abstract class ITextBehavior<
     lineIndex: number,
     charIndex: number,
     qty: number,
-    copiedStyle?: { [index: number]: TextStyleDeclaration }
+    copiedStyle?: { [index: number]: TextStyleDeclaration },
   ) {
     const newLineStyles: { [index: number]: TextStyleDeclaration } = {};
     const originalLineLength = this._unwrappedTextLines[lineIndex].length;
@@ -885,7 +885,7 @@ export abstract class ITextBehavior<
     lineIndex: number,
     charIndex: number,
     quantity: number,
-    copiedStyle?: TextStyleDeclaration[]
+    copiedStyle?: TextStyleDeclaration[],
   ) {
     if (!this.styles) {
       this.styles = {};
@@ -942,7 +942,7 @@ export abstract class ITextBehavior<
   insertNewStyleBlock(
     insertedText: string[],
     start: number,
-    copiedStyle?: TextStyleDeclaration[]
+    copiedStyle?: TextStyleDeclaration[],
   ) {
     const cursorLoc = this.get2DCursorLocation(start, true),
       addedLines = [0];
@@ -962,7 +962,7 @@ export abstract class ITextBehavior<
         cursorLoc.lineIndex,
         cursorLoc.charIndex,
         addedLines[0],
-        copiedStyle
+        copiedStyle,
       );
       copiedStyle = copiedStyle && copiedStyle.slice(addedLines[0] + 1);
     }
@@ -970,7 +970,7 @@ export abstract class ITextBehavior<
       this.insertNewlineStyleObject(
         cursorLoc.lineIndex,
         cursorLoc.charIndex + addedLines[0],
-        linesLength
+        linesLength,
       );
     let i;
     for (i = 1; i < linesLength; i++) {
@@ -979,7 +979,7 @@ export abstract class ITextBehavior<
           cursorLoc.lineIndex + i,
           0,
           addedLines[i],
-          copiedStyle
+          copiedStyle,
         );
       } else if (copiedStyle) {
         // this test is required in order to close #6841
@@ -997,7 +997,7 @@ export abstract class ITextBehavior<
         cursorLoc.lineIndex + i,
         0,
         addedLines[i],
-        copiedStyle
+        copiedStyle,
       );
     }
   }
@@ -1035,7 +1035,7 @@ export abstract class ITextBehavior<
     text: string,
     style: TextStyleDeclaration[] | undefined,
     start: number,
-    end: number = start
+    end: number = start,
   ) {
     if (end > start) {
       this.removeStyleFromTo(start, end);
@@ -1061,7 +1061,7 @@ export abstract class ITextBehavior<
   setSelectionStartEndWithShift(
     start: number,
     end: number,
-    newSelection: number
+    newSelection: number,
   ) {
     if (newSelection <= start) {
       if (end === start) {

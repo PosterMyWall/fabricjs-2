@@ -66,7 +66,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @private
      */
     private _getEventPrefix;
-    addOrRemove(functor: any, eventjsFunctor: 'add' | 'remove'): void;
+    addOrRemove(functor: any, _eventjsFunctor: 'add' | 'remove'): void;
     /**
      * Removes all event listeners
      */
