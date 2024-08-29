@@ -46,7 +46,6 @@ export declare class InteractiveFabricObject<Props extends TFabricObjectProps = 
     selectable: boolean;
     evented: boolean;
     perPixelTargetFind: boolean;
-    targetFindTolerance: number;
     activeOn: 'down' | 'up';
     hoverCursor: CSSStyleDeclaration['cursor'] | null;
     moveCursor: CSSStyleDeclaration['cursor'] | null;

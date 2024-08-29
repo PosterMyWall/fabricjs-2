@@ -327,8 +327,7 @@ class SelectableCanvas extends StaticCanvas {
    * @return {Boolean}
    */
   isTargetTransparent(target, x, y) {
-    // *PMW* Using item find tolerance instead of canvas
-    const tolerance = target.targetFindTolerance;
+    const tolerance = this.targetFindTolerance;
     const ctx = this.pixelFindContext;
     this.clearContext(ctx);
     ctx.save();

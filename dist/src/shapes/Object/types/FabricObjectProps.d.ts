@@ -39,7 +39,6 @@ export interface FabricObjectProps extends ObjectProps, ControlProps, BorderProp
      * @default
      */
     perPixelTargetFind: boolean;
-    targetFindTolerance: number;
     /**
      * When set to `false`, an object can not be selected for modification (using either point-click-based or group-based selection).
      * But events still fire on it.

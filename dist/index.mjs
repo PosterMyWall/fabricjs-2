@@ -434,7 +434,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.2.0-pmw-17";
+var version = "6.2.0-pmw-18";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -13728,8 +13728,7 @@ class SelectableCanvas extends StaticCanvas {
    * @return {Boolean}
    */
   isTargetTransparent(target, x, y) {
-    // *PMW* Using item find tolerance instead of canvas
-    const tolerance = target.targetFindTolerance;
+    const tolerance = this.targetFindTolerance;
     const ctx = this.pixelFindContext;
     this.clearContext(ctx);
     ctx.save();

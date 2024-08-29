@@ -82,7 +82,6 @@ export class InteractiveFabricObject<
   declare selectable: boolean;
   declare evented: boolean;
   declare perPixelTargetFind: boolean;
-  declare targetFindTolerance: number;
   declare activeOn: 'down' | 'up';
 
   declare hoverCursor: CSSStyleDeclaration['cursor'] | null;
