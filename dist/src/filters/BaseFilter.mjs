@@ -288,10 +288,12 @@ class BaseFilter {
 
   /**
    * Returns object representation of an instance
+   * It will automatically export the default values of a filter,
+   * stored in the static defaults property.
    * @return {Object} Object representation of an instance
    */
   toObject() {
-    const defaultKeys = Object.keys(this.constructor.defaults);
+    const defaultKeys = Object.keys(this.constructor.defaults || {});
     return _objectSpread2({
       type: this.type
     }, defaultKeys.reduce((acc, key) => {

@@ -136,6 +136,8 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
     createHelpLayer(options: T2DPipelineState): void;
     /**
      * Returns object representation of an instance
+     * It will automatically export the default values of a filter,
+     * stored in the static defaults property.
      * @return {Object} Object representation of an instance
      */
     toObject(): {

@@ -80,7 +80,7 @@ function skewObject(axis, _ref, pointer) {
       scaleY: 1
     }).y;
   const shearing = 2 * offset * skewingSide /
-   // we max out fractions to safeguard from asymptotic behavior
+  // we max out fractions to safeguard from asymptotic behavior
   Math.max(b, 1) +
   // add starting state
   shearingStart;

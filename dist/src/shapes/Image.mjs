@@ -511,7 +511,7 @@ class FabricImage extends FabricObject {
     } else {
       var _getContext;
       // clear the existing element to get new filter data
-      (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 ? void 0 : _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
+      (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 || _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
     }
     getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
     if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {

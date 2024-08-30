@@ -3,8 +3,8 @@ import { ColorMatrix } from './ColorMatrix.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 
 function createColorMatrixFilter(key, matrix) {
-  var _class;
-  const newClass = (_class = class newClass extends ColorMatrix {
+  var _Class;
+  const newClass = (_Class = class newClass extends ColorMatrix {
     //@ts-expect-error TS wants matrix to be exported.
     toObject() {
       return {
@@ -12,10 +12,10 @@ function createColorMatrixFilter(key, matrix) {
         colorsOnly: this.colorsOnly
       };
     }
-  }, _defineProperty(_class, "type", key), _defineProperty(_class, "defaults", {
+  }, _defineProperty(_Class, "type", key), _defineProperty(_Class, "defaults", {
     colorsOnly: false,
     matrix
-  }), _class);
+  }), _Class);
   classRegistry.setClass(newClass, key);
   return newClass;
 }

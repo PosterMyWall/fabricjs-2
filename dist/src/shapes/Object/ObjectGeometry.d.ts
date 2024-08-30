@@ -245,7 +245,13 @@ export declare class ObjectGeometry<EventSpec extends ObjectEvents = ObjectEvent
     scaleY: number;
     skewX: number;
     skewY: number;
+    /**
+     * @deprecated please use 'center' as value in new projects
+     * */
     originX: TOriginX;
+    /**
+     * @deprecated please use 'center' as value in new projects
+     * */
     originY: TOriginY;
     angle: TDegree;
     strokeWidth: number;
@@ -304,7 +310,12 @@ export declare class ObjectGeometry<EventSpec extends ObjectEvents = ObjectEvent
      */
     getRelativeCenterPoint(): Point;
     /**
-     * Returns the coordinates of the object as if it has a different origin
+     * Returns the position of the object as if it has a different origin.
+     * Take an object that has left, top set to 100, 100 with origin 'left', 'top'.
+     * Return the values of left top ( wrapped in a point ) that you would need to keep
+     * the same position if origin where different.
+     * Alternatively you can use this to also find which point in the parent plane is a specific origin
+     * ( where is the bottom right corner of my object? )
      * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
      * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
      * @return {Point}

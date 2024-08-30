@@ -129,7 +129,7 @@ class DraggableTextDelegate {
       dragImage.remove();
     };
     getDocumentFromElement(e.target || this.target.hiddenTextarea).body.appendChild(dragImage);
-    (_e$dataTransfer = e.dataTransfer) === null || _e$dataTransfer === void 0 ? void 0 : _e$dataTransfer.setDragImage(dragImage, offset.x, offset.y);
+    (_e$dataTransfer = e.dataTransfer) === null || _e$dataTransfer === void 0 || _e$dataTransfer.setDragImage(dragImage, offset.x, offset.y);
   }
 
   /**

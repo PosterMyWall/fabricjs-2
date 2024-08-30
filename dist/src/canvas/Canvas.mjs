@@ -236,7 +236,7 @@ class Canvas extends SelectableCanvas {
       dropTarget.clearContextTop();
       dirty = true;
     }
-    source === null || source === void 0 ? void 0 : source.clearContextTop();
+    source === null || source === void 0 || source.clearContextTop();
     target !== source && (target === null || target === void 0 ? void 0 : target.clearContextTop());
     // render effects
     const ctx = this.contextTop;

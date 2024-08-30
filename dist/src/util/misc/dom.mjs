@@ -29,7 +29,7 @@ const copyCanvasElement = canvas => {
   const newCanvas = createCanvasElement();
   newCanvas.width = canvas.width;
   newCanvas.height = canvas.height;
-  (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 ? void 0 : _newCanvas$getContext.drawImage(canvas, 0, 0);
+  (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 || _newCanvas$getContext.drawImage(canvas, 0, 0);
   return newCanvas;
 };
 

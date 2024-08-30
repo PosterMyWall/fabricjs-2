@@ -31,6 +31,7 @@ export { PencilBrush } from './src/brushes/PencilBrush';
 export { CircleBrush } from './src/brushes/CircleBrush';
 export { SprayBrush } from './src/brushes/SprayBrush';
 export { PatternBrush } from './src/brushes/PatternBrush';
+export type * from './src/util/path/typedefs';
 export { FabricObject, 
 /**
  * @deprecated Due to a naming conflict with the

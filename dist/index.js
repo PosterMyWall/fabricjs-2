@@ -39,8 +39,8 @@
       r,
       i = _objectWithoutPropertiesLoose(e, t);
     if (Object.getOwnPropertySymbols) {
-      var s = Object.getOwnPropertySymbols(e);
-      for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
+      var n = Object.getOwnPropertySymbols(e);
+      for (r = 0; r < n.length; r++) o = n[r], t.indexOf(o) >= 0 || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
     }
     return i;
   }
@@ -48,7 +48,7 @@
     if (null == r) return {};
     var t = {};
     for (var n in r) if ({}.hasOwnProperty.call(r, n)) {
-      if (e.includes(n)) continue;
+      if (e.indexOf(n) >= 0) continue;
       t[n] = r[n];
     }
     return t;
@@ -424,7 +424,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.3.0-pmw-19";
+  var version = "6.4.0-pmw-19";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -1578,7 +1578,7 @@
     const newCanvas = createCanvasElement();
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
-    (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 ? void 0 : _newCanvas$getContext.drawImage(canvas, 0, 0);
+    (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 || _newCanvas$getContext.drawImage(canvas, 0, 0);
     return newCanvas;
   };
 
@@ -4539,7 +4539,7 @@
         target
       }
     } = options;
-    (_target$canvas = target.canvas) === null || _target$canvas === void 0 ? void 0 : _target$canvas.fire("object:".concat(eventName), _objectSpread2(_objectSpread2({}, options), {}, {
+    (_target$canvas = target.canvas) === null || _target$canvas === void 0 || _target$canvas.fire("object:".concat(eventName), _objectSpread2(_objectSpread2({}, options), {}, {
       target
     }));
     target.fire(eventName, options);
@@ -6552,6 +6552,14 @@
     // #region Origin
 
     /**
+     * @deprecated please use 'center' as value in new projects
+     * */
+
+    /**
+     * @deprecated please use 'center' as value in new projects
+     * */
+
+    /**
      * Object containing this object.
      * can influence its size and position
      */
@@ -6631,6 +6639,9 @@
      * @return {Point}
      */
     translateToCenterPoint(point, originX, originY) {
+      if (originX === CENTER && originY === CENTER) {
+        return point;
+      }
       const p = this.translateToGivenOrigin(point, originX, originY, CENTER, CENTER);
       if (this.angle) {
         return p.rotate(degreesToRadians(this.angle), point);
@@ -6671,7 +6682,12 @@
     }
 
     /**
-     * Returns the coordinates of the object as if it has a different origin
+     * Returns the position of the object as if it has a different origin.
+     * Take an object that has left, top set to 100, 100 with origin 'left', 'top'.
+     * Return the values of left top ( wrapped in a point ) that you would need to keep
+     * the same position if origin where different.
+     * Alternatively you can use this to also find which point in the parent plane is a specific origin
+     * ( where is the bottom right corner of my object? )
      * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
      * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
      * @return {Point}
@@ -9060,7 +9076,7 @@
         scaleY: 1
       }).y;
     const shearing = 2 * offset * skewingSide /
-     // we max out fractions to safeguard from asymptotic behavior
+    // we max out fractions to safeguard from asymptotic behavior
     Math.max(b, 1) +
     // add starting state
     shearingStart;
@@ -12110,7 +12126,7 @@
         default:
           return;
       }
-      (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 ? void 0 : _this$canvas2.fire('object:modified', {
+      (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 || _this$canvas2.fire('object:modified', {
         target: this
       });
     }
@@ -12159,7 +12175,7 @@
         default:
           return;
       }
-      (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 ? void 0 : _this$canvas3.fire('object:modified', {
+      (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 || _this$canvas3.fire('object:modified', {
         target: this
       });
     }
@@ -14848,7 +14864,7 @@
         dropTarget.clearContextTop();
         dirty = true;
       }
-      source === null || source === void 0 ? void 0 : source.clearContextTop();
+      source === null || source === void 0 || source.clearContextTop();
       target !== source && (target === null || target === void 0 ? void 0 : target.clearContextTop());
       // render effects
       const ctx = this.contextTop;
@@ -21054,7 +21070,7 @@
         dragImage.remove();
       };
       getDocumentFromElement(e.target || this.target.hiddenTextarea).body.appendChild(dragImage);
-      (_e$dataTransfer = e.dataTransfer) === null || _e$dataTransfer === void 0 ? void 0 : _e$dataTransfer.setDragImage(dragImage, offset.x, offset.y);
+      (_e$dataTransfer = e.dataTransfer) === null || _e$dataTransfer === void 0 || _e$dataTransfer.setDragImage(dragImage, offset.x, offset.y);
     }
 
     /**
@@ -21347,7 +21363,7 @@
      */
     _onTickComplete() {
       var _this$_currentTickCom;
-      (_this$_currentTickCom = this._currentTickCompleteState) === null || _this$_currentTickCom === void 0 ? void 0 : _this$_currentTickCom.abort();
+      (_this$_currentTickCom = this._currentTickCompleteState) === null || _this$_currentTickCom === void 0 || _this$_currentTickCom.abort();
       this._currentTickCompleteState = this._animateCursor({
         toValue: 1,
         duration: this.cursorDuration,
@@ -25391,7 +25407,7 @@
       } else {
         var _getContext;
         // clear the existing element to get new filter data
-        (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 ? void 0 : _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
+        (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 || _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
       }
       getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
       if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
@@ -26749,10 +26765,12 @@
 
     /**
      * Returns object representation of an instance
+     * It will automatically export the default values of a filter,
+     * stored in the static defaults property.
      * @return {Object} Object representation of an instance
      */
     toObject() {
-      const defaultKeys = Object.keys(this.constructor.defaults);
+      const defaultKeys = Object.keys(this.constructor.defaults || {});
       return _objectSpread2({
         type: this.type
       }, defaultKeys.reduce((acc, key) => {
@@ -27432,8 +27450,8 @@
   classRegistry.setClass(ColorMatrix);
 
   function createColorMatrixFilter(key, matrix) {
-    var _class;
-    const newClass = (_class = class newClass extends ColorMatrix {
+    var _Class;
+    const newClass = (_Class = class newClass extends ColorMatrix {
       //@ts-expect-error TS wants matrix to be exported.
       toObject() {
         return {
@@ -27441,10 +27459,10 @@
           colorsOnly: this.colorsOnly
         };
       }
-    }, _defineProperty(_class, "type", key), _defineProperty(_class, "defaults", {
+    }, _defineProperty(_Class, "type", key), _defineProperty(_Class, "defaults", {
       colorsOnly: false,
       matrix
-    }), _class);
+    }), _Class);
     classRegistry.setClass(newClass, key);
     return newClass;
   }

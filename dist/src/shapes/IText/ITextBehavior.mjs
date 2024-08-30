@@ -85,7 +85,7 @@ class ITextBehavior extends FabricText {
    */
   _onTickComplete() {
     var _this$_currentTickCom;
-    (_this$_currentTickCom = this._currentTickCompleteState) === null || _this$_currentTickCom === void 0 ? void 0 : _this$_currentTickCom.abort();
+    (_this$_currentTickCom = this._currentTickCompleteState) === null || _this$_currentTickCom === void 0 || _this$_currentTickCom.abort();
     this._currentTickCompleteState = this._animateCursor({
       toValue: 1,
       duration: this.cursorDuration,

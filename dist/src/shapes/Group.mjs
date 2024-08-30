@@ -683,7 +683,7 @@ class Group extends createCollectionMixin(FabricObject) {
       default:
         return;
     }
-    (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 ? void 0 : _this$canvas2.fire('object:modified', {
+    (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 || _this$canvas2.fire('object:modified', {
       target: this
     });
   }
@@ -732,7 +732,7 @@ class Group extends createCollectionMixin(FabricObject) {
       default:
         return;
     }
-    (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 ? void 0 : _this$canvas3.fire('object:modified', {
+    (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 || _this$canvas3.fire('object:modified', {
       target: this
     });
   }

@@ -484,6 +484,14 @@ class ObjectGeometry extends CommonMethods {
   // #region Origin
 
   /**
+   * @deprecated please use 'center' as value in new projects
+   * */
+
+  /**
+   * @deprecated please use 'center' as value in new projects
+   * */
+
+  /**
    * Object containing this object.
    * can influence its size and position
    */
@@ -563,6 +571,9 @@ class ObjectGeometry extends CommonMethods {
    * @return {Point}
    */
   translateToCenterPoint(point, originX, originY) {
+    if (originX === CENTER && originY === CENTER) {
+      return point;
+    }
     const p = this.translateToGivenOrigin(point, originX, originY, CENTER, CENTER);
     if (this.angle) {
       return p.rotate(degreesToRadians(this.angle), point);
@@ -603,7 +614,12 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * Returns the coordinates of the object as if it has a different origin
+   * Returns the position of the object as if it has a different origin.
+   * Take an object that has left, top set to 100, 100 with origin 'left', 'top'.
+   * Return the values of left top ( wrapped in a point ) that you would need to keep
+   * the same position if origin where different.
+   * Alternatively you can use this to also find which point in the parent plane is a specific origin
+   * ( where is the bottom right corner of my object? )
    * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
    * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
    * @return {Point}
