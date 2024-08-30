@@ -1,5 +1,5 @@
-import type { FabricObject, TBBox } from 'fabric';
-import { Point } from 'fabric';
+import type { FabricObject, TBBox } from '@postermywall/fabricjs-2';
+import { Point } from '@postermywall/fabricjs-2';
 import type { HorizontalLine, VerticalLine } from '../typedefs';
 import { aligningLineConfig } from '../constant';
 import { getDistance, setPositionDir } from './basic';

@@ -151,7 +151,7 @@ export default [
 
   {
     input: ['./extensions/index.ts'],
-    external: ['fabric'],
+    external: ['@postermywall/fabricjs-2'],
     output: [
       // es modules in files
       {
@@ -168,7 +168,7 @@ export default [
         format: 'umd',
         sourcemap: true,
         globals: {
-          fabric: 'fabric',
+          '@postermywall/fabricjs-2': '@postermywall/fabricjs-2',
         },
         plugins: [terser()],
       },

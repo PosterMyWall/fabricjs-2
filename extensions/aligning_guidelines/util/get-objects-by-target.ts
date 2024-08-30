@@ -1,5 +1,5 @@
-import type { FabricObject } from 'fabric';
-import { ActiveSelection, Group } from 'fabric';
+import type { FabricObject } from '@postermywall/fabricjs-2';
+import { ActiveSelection, Group } from '@postermywall/fabricjs-2';
 
 export function getObjectsByTarget(target: FabricObject) {
   const objects = new Set<FabricObject>();

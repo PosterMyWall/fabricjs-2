@@ -1,4 +1,4 @@
-import type { FabricObject, Point, TOriginX, TOriginY } from 'fabric';
+import type { FabricObject, Point, TOriginX, TOriginY } from '@postermywall/fabricjs-2';
 import { aligningLineConfig } from '../constant';
 import { getDistance } from './basic';
 

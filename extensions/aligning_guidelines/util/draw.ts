@@ -1,5 +1,5 @@
-import type { Canvas } from 'fabric';
-import { Point } from 'fabric';
+import type { Canvas } from '@postermywall/fabricjs-2';
+import { Point } from '@postermywall/fabricjs-2';
 import type { HorizontalLine, VerticalLine } from '../typedefs';
 import { aligningLineConfig } from '../constant';
 
@@ -12,6 +12,7 @@ function drawLine(canvas: Canvas, origin: Point, target: Point) {
   ctx.transform(...viewportTransform);
   ctx.lineWidth = width / zoom;
   ctx.strokeStyle = color;
+  ctx.setLineDash([5, 3]);
   ctx.beginPath();
   ctx.moveTo(origin.x, origin.y);
   ctx.lineTo(target.x, target.y);
@@ -23,6 +24,9 @@ function drawLine(canvas: Canvas, origin: Point, target: Point) {
 
 const xSize = 2.4;
 function drawX(ctx: CanvasRenderingContext2D, zoom: number, point: Point) {
+  if(!aligningLineConfig.drawX){
+    return;
+  }
   const size = xSize / zoom;
   ctx.save();
   ctx.translate(point.x, point.y);

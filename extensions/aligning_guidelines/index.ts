@@ -4,8 +4,8 @@ import type {
   FabricObject,
   TBBox,
   TPointerEvent,
-} from 'fabric';
-import { Point, util } from 'fabric';
+} from '@postermywall/fabricjs-2';
+import { Point, util } from '@postermywall/fabricjs-2';
 import {
   collectHorizontalPoint,
   collectVerticalPoint,

@@ -33,4 +33,6 @@ export type AligningLineConfig = {
   width: number;
   /** Aligning line color */
   color: string;
+  /** *PMW* bool to disable x on both ends of the line drawn */
+  drawX: boolean;
 };
