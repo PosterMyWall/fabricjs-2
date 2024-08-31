@@ -7,5 +7,6 @@ export const aligningLineConfig: AligningLineConfig = {
   width: 1,
   /** Aligning line color */
   color: 'rgb(255,0,0,0.9)',
+  /** Whether to draw the x at the end of lines or not */
   drawX: false,
 };

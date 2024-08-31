@@ -6,7 +6,7 @@ import {
   type FabricObject,
   type TOriginX,
   type TOriginY,
-} from 'fabric';
+} from '@postermywall/fabricjs-2';
 
 /**
  * Updates the fromObject function of a class to return a version that can restore old data

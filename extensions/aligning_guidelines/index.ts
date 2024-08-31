@@ -148,16 +148,16 @@ export function initAligningGuidelines(
     canvas.requestRenderAll();
   }
 
-  canvas.on('object:resizing', scalingOrResizing);
-  canvas.on('object:scaling', scalingOrResizing);
+  // canvas.on('object:resizing', scalingOrResizing);
+  // canvas.on('object:scaling', scalingOrResizing);
   canvas.on('object:moving', moving);
   canvas.on('before:render', beforeRender);
   canvas.on('after:render', afterRender);
   canvas.on('mouse:up', mouseUp);
 
   return () => {
-    canvas.off('object:resizing', scalingOrResizing);
-    canvas.off('object:scaling', scalingOrResizing);
+    // canvas.off('object:resizing', scalingOrResizing);
+    // canvas.off('object:scaling', scalingOrResizing);
     canvas.off('object:moving', moving);
     canvas.off('before:render', beforeRender);
     canvas.off('after:render', afterRender);
