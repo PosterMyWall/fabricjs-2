@@ -20,7 +20,6 @@ import { createCanvasElement } from '../util/misc/dom.mjs';
 import { config } from '../config.mjs';
 import '../shapes/Group.mjs';
 import '../cache.mjs';
-import '../util/path/regex.mjs';
 import '../parser/constants.mjs';
 import '../util/animation/AnimationRegistry.mjs';
 import { CanvasDOMManager } from './DOMManagers/CanvasDOMManager.mjs';

@@ -1,2 +1,2 @@
-import{Point as t}from"../../Point.min.mjs";const n=n=>{if(0===n.length)return{left:0,top:0,width:0,height:0};const{min:e,max:m}=n.reduce(((t,n)=>{let{min:e,max:m}=t;return{min:e.min(n),max:m.max(n)}}),{min:new t(n[0]),max:new t(n[0])}),i=m.subtract(e);return{left:e.x,top:e.y,width:i.x,height:i.y}};export{n as makeBoundingBoxFromPoints};
+const t=t=>{let e=0,o=0,h=0,l=0;for(let n=0,r=t.length;n<r;n++){const{x:r,y:c}=t[n];(r>h||!n)&&(h=r),(r<e||!n)&&(e=r),(c>l||!n)&&(l=c),(c<o||!n)&&(o=c)}return{left:e,top:o,width:h-e,height:l-o}};export{t as makeBoundingBoxFromPoints};
 //# sourceMappingURL=boundingBoxFromPoints.min.mjs.map

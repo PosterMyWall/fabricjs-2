@@ -8,7 +8,6 @@ import { createCanvasElement } from '../../util/misc/dom.mjs';
 import '../../config.mjs';
 import '../../shapes/Group.mjs';
 import '../../cache.mjs';
-import '../../util/path/regex.mjs';
 import '../../parser/constants.mjs';
 import { setStyle } from '../../util/dom_style.mjs';
 import '../../util/animation/AnimationRegistry.mjs';

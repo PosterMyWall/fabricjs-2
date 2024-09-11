@@ -7,8 +7,8 @@ import { multiplyTransformMatrices, transformPoint } from '../misc/matrix.mjs';
 import { sin } from '../misc/sin.mjs';
 import { toFixed } from '../misc/toFixed.mjs';
 import { Point } from '../../Point.mjs';
-import { rePathCommand } from './regex.mjs';
-import { cleanupSvgAttribute } from '../internals/cleanupSvgAttribute.mjs';
+import { rePathCommand, reArcCommandPoints } from './regex.mjs';
+import { reNum } from '../../parser/constants.mjs';
 
 /**
  * Commands that may be repeated
@@ -638,8 +638,19 @@ const getPointOnPath = function (path, distance) {
   }
 };
 const rePathCmdAll = new RegExp(rePathCommand, 'gi');
-const rePathCmd = new RegExp(rePathCommand, 'i');
-
+const regExpArcCommandPoints = new RegExp(reArcCommandPoints, 'g');
+const reMyNum = new RegExp(reNum, 'gi');
+const commandLengths = {
+  m: 2,
+  l: 2,
+  h: 1,
+  v: 1,
+  c: 6,
+  s: 4,
+  q: 4,
+  t: 2,
+  a: 7
+};
 /**
  *
  * @param {string} pathString
@@ -652,52 +663,45 @@ const rePathCmd = new RegExp(rePathCommand, 'i');
  * ];
  */
 const parsePath = pathString => {
-  // clean the string
-  // add spaces around the numbers
-  pathString = cleanupSvgAttribute(pathString);
-  const res = [];
-  for (let [matchStr] of pathString.matchAll(rePathCmdAll)) {
-    const chain = [];
-    let paramArr;
-    do {
-      paramArr = rePathCmd.exec(matchStr);
-      if (!paramArr) {
-        break;
+  var _pathString$match;
+  const chain = [];
+  const all = (_pathString$match = pathString.match(rePathCmdAll)) !== null && _pathString$match !== void 0 ? _pathString$match : [];
+  for (const matchStr of all) {
+    // take match string and save the first letter as the command
+    const commandLetter = matchStr[0];
+    // in case of Z we have very little to do
+    if (commandLetter === 'z' || commandLetter === 'Z') {
+      chain.push([commandLetter]);
+      continue;
+    }
+    const commandLength = commandLengths[commandLetter.toLowerCase()];
+    let paramArr = [];
+    if (commandLetter === 'a' || commandLetter === 'A') {
+      // the arc command ha some peculariaties that requires a special regex other than numbers
+      // it is possible to avoid using a space between the sweep and large arc flags, making them either
+      // 00, 01, 10 or 11, making them identical to a plain number for the regex reMyNum
+      // reset the regexp
+      regExpArcCommandPoints.lastIndex = 0;
+      for (let out = null; out = regExpArcCommandPoints.exec(matchStr);) {
+        paramArr.push(...out.slice(1));
       }
-      // ignore undefined match groups
-      const filteredGroups = paramArr.filter(g => g);
-      // remove the first element from the match array since it's just the whole command
-      filteredGroups.shift();
-      // if we can't parse the number, just interpret it as a string
-      // (since it's probably the path command)
-      const command = filteredGroups.map(g => {
-        const numParse = Number.parseFloat(g);
-        if (Number.isNaN(numParse)) {
-          return g;
-        } else {
-          return numParse;
-        }
-      });
-      chain.push(command);
-      // stop now if it's a z command
-      if (filteredGroups.length <= 1) {
-        break;
+    } else {
+      paramArr = matchStr.match(reMyNum) || [];
+    }
+
+    // inspect the length of paramArr, if is longer than commandLength
+    // we are dealing with repeated commands
+    for (let i = 0; i < paramArr.length; i += commandLength) {
+      const newCommand = new Array(commandLength);
+      const transformedCommand = repeatedCommands[commandLetter];
+      newCommand[0] = i > 0 && transformedCommand ? transformedCommand : commandLetter;
+      for (let j = 0; j < commandLength; j++) {
+        newCommand[j + 1] = parseFloat(paramArr[i + j]);
       }
-      // remove the last part of the chained command
-      filteredGroups.shift();
-      // ` ?` is to support commands with optional spaces between flags
-      matchStr = matchStr.replace(new RegExp("".concat(filteredGroups.join(' ?'), " ?$")), '');
-    } while (paramArr);
-    // add the chain, convert multiple m's to l's in the process
-    chain.reverse().forEach((c, idx) => {
-      const transformed = repeatedCommands[c[0]];
-      if (idx > 0 && (transformed == 'l' || transformed == 'L')) {
-        c[0] = transformed;
-      }
-      res.push(c);
-    });
+      chain.push(newCommand);
+    }
   }
-  return res;
+  return chain;
 };
 
 /**

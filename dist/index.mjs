@@ -173,9 +173,13 @@ class BaseConfiguration {
     _defineProperty(this, "forceGLPutImageData", false);
     /**
      * If disabled boundsOfCurveCache is not used. For apps that make heavy usage of pencil drawing probably disabling it is better
-     * @default true
+     * With the standard behaviour of fabric to translate all curves in absolute commands and by not subtracting the starting point from
+     * the curve is very hard to hit any cache.
+     * Enable only if you know why it could be useful.
+     * Candidate for removal/simplification
+     * @default false
      */
-    _defineProperty(this, "cachesBoundsOfCurve", true);
+    _defineProperty(this, "cachesBoundsOfCurve", false);
     /**
      * Map of font files
      * Map<fontFamily, pathToFile> of font files
@@ -418,7 +422,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.4.1-pmw-22";
+var version = "6.4.2-pmw-22";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -4312,36 +4316,25 @@ const stopEvent = e => {
  * @return {Object} Object with left, top, width, height properties
  */
 const makeBoundingBoxFromPoints = points => {
-  if (points.length === 0) {
-    return {
-      left: 0,
-      top: 0,
-      width: 0,
-      height: 0
-    };
+  let left = 0,
+    top = 0,
+    width = 0,
+    height = 0;
+  for (let i = 0, len = points.length; i < len; i++) {
+    const {
+      x,
+      y
+    } = points[i];
+    if (x > width || !i) width = x;
+    if (x < left || !i) left = x;
+    if (y > height || !i) height = y;
+    if (y < top || !i) top = y;
   }
-  const {
-    min,
-    max
-  } = points.reduce((_ref, curr) => {
-    let {
-      min,
-      max
-    } = _ref;
-    return {
-      min: min.min(curr),
-      max: max.max(curr)
-    };
-  }, {
-    min: new Point(points[0]),
-    max: new Point(points[0])
-  });
-  const size = max.subtract(min);
   return {
-    left: min.x,
-    top: min.y,
-    width: size.x,
-    height: size.y
+    left,
+    top,
+    width: width - left,
+    height: height - top
   };
 };
 
@@ -4840,10 +4833,9 @@ function getSvgRegex(arr) {
   return new RegExp('^(' + arr.join('|') + ')\\b', 'i');
 }
 
-var _templateObject$2, _templateObject2$1;
-const reNum = String.raw(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["(?:[-+]?(?:d*.d+|d+.?)(?:[eE][-+]?d+)?)"], ["(?:[-+]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE][-+]?\\d+)?)"])));
+var _templateObject$1;
+const reNum = String.raw(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["(?:[-+]?(?:d*.d+|d+.?)(?:[eE][-+]?d+)?)"], ["(?:[-+]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE][-+]?\\d+)?)"])));
 const svgNS = 'http://www.w3.org/2000/svg';
-String.raw(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["(?:s+,?s*|,s*|$)"], ["(?:\\s+,?\\s*|,\\s*|$)"])));
 const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
 const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
   svgViewBoxElements = ['symbol', 'image', 'marker', 'pattern', 'view', 'svg'],
@@ -10608,11 +10600,11 @@ const cleanupSvgAttribute = attributeValue => attributeValue.replace(regex$1, ' 
 // replace annoying commas and arbitrary whitespace with single spaces
 .replace(/,/gi, ' ').replace(/\s+/gi, ' ');
 
-var _templateObject$1, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7;
+var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7;
 
 // == begin transform regexp
 const p$1 = "(".concat(reNum, ")");
-const skewX = String.raw(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["(skewX)(", ")"], ["(skewX)\\(", "\\)"])), p$1);
+const skewX = String.raw(_templateObject || (_templateObject = _taggedTemplateLiteral(["(skewX)(", ")"], ["(skewX)\\(", "\\)"])), p$1);
 const skewY = String.raw(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["(skewY)(", ")"], ["(skewY)\\(", "\\)"])), p$1);
 const rotate = String.raw(_templateObject3 || (_templateObject3 = _taggedTemplateLiteral(["(rotate)(", "(?: ", " ", ")?)"], ["(rotate)\\(", "(?: ", " ", ")?\\)"])), p$1, p$1, p$1);
 const scale = String.raw(_templateObject4 || (_templateObject4 = _taggedTemplateLiteral(["(scale)(", "(?: ", ")?)"], ["(scale)\\(", "(?: ", ")?\\)"])), p$1, p$1);
@@ -12249,24 +12241,50 @@ const findScaleToFit = (source, destination) => Math.min(destination.width / sou
  */
 const findScaleToCover = (source, destination) => Math.max(destination.width / source.width, destination.height / source.height);
 
-var _templateObject;
+const commaWsp = "\\s*,?\\s*";
 
 /**
  * p for param
  * using "bad naming" here because it makes the regex much easier to read
+ * p is a number that is preceded by an arbitary number of spaces, maybe 0,
+ * a comma or not, and then possibly more spaces or not.
  */
-const p = "(".concat(reNum, ")");
-const reMoveToCommand = "(M) (?:".concat(p, " ").concat(p, " ?)+");
-const reLineCommand = "(L) (?:".concat(p, " ").concat(p, " ?)+");
-const reHorizontalLineCommand = "(H) (?:".concat(p, " ?)+");
-const reVerticalLineCommand = "(V) (?:".concat(p, " ?)+");
-const reClosePathCommand = String.raw(_templateObject || (_templateObject = _taggedTemplateLiteral(["(Z)s*"], ["(Z)\\s*"])));
-const reCubicCurveCommand = "(C) (?:".concat(p, " ").concat(p, " ").concat(p, " ").concat(p, " ").concat(p, " ").concat(p, " ?)+");
-const reCubicCurveShortcutCommand = "(S) (?:".concat(p, " ").concat(p, " ").concat(p, " ").concat(p, " ?)+");
-const reQuadraticCurveCommand = "(Q) (?:".concat(p, " ").concat(p, " ").concat(p, " ").concat(p, " ?)+");
-const reQuadraticCurveShortcutCommand = "(T) (?:".concat(p, " ").concat(p, " ?)+");
-const reArcCommand = "(A) (?:".concat(p, " ").concat(p, " ").concat(p, " ([01]) ?([01]) ").concat(p, " ").concat(p, " ?)+");
-const rePathCommand = "(?:(?:".concat(reMoveToCommand, ")") + "|(?:".concat(reLineCommand, ")") + "|(?:".concat(reHorizontalLineCommand, ")") + "|(?:".concat(reVerticalLineCommand, ")") + "|(?:".concat(reClosePathCommand, ")") + "|(?:".concat(reCubicCurveCommand, ")") + "|(?:".concat(reCubicCurveShortcutCommand, ")") + "|(?:".concat(reQuadraticCurveCommand, ")") + "|(?:".concat(reQuadraticCurveShortcutCommand, ")") + "|(?:".concat(reArcCommand, "))");
+const p = "".concat(commaWsp, "(").concat(reNum, ")");
+
+// const reMoveToCommand = `(M) ?(?:${p}${p} ?)+`;
+
+// const reLineCommand = `(L) ?(?:${p}${p} ?)+`;
+
+// const reHorizontalLineCommand = `(H) ?(?:${p} ?)+`;
+
+// const reVerticalLineCommand = `(V) ?(?:${p} ?)+`;
+
+// const reClosePathCommand = String.raw`(Z)\s*`;
+
+// const reCubicCurveCommand = `(C) ?(?:${p}${p}${p}${p}${p}${p} ?)+`;
+
+// const reCubicCurveShortcutCommand = `(S) ?(?:${p}${p}${p}${p} ?)+`;
+
+// const reQuadraticCurveCommand = `(Q) ?(?:${p}${p}${p}${p} ?)+`;
+
+// const reQuadraticCurveShortcutCommand = `(T) ?(?:${p}${p} ?)+`;
+
+const reArcCommandPoints = "".concat(p).concat(p).concat(p).concat(commaWsp, "([01])").concat(commaWsp, "([01])").concat(p).concat(p);
+// const reArcCommand = `(A) ?(?:${reArcCommandPoints} ?)+`;
+
+// export const rePathCommandGroups =
+//   `(?:(?:${reMoveToCommand})` +
+//   `|(?:${reLineCommand})` +
+//   `|(?:${reHorizontalLineCommand})` +
+//   `|(?:${reVerticalLineCommand})` +
+//   `|(?:${reClosePathCommand})` +
+//   `|(?:${reCubicCurveCommand})` +
+//   `|(?:${reCubicCurveShortcutCommand})` +
+//   `|(?:${reQuadraticCurveCommand})` +
+//   `|(?:${reQuadraticCurveShortcutCommand})` +
+//   `|(?:${reArcCommand}))`;
+
+const rePathCommand = '[mzlhvcsqta][^mzlhvcsqta]*';
 
 /**
  * Commands that may be repeated
@@ -12896,8 +12914,19 @@ const getPointOnPath = function (path, distance) {
   }
 };
 const rePathCmdAll = new RegExp(rePathCommand, 'gi');
-const rePathCmd = new RegExp(rePathCommand, 'i');
-
+const regExpArcCommandPoints = new RegExp(reArcCommandPoints, 'g');
+const reMyNum = new RegExp(reNum, 'gi');
+const commandLengths = {
+  m: 2,
+  l: 2,
+  h: 1,
+  v: 1,
+  c: 6,
+  s: 4,
+  q: 4,
+  t: 2,
+  a: 7
+};
 /**
  *
  * @param {string} pathString
@@ -12910,52 +12939,45 @@ const rePathCmd = new RegExp(rePathCommand, 'i');
  * ];
  */
 const parsePath = pathString => {
-  // clean the string
-  // add spaces around the numbers
-  pathString = cleanupSvgAttribute(pathString);
-  const res = [];
-  for (let [matchStr] of pathString.matchAll(rePathCmdAll)) {
-    const chain = [];
-    let paramArr;
-    do {
-      paramArr = rePathCmd.exec(matchStr);
-      if (!paramArr) {
-        break;
+  var _pathString$match;
+  const chain = [];
+  const all = (_pathString$match = pathString.match(rePathCmdAll)) !== null && _pathString$match !== void 0 ? _pathString$match : [];
+  for (const matchStr of all) {
+    // take match string and save the first letter as the command
+    const commandLetter = matchStr[0];
+    // in case of Z we have very little to do
+    if (commandLetter === 'z' || commandLetter === 'Z') {
+      chain.push([commandLetter]);
+      continue;
+    }
+    const commandLength = commandLengths[commandLetter.toLowerCase()];
+    let paramArr = [];
+    if (commandLetter === 'a' || commandLetter === 'A') {
+      // the arc command ha some peculariaties that requires a special regex other than numbers
+      // it is possible to avoid using a space between the sweep and large arc flags, making them either
+      // 00, 01, 10 or 11, making them identical to a plain number for the regex reMyNum
+      // reset the regexp
+      regExpArcCommandPoints.lastIndex = 0;
+      for (let out = null; out = regExpArcCommandPoints.exec(matchStr);) {
+        paramArr.push(...out.slice(1));
       }
-      // ignore undefined match groups
-      const filteredGroups = paramArr.filter(g => g);
-      // remove the first element from the match array since it's just the whole command
-      filteredGroups.shift();
-      // if we can't parse the number, just interpret it as a string
-      // (since it's probably the path command)
-      const command = filteredGroups.map(g => {
-        const numParse = Number.parseFloat(g);
-        if (Number.isNaN(numParse)) {
-          return g;
-        } else {
-          return numParse;
-        }
-      });
-      chain.push(command);
-      // stop now if it's a z command
-      if (filteredGroups.length <= 1) {
-        break;
+    } else {
+      paramArr = matchStr.match(reMyNum) || [];
+    }
+
+    // inspect the length of paramArr, if is longer than commandLength
+    // we are dealing with repeated commands
+    for (let i = 0; i < paramArr.length; i += commandLength) {
+      const newCommand = new Array(commandLength);
+      const transformedCommand = repeatedCommands[commandLetter];
+      newCommand[0] = i > 0 && transformedCommand ? transformedCommand : commandLetter;
+      for (let j = 0; j < commandLength; j++) {
+        newCommand[j + 1] = parseFloat(paramArr[i + j]);
       }
-      // remove the last part of the chained command
-      filteredGroups.shift();
-      // ` ?` is to support commands with optional spaces between flags
-      matchStr = matchStr.replace(new RegExp("".concat(filteredGroups.join(' ?'), " ?$")), '');
-    } while (paramArr);
-    // add the chain, convert multiple m's to l's in the process
-    chain.reverse().forEach((c, idx) => {
-      const transformed = repeatedCommands[c[0]];
-      if (idx > 0 && (transformed == 'l' || transformed == 'L')) {
-        c[0] = transformed;
-      }
-      res.push(c);
-    });
+      chain.push(newCommand);
+    }
   }
-  return res;
+  return chain;
 };
 
 /**
@@ -16928,7 +16950,13 @@ class Path extends FabricObject {
           // lineto, absolute
           x = command[1];
           y = command[2];
-          bounds.push(new Point(subpathStartX, subpathStartY), new Point(x, y));
+          bounds.push({
+            x: subpathStartX,
+            y: subpathStartY
+          }, {
+            x,
+            y
+          });
           break;
         case 'M':
           // moveTo, absolute

@@ -2,10 +2,9 @@ import { taggedTemplateLiteral as _taggedTemplateLiteral } from '../../_virtual/
 import { getSvgRegex } from './getSvgRegex.mjs';
 import { LEFT, TOP } from '../constants.mjs';
 
-var _templateObject, _templateObject2;
+var _templateObject;
 const reNum = String.raw(_templateObject || (_templateObject = _taggedTemplateLiteral(["(?:[-+]?(?:d*.d+|d+.?)(?:[eE][-+]?d+)?)"], ["(?:[-+]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE][-+]?\\d+)?)"])));
 const svgNS = 'http://www.w3.org/2000/svg';
-String.raw(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["(?:s+,?s*|,s*|$)"], ["(?:\\s+,?\\s*|,\\s*|$)"])));
 const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
 const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
   svgViewBoxElements = ['symbol', 'image', 'marker', 'pattern', 'view', 'svg'],

@@ -8,7 +8,6 @@ import '../../config.mjs';
 import '../Group.mjs';
 import { pickBy, pick } from '../../util/misc/pick.mjs';
 import '../../cache.mjs';
-import '../../util/path/regex.mjs';
 import '../../parser/constants.mjs';
 import '../../util/animation/AnimationRegistry.mjs';
 

@@ -101,7 +101,11 @@ declare class BaseConfiguration {
     forceGLPutImageData: boolean;
     /**
      * If disabled boundsOfCurveCache is not used. For apps that make heavy usage of pencil drawing probably disabling it is better
-     * @default true
+     * With the standard behaviour of fabric to translate all curves in absolute commands and by not subtracting the starting point from
+     * the curve is very hard to hit any cache.
+     * Enable only if you know why it could be useful.
+     * Candidate for removal/simplification
+     * @default false
      */
     cachesBoundsOfCurve: boolean;
     /**

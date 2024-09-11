@@ -1,6 +1,5 @@
 export declare const reNum: string;
 export declare const svgNS = "http://www.w3.org/2000/svg";
-export declare const commaWsp: string;
 export declare const reFontDeclaration: RegExp;
 export declare const svgValidTagNames: string[], svgViewBoxElements: string[], svgInvalidAncestors: string[], svgValidParents: string[], attributesMap: {
     cx: string;
