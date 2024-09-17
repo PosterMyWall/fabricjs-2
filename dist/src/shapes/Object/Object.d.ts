@@ -303,8 +303,6 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
-    eqqwe(): void;
-    eqqwe2(): void;
     /**
      * Update width and height of the canvas for cache
      * returns true or false if canvas needed resize.
@@ -469,6 +467,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _setShadow(ctx: CanvasRenderingContext2D): void;
+    _getShadowScaling(): Point;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on

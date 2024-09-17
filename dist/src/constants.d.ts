@@ -32,4 +32,5 @@ export declare const SKEW_Y = "skewY";
 export declare const FILL = "fill";
 export declare const STROKE = "stroke";
 export declare const MODIFIED = "modified";
+export declare const SHADOW_REFERENCE_DIMENSION = 500;
 //# sourceMappingURL=constants.d.ts.map

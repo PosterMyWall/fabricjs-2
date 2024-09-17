@@ -11,6 +11,7 @@ import {
   FILL,
   TOP,
   VERSION,
+  SHADOW_REFERENCE_DIMENSION,
 } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type { XY } from '../../Point';
@@ -105,8 +106,8 @@ export type TCachedFabricObject<T extends FabricObject = FabricObject> = T &
       | 'cacheTranslationY'
     >
   > & {
-    _cacheContext: CanvasRenderingContext2D;
-  };
+  _cacheContext: CanvasRenderingContext2D;
+};
 
 export type ObjectToCanvasElementOptions = {
   format?: ImageFormat;
@@ -173,14 +174,13 @@ interface GetCornerPointsResponse {
  * @fires drop
  */
 export class FabricObject<
-    Props extends TOptions<ObjectProps> = Partial<ObjectProps>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    SProps extends SerializedObjectProps = SerializedObjectProps,
-    EventSpec extends ObjectEvents = ObjectEvents,
-  >
+  Props extends TOptions<ObjectProps> = Partial<ObjectProps>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  SProps extends SerializedObjectProps = SerializedObjectProps,
+  EventSpec extends ObjectEvents = ObjectEvents,
+>
   extends ObjectGeometry<EventSpec>
-  implements ObjectProps
-{
+  implements ObjectProps {
   declare minScaleLimit: number;
 
   declare opacity: number;
@@ -493,12 +493,6 @@ export class FabricObject<
     };
   }
 
-  eqqwe() {
-
-  }
-  eqqwe2() {
-
-  }
   /**
    * Update width and height of the canvas for cache
    * returns true or false if canvas needed resize.
@@ -696,12 +690,12 @@ export class FabricObject<
     // but a non dirty child does not make the parent not dirty.
     // the parent could be dirty for some other reason.
     this.parent &&
-      (this.dirty ||
-        (isChanged &&
-          (this.constructor as typeof FabricObject).stateProperties.includes(
-            key,
-          ))) &&
-      this.parent._set('dirty', true);
+    (this.dirty ||
+      (isChanged &&
+        (this.constructor as typeof FabricObject).stateProperties.includes(
+          key,
+        ))) &&
+    this.parent._set('dirty', true);
 
     return this;
   }
@@ -990,20 +984,20 @@ export class FabricObject<
       ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
       ctx.lineTo(
         -this.width / 2 + this.width + offset,
-        -this.height / 2 - yFix
+        -this.height / 2 - yFix,
       );
       ctx.lineTo(
         -this.width / 2 + this.width - slant + offset,
-        -this.height / 2 + this.height - yFix
+        -this.height / 2 + this.height - yFix,
       );
       ctx.lineTo(
         -this.width / 2 - slant + offset,
-        -this.height / 2 + this.height - yFix
+        -this.height / 2 + this.height - yFix,
       );
       ctx.closePath();
       ctx.fill();
       ctx.restore();
-    }else {
+    } else {
       const dim = this._getNonTransformedDimensions();
       ctx.fillStyle = this.backgroundColor;
 
@@ -1117,7 +1111,8 @@ export class FabricObject<
       [sx, , , sy] = canvas?.viewportTransform || iMatrix,
       multX = sx * retinaScaling,
       multY = sy * retinaScaling,
-      scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
+      scaling = this._getShadowScaling();
+
     ctx.shadowColor = shadow.color;
     ctx.shadowBlur =
       (shadow.blur *
@@ -1127,6 +1122,18 @@ export class FabricObject<
       4;
     ctx.shadowOffsetX = shadow.offsetX * multX * scaling.x;
     ctx.shadowOffsetY = shadow.offsetY * multY * scaling.y;
+  }
+
+  _getShadowScaling() {
+    if (!this.shadow || this.shadow.nonScaling) {
+      return new Point(1, 1);
+    }
+    const scaling = this.getObjectScaling();
+    const maxDimension = Math.max(this.width, this.height);
+    return new Point(
+      (scaling.x * maxDimension) / SHADOW_REFERENCE_DIMENSION,
+      (scaling.y * maxDimension) / SHADOW_REFERENCE_DIMENSION,
+    );
   }
 
   /**
@@ -1408,9 +1415,7 @@ export class FabricObject<
 
     if (shadow) {
       const shadowBlur = shadow.blur;
-      const scaling = shadow.nonScaling
-        ? new Point(1, 1)
-        : this.getObjectScaling();
+      const scaling = this._getShadowScaling();
       // consider non scaling shadow.
       shadowOffset.x =
         2 * Math.round(abs(shadow.offsetX) + shadowBlur) * abs(scaling.x);
@@ -1455,7 +1460,7 @@ export class FabricObject<
     return canvasEl;
   }
 
-  isGroup(): this is Group{
+  isGroup(): this is Group {
     return false;
   }
 
@@ -1674,8 +1679,8 @@ export class FabricObject<
           return deep[key];
         }, this);
         onChange &&
-          // @ts-expect-error generic callback arg0 is wrong
-          onChange(value, valueProgress, durationProgress);
+        // @ts-expect-error generic callback arg0 is wrong
+        onChange(value, valueProgress, durationProgress);
       },
       onComplete: (
         value: number | number[] | string,
@@ -1684,8 +1689,8 @@ export class FabricObject<
       ) => {
         this.setCoords();
         onComplete &&
-          // @ts-expect-error generic callback arg0 is wrong
-          onComplete(value, valueProgress, durationProgress);
+        // @ts-expect-error generic callback arg0 is wrong
+        onComplete(value, valueProgress, durationProgress);
       },
     } as AnimationOptions<T>;
 
@@ -1693,8 +1698,8 @@ export class FabricObject<
       propIsColor
         ? animateColor(animationOptions as ColorAnimationOptions)
         : animate(
-            animationOptions as ValueAnimationOptions | ArrayAnimationOptions,
-          )
+          animationOptions as ValueAnimationOptions | ArrayAnimationOptions,
+        )
     ) as TAnimation<T>;
   }
 

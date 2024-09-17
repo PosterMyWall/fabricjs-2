@@ -1,6 +1,6 @@
 export { getEnv, getFabricDocument, getFabricWindow, setEnv } from './src/env';
 export { cache } from './src/cache';
-export { VERSION as version, iMatrix } from './src/constants';
+export { VERSION as version, iMatrix, SHADOW_REFERENCE_DIMENSION } from './src/constants';
 export { config } from './src/config';
 export { classRegistry } from './src/ClassRegistry';
 export { runningAnimations } from './src/util/animation/AnimationRegistry';

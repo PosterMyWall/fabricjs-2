@@ -422,7 +422,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.4.2-pmw-22";
+var version = "6.4.2-pmw-23";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -461,6 +461,7 @@ const SKEW_Y = 'skewY';
 const FILL = 'fill';
 const STROKE = 'stroke';
 const MODIFIED = 'modified';
+const SHADOW_REFERENCE_DIMENSION = 500;
 
 /*
  * This Map connects the objects type value with their
@@ -6880,8 +6881,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
       y: neededY
     };
   }
-  eqqwe() {}
-  eqqwe2() {}
+
   /**
    * Update width and height of the canvas for cache
    * returns true or false if canvas needed resize.
@@ -7420,11 +7420,19 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
       [sx,,, sy] = (canvas === null || canvas === void 0 ? void 0 : canvas.viewportTransform) || iMatrix,
       multX = sx * retinaScaling,
       multY = sy * retinaScaling,
-      scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
+      scaling = this._getShadowScaling();
     ctx.shadowColor = shadow.color;
     ctx.shadowBlur = shadow.blur * config.browserShadowBlurConstant * (multX + multY) * (scaling.x + scaling.y) / 4;
     ctx.shadowOffsetX = shadow.offsetX * multX * scaling.x;
     ctx.shadowOffsetY = shadow.offsetY * multY * scaling.y;
+  }
+  _getShadowScaling() {
+    if (!this.shadow || this.shadow.nonScaling) {
+      return new Point(1, 1);
+    }
+    const scaling = this.getObjectScaling();
+    const maxDimension = Math.max(this.width, this.height);
+    return new Point(scaling.x * maxDimension / SHADOW_REFERENCE_DIMENSION, scaling.y * maxDimension / SHADOW_REFERENCE_DIMENSION);
   }
 
   /**
@@ -7684,7 +7692,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
 
     if (shadow) {
       const shadowBlur = shadow.blur;
-      const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
+      const scaling = this._getShadowScaling();
       // consider non scaling shadow.
       shadowOffset.x = 2 * Math.round(abs(shadow.offsetX) + shadowBlur) * abs(scaling.x);
       shadowOffset.y = 2 * Math.round(abs(shadow.offsetY) + shadowBlur) * abs(scaling.y);
@@ -28895,5 +28903,5 @@ var filters = /*#__PURE__*/Object.freeze({
   Vintage: Vintage
 });
 
-export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
+export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, SHADOW_REFERENCE_DIMENSION, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
 //# sourceMappingURL=index.mjs.map
