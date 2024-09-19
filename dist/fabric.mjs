@@ -1,6 +1,6 @@
 export { getEnv, getFabricDocument, getFabricWindow, setEnv } from './src/env/index.mjs';
 export { cache } from './src/cache.mjs';
-export { SHADOW_REFERENCE_DIMENSION, iMatrix, VERSION as version } from './src/constants.mjs';
+export { iMatrix, VERSION as version } from './src/constants.mjs';
 export { config } from './src/config.mjs';
 export { classRegistry } from './src/ClassRegistry.mjs';
 export { runningAnimations } from './src/util/animation/AnimationRegistry.mjs';

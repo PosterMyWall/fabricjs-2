@@ -1,7 +1,7 @@
 import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
-import { ALIASING_LIMIT, SCALE_X, SCALE_Y, STROKE, iMatrix, SHADOW_REFERENCE_DIMENSION, CENTER, VERSION, FILL, LEFT, TOP } from '../../constants.mjs';
+import { ALIASING_LIMIT, SCALE_X, SCALE_Y, STROKE, iMatrix, CENTER, VERSION, FILL, LEFT, TOP } from '../../constants.mjs';
 import { Point } from '../../Point.mjs';
 import { Shadow } from '../../Shadow.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
@@ -736,19 +736,11 @@ class FabricObject extends ObjectGeometry {
       [sx,,, sy] = (canvas === null || canvas === void 0 ? void 0 : canvas.viewportTransform) || iMatrix,
       multX = sx * retinaScaling,
       multY = sy * retinaScaling,
-      scaling = this._getShadowScaling();
+      scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
     ctx.shadowColor = shadow.color;
     ctx.shadowBlur = shadow.blur * config.browserShadowBlurConstant * (multX + multY) * (scaling.x + scaling.y) / 4;
     ctx.shadowOffsetX = shadow.offsetX * multX * scaling.x;
     ctx.shadowOffsetY = shadow.offsetY * multY * scaling.y;
-  }
-  _getShadowScaling() {
-    if (!this.shadow || this.shadow.nonScaling) {
-      return new Point(1, 1);
-    }
-    const scaling = this.getObjectScaling();
-    const maxDimension = Math.max(this.width, this.height);
-    return new Point(scaling.x * maxDimension / SHADOW_REFERENCE_DIMENSION, scaling.y * maxDimension / SHADOW_REFERENCE_DIMENSION);
   }
 
   /**
@@ -1008,7 +1000,7 @@ class FabricObject extends ObjectGeometry {
 
     if (shadow) {
       const shadowBlur = shadow.blur;
-      const scaling = this._getShadowScaling();
+      const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
       // consider non scaling shadow.
       shadowOffset.x = 2 * Math.round(abs(shadow.offsetX) + shadowBlur) * abs(scaling.x);
       shadowOffset.y = 2 * Math.round(abs(shadow.offsetY) + shadowBlur) * abs(scaling.y);

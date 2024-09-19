@@ -43,5 +43,3 @@ export const SKEW_Y = 'skewY';
 export const FILL = 'fill';
 export const STROKE = 'stroke';
 export const MODIFIED = 'modified';
-
-export const SHADOW_REFERENCE_DIMENSION = 500;

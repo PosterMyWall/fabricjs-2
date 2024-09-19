@@ -480,7 +480,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.4.2-pmw-23";
+var version = "6.4.2-pmw-24";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -519,7 +519,6 @@ const SKEW_Y = 'skewY';
 const FILL = 'fill';
 const STROKE = 'stroke';
 const MODIFIED = 'modified';
-const SHADOW_REFERENCE_DIMENSION = 500;
 
 /*
  * This Map connects the objects type value with their
@@ -7478,19 +7477,11 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
       [sx,,, sy] = (canvas === null || canvas === void 0 ? void 0 : canvas.viewportTransform) || iMatrix,
       multX = sx * retinaScaling,
       multY = sy * retinaScaling,
-      scaling = this._getShadowScaling();
+      scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
     ctx.shadowColor = shadow.color;
     ctx.shadowBlur = shadow.blur * config.browserShadowBlurConstant * (multX + multY) * (scaling.x + scaling.y) / 4;
     ctx.shadowOffsetX = shadow.offsetX * multX * scaling.x;
     ctx.shadowOffsetY = shadow.offsetY * multY * scaling.y;
-  }
-  _getShadowScaling() {
-    if (!this.shadow || this.shadow.nonScaling) {
-      return new Point(1, 1);
-    }
-    const scaling = this.getObjectScaling();
-    const maxDimension = Math.max(this.width, this.height);
-    return new Point(scaling.x * maxDimension / SHADOW_REFERENCE_DIMENSION, scaling.y * maxDimension / SHADOW_REFERENCE_DIMENSION);
   }
 
   /**
@@ -7750,7 +7741,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
 
     if (shadow) {
       const shadowBlur = shadow.blur;
-      const scaling = this._getShadowScaling();
+      const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
       // consider non scaling shadow.
       shadowOffset.x = 2 * Math.round(abs(shadow.offsetX) + shadowBlur) * abs(scaling.x);
       shadowOffset.y = 2 * Math.round(abs(shadow.offsetY) + shadowBlur) * abs(scaling.y);
@@ -29032,7 +29023,6 @@ exports.Point = Point;
 exports.Polygon = Polygon;
 exports.Polyline = Polyline;
 exports.Rect = Rect;
-exports.SHADOW_REFERENCE_DIMENSION = SHADOW_REFERENCE_DIMENSION;
 exports.Shadow = Shadow;
 exports.SprayBrush = SprayBrush;
 exports.StaticCanvas = StaticCanvas;

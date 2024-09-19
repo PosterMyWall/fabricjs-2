@@ -467,7 +467,6 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _setShadow(ctx: CanvasRenderingContext2D): void;
-    _getShadowScaling(): Point;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on

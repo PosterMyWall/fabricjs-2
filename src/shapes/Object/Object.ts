@@ -11,7 +11,6 @@ import {
   FILL,
   TOP,
   VERSION,
-  SHADOW_REFERENCE_DIMENSION,
 } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type { XY } from '../../Point';
@@ -1111,8 +1110,7 @@ export class FabricObject<
       [sx, , , sy] = canvas?.viewportTransform || iMatrix,
       multX = sx * retinaScaling,
       multY = sy * retinaScaling,
-      scaling = this._getShadowScaling();
-
+      scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
     ctx.shadowColor = shadow.color;
     ctx.shadowBlur =
       (shadow.blur *
@@ -1122,18 +1120,6 @@ export class FabricObject<
       4;
     ctx.shadowOffsetX = shadow.offsetX * multX * scaling.x;
     ctx.shadowOffsetY = shadow.offsetY * multY * scaling.y;
-  }
-
-  _getShadowScaling() {
-    if (!this.shadow || this.shadow.nonScaling) {
-      return new Point(1, 1);
-    }
-    const scaling = this.getObjectScaling();
-    const maxDimension = Math.max(this.width, this.height);
-    return new Point(
-      (scaling.x * maxDimension) / SHADOW_REFERENCE_DIMENSION,
-      (scaling.y * maxDimension) / SHADOW_REFERENCE_DIMENSION,
-    );
   }
 
   /**
@@ -1415,7 +1401,9 @@ export class FabricObject<
 
     if (shadow) {
       const shadowBlur = shadow.blur;
-      const scaling = this._getShadowScaling();
+      const scaling = shadow.nonScaling
+        ? new Point(1, 1)
+        : this.getObjectScaling();
       // consider non scaling shadow.
       shadowOffset.x =
         2 * Math.round(abs(shadow.offsetX) + shadowBlur) * abs(scaling.x);
