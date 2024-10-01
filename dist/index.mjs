@@ -422,7 +422,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.4.2-pmw-24";
+var version = "6.4.2-pmw-25";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -18981,9 +18981,10 @@ class CustomBorderTable extends Table {
         left = this.width / 2 - maxWidth;
       }
     }
+    const oldPadding = 11;
     ctx.beginPath();
-    ctx.moveTo(left - this.padding * 2, -(this.height / 2));
-    ctx.lineTo(left - this.padding * 2, -(this.height / 2) + this.height);
+    ctx.moveTo(left - oldPadding * 2, -(this.height / 2));
+    ctx.lineTo(left - oldPadding * 2, -(this.height / 2) + this.height);
     ctx.stroke();
   }
 
