@@ -14,7 +14,8 @@ function scaleIsProportional(eventData, fabricObject) {
     uniformIsToggled = eventData[canvas.uniScaleKey];
 
   // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
-  return fabricObject.uniformScaling && !uniformIsToggled || !fabricObject.uniformScaling && uniformIsToggled;
+  // *PMW* changed canvas.uniScaleKey behaviour to not set unform scaling false in case of true but only to true in case of false
+  return fabricObject.uniformScaling || !fabricObject.uniformScaling && uniformIsToggled;
 }
 
 /**
