@@ -422,7 +422,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.4.2-pmw-25";
+var version = "6.4.2-pmw-26";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -5168,6 +5168,7 @@ const fabricObjectDefaultValues = {
   globalCompositeOperation: 'source-over',
   backgroundColor: '',
   shadow: null,
+  uniformScaling: true,
   visible: true,
   includeDefaultValues: true,
   excludeFromExport: false,
@@ -8794,7 +8795,9 @@ const rotationWithSnapping = wrapWithFireEvent(ROTATING, wrapWithFixedAnchor(rot
 function scaleIsProportional(eventData, fabricObject) {
   const canvas = fabricObject.canvas,
     uniformIsToggled = eventData[canvas.uniScaleKey];
-  return canvas.uniformScaling && !uniformIsToggled || !canvas.uniformScaling && uniformIsToggled;
+
+  // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
+  return fabricObject.uniformScaling && !uniformIsToggled || !fabricObject.uniformScaling && uniformIsToggled;
 }
 
 /**

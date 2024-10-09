@@ -28,6 +28,7 @@ export interface SerializedObjectProps extends BaseProps, FillStrokeProps {
   leanBackgroundOffset: number;
 
   __PMWID: string;
+  uniformScaling: boolean;
   erasable: boolean | 'deep';
 
   /**

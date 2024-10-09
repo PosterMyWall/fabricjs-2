@@ -12,7 +12,9 @@ import { SCALING, SCALE_X, SCALE_Y } from '../constants.mjs';
 function scaleIsProportional(eventData, fabricObject) {
   const canvas = fabricObject.canvas,
     uniformIsToggled = eventData[canvas.uniScaleKey];
-  return canvas.uniformScaling && !uniformIsToggled || !canvas.uniformScaling && uniformIsToggled;
+
+  // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
+  return fabricObject.uniformScaling && !uniformIsToggled || !fabricObject.uniformScaling && uniformIsToggled;
 }
 
 /**

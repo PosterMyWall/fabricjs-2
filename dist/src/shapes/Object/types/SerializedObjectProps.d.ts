@@ -24,6 +24,7 @@ export interface SerializedObjectProps extends BaseProps, FillStrokeProps {
     leanBackground: boolean;
     leanBackgroundOffset: number;
     __PMWID: string;
+    uniformScaling: boolean;
     erasable: boolean | 'deep';
     /**
      * Shadow object representing shadow of this shape

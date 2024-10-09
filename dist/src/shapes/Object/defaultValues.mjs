@@ -40,6 +40,7 @@ const fabricObjectDefaultValues = {
   globalCompositeOperation: 'source-over',
   backgroundColor: '',
   shadow: null,
+  uniformScaling: true,
   visible: true,
   includeDefaultValues: true,
   excludeFromExport: false,

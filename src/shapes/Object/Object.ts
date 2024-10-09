@@ -185,6 +185,7 @@ export class FabricObject<
   declare opacity: number;
   declare __PMWTESTPROPERTY: string;
   declare __PMWID: string;
+  declare uniformScaling: boolean
   declare erasable: boolean | 'deep';
   declare bindedObjectPmwId: string;
 

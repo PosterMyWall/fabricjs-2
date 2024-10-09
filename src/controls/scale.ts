@@ -39,9 +39,11 @@ export function scaleIsProportional(
 ): boolean {
   const canvas = fabricObject.canvas as Canvas,
     uniformIsToggled = eventData[canvas.uniScaleKey!];
+
+  // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
   return (
-    (canvas.uniformScaling && !uniformIsToggled) ||
-    (!canvas.uniformScaling && uniformIsToggled)
+    (fabricObject.uniformScaling && !uniformIsToggled) ||
+    (!fabricObject.uniformScaling && uniformIsToggled)
   );
 }
 
