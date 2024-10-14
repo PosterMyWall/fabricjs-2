@@ -5,6 +5,7 @@ import type { ObjectEvents } from '../EventTypeDefs';
 import type { CSSRules } from '../parser/typedefs';
 export declare const rectDefaultValues: Partial<TClassProperties<Rect>>;
 interface UniqueRectProps {
+    uniformRoundness: boolean;
     rx: number;
     ry: number;
 }
@@ -13,6 +14,7 @@ export interface SerializedRectProps extends SerializedObjectProps, UniqueRectPr
 export interface RectProps extends FabricObjectProps, UniqueRectProps {
 }
 export declare class Rect<Props extends TOptions<RectProps> = Partial<RectProps>, SProps extends SerializedRectProps = SerializedRectProps, EventSpec extends ObjectEvents = ObjectEvents> extends FabricObject<Props, SProps, EventSpec> implements RectProps {
+    uniformRoundness: boolean;
     /**
      * Horizontal border radius
      * @type Number

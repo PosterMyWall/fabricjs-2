@@ -428,7 +428,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.4.2-pmw-27";
+  var version = "6.4.2-pmw-28";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -10920,6 +10920,7 @@
 
   const _excluded$c = ["left", "top", "width", "height", "visible"];
   const rectDefaultValues = {
+    uniformRoundness: false,
     rx: 0,
     ry: 0
   };
@@ -10939,6 +10940,7 @@
       this.setOptions(options);
       this._initRxRy();
     }
+
     /**
      * Initializes rx/ry attributes
      * @private
@@ -10966,9 +10968,14 @@
       } = this;
       const x = -w / 2;
       const y = -h / 2;
-      const rx = this.rx ? Math.min(this.rx, w / 2) : 0;
-      const ry = this.ry ? Math.min(this.ry, h / 2) : 0;
+      let rx = this.rx ? Math.min(this.rx, w / 2) : 0;
+      let ry = this.ry ? Math.min(this.ry, h / 2) : 0;
       const isRounded = rx !== 0 || ry !== 0;
+      if (this.uniformRoundness) {
+        const scaling = this.getObjectScaling();
+        rx = rx / scaling.x;
+        ry = ry / scaling.y;
+      }
       ctx.beginPath();
       ctx.moveTo(x + rx, y);
       ctx.lineTo(x + w - rx, y);

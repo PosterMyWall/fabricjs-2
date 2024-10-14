@@ -9,31 +9,35 @@ import type { ObjectEvents } from '../EventTypeDefs';
 import type { CSSRules } from '../parser/typedefs';
 
 export const rectDefaultValues: Partial<TClassProperties<Rect>> = {
+  uniformRoundness: false,
   rx: 0,
   ry: 0,
 };
 
 interface UniqueRectProps {
+  uniformRoundness: boolean;
   rx: number;
   ry: number;
 }
 
 export interface SerializedRectProps
   extends SerializedObjectProps,
-    UniqueRectProps {}
+    UniqueRectProps {
+}
 
-export interface RectProps extends FabricObjectProps, UniqueRectProps {}
+export interface RectProps extends FabricObjectProps, UniqueRectProps {
+}
 
 const RECT_PROPS = ['rx', 'ry'] as const;
 
 export class Rect<
-    Props extends TOptions<RectProps> = Partial<RectProps>,
-    SProps extends SerializedRectProps = SerializedRectProps,
-    EventSpec extends ObjectEvents = ObjectEvents,
-  >
+  Props extends TOptions<RectProps> = Partial<RectProps>,
+  SProps extends SerializedRectProps = SerializedRectProps,
+  EventSpec extends ObjectEvents = ObjectEvents,
+>
   extends FabricObject<Props, SProps, EventSpec>
-  implements RectProps
-{
+  implements RectProps {
+  declare uniformRoundness: boolean;
   /**
    * Horizontal border radius
    * @type Number
@@ -71,6 +75,7 @@ export class Rect<
     this.setOptions(options);
     this._initRxRy();
   }
+
   /**
    * Initializes rx/ry attributes
    * @private
@@ -92,50 +97,55 @@ export class Rect<
     const { width: w, height: h } = this;
     const x = -w / 2;
     const y = -h / 2;
-    const rx = this.rx ? Math.min(this.rx, w / 2) : 0;
-    const ry = this.ry ? Math.min(this.ry, h / 2) : 0;
+    let rx = this.rx ? Math.min(this.rx, w / 2) : 0;
+    let ry = this.ry ? Math.min(this.ry, h / 2) : 0;
     const isRounded = rx !== 0 || ry !== 0;
 
-    ctx.beginPath();
+    if (this.uniformRoundness) {
+      const scaling = this.getObjectScaling();
+      rx = rx / scaling.x;
+      ry = ry / scaling.y;
+    }
 
+    ctx.beginPath();
     ctx.moveTo(x + rx, y);
 
     ctx.lineTo(x + w - rx, y);
     isRounded &&
-      ctx.bezierCurveTo(
-        x + w - kRect * rx,
-        y,
-        x + w,
-        y + kRect * ry,
-        x + w,
-        y + ry,
-      );
+    ctx.bezierCurveTo(
+      x + w - kRect * rx,
+      y,
+      x + w,
+      y + kRect * ry,
+      x + w,
+      y + ry,
+    );
 
     ctx.lineTo(x + w, y + h - ry);
     isRounded &&
-      ctx.bezierCurveTo(
-        x + w,
-        y + h - kRect * ry,
-        x + w - kRect * rx,
-        y + h,
-        x + w - rx,
-        y + h,
-      );
+    ctx.bezierCurveTo(
+      x + w,
+      y + h - kRect * ry,
+      x + w - kRect * rx,
+      y + h,
+      x + w - rx,
+      y + h,
+    );
 
     ctx.lineTo(x + rx, y + h);
     isRounded &&
-      ctx.bezierCurveTo(
-        x + kRect * rx,
-        y + h,
-        x,
-        y + h - kRect * ry,
-        x,
-        y + h - ry,
-      );
+    ctx.bezierCurveTo(
+      x + kRect * rx,
+      y + h,
+      x,
+      y + h - kRect * ry,
+      x,
+      y + h - ry,
+    );
 
     ctx.lineTo(x, y + ry);
     isRounded &&
-      ctx.bezierCurveTo(x, y + kRect * ry, x + kRect * rx, y, x + rx, y);
+    ctx.bezierCurveTo(x, y + kRect * ry, x + kRect * rx, y, x + rx, y);
 
     ctx.closePath();
 
