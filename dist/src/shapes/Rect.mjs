@@ -56,14 +56,16 @@ class Rect extends FabricObject {
     } = this;
     const x = -w / 2;
     const y = -h / 2;
-    let rx = this.rx ? Math.min(this.rx, w / 2) : 0;
-    let ry = this.ry ? Math.min(this.ry, h / 2) : 0;
+    let rx = this.rx ? this.rx : 0;
+    let ry = this.ry ? this.ry : 0;
     const isRounded = rx !== 0 || ry !== 0;
     if (this.uniformRoundness) {
       const scaling = this.getObjectScaling();
       rx = rx / scaling.x;
       ry = ry / scaling.y;
     }
+    rx = Math.min(rx, w / 2);
+    ry = Math.min(ry, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rx, y);
     ctx.lineTo(x + w - rx, y);
