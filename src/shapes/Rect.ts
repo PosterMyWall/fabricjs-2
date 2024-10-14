@@ -107,8 +107,8 @@ export class Rect<
       ry = ry / scaling.y;
     }
 
-     rx = Math.min(rx, w / 2);
-     ry = Math.min(ry, h / 2);
+    rx = Math.min(rx, w / 2);
+    ry = Math.min(ry, h / 2);
 
     ctx.beginPath();
     ctx.moveTo(x + rx, y);
