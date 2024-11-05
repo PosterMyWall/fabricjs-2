@@ -627,7 +627,7 @@ export class StaticCanvas<
     for (const [key, value] of Object.entries(times)) {
       logMessage += `${key} ${String(Math.round(value))}ms `;
     }
-    console.trace(logMessage);
+    console.log(logMessage);
   }
 
   /**
