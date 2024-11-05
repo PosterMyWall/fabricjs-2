@@ -1,6 +1,6 @@
 import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { config } from '../config.mjs';
-import { createCanvasElement } from '../util/misc/dom.mjs';
+import { createCanvasElementFor } from '../util/misc/dom.mjs';
 
 class WebGLFilterBackend {
   constructor() {
@@ -37,9 +37,10 @@ class WebGLFilterBackend {
    * class properties to the GLFilterBackend class.
    */
   createWebGLCanvas(width, height) {
-    const canvas = createCanvasElement();
-    canvas.width = width;
-    canvas.height = height;
+    const canvas = createCanvasElementFor({
+      width,
+      height
+    });
     const glOptions = {
         alpha: true,
         premultipliedAlpha: false,

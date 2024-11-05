@@ -7,7 +7,7 @@ import { Shadow } from '../../Shadow.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { runningAnimations } from '../../util/animation/AnimationRegistry.mjs';
 import { capValue } from '../../util/misc/capValue.mjs';
-import { createCanvasElement, toDataURL } from '../../util/misc/dom.mjs';
+import { createCanvasElement, createCanvasElementFor, toDataURL } from '../../util/misc/dom.mjs';
 import { qrDecompose, invertTransform } from '../../util/misc/matrix.mjs';
 import { enlivenObjectEnlivables } from '../../util/misc/objectEnlive.mjs';
 import { saveObjectTransform, resetObjectTransform } from '../../util/misc/objectTransforms.mjs';
@@ -73,6 +73,7 @@ class FabricObject extends ObjectGeometry {
    * Legacy identifier of the class. Prefer using utils like isType or instanceOf
    * Will be removed in fabric 7 or 8.
    * The setter exists to avoid type errors in old code and possibly current deserialization code.
+   * DO NOT build new code around this type value
    * @TODO add sustainable warning message
    * @type string
    * @deprecated
@@ -404,19 +405,41 @@ class FabricObject extends ObjectGeometry {
       return;
     }
     ctx.save();
+    const t1 = performance.now();
     this._setupCompositeOperation(ctx);
     this.drawSelectionBackground(ctx);
+    const t2 = performance.now();
     this.transform(ctx);
     this._setOpacity(ctx);
     this._setShadow(ctx);
+    const t3 = performance.now();
+    let t4 = performance.now();
+    let t5 = performance.now();
     if (this.shouldCache()) {
       this.renderCache();
+      t4 = performance.now();
       this.drawCacheOnCanvas(ctx);
+      t5 = performance.now();
     } else {
       this._removeCacheCanvas();
-      this.drawObject(ctx);
+      t4 = performance.now();
+      this.drawObject(ctx, false, {});
+      t5 = performance.now();
       this.dirty = false;
     }
+    const times = {
+      drawSelectonBackground: t2 - t1,
+      setBackgroundShadow: t3 - t2,
+      shoudCache: this.shouldCache() ? 1 : 0,
+      rendercacheOrRemoveCache: t4 - t3,
+      drawObject: t5 - t4,
+      total: t5 - t1
+    };
+    let logMessage = '';
+    for (const [key, value] of Object.entries(times)) {
+      logMessage += "".concat(key, " ").concat(String(Math.round(value)), "ms ");
+    }
+    console.log(logMessage);
     ctx.restore();
   }
   drawSelectionBackground(_ctx) {
@@ -428,7 +451,25 @@ class FabricObject extends ObjectGeometry {
       this._createCacheCanvas();
     }
     if (this.isCacheDirty() && this._cacheContext) {
-      this.drawObject(this._cacheContext, options.forClipping);
+      const {
+        zoomX,
+        zoomY,
+        cacheTranslationX,
+        cacheTranslationY
+      } = this;
+      const {
+        width,
+        height
+      } = this._cacheCanvas;
+      this.drawObject(this._cacheContext, options.forClipping, {
+        zoomX,
+        zoomY,
+        cacheTranslationX,
+        cacheTranslationY,
+        width,
+        height,
+        parentClipPaths: []
+      });
       this.dirty = false;
     }
   }
@@ -516,7 +557,7 @@ class FabricObject extends ObjectGeometry {
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {FabricObject} clipPath
    */
-  drawClipPathOnCache(ctx, clipPath) {
+  drawClipPathOnCache(ctx, clipPath, canvasWithClipPath) {
     ctx.save();
     // DEBUG: uncomment this line, comment the following
     // ctx.globalAlpha = 0.4
@@ -525,14 +566,9 @@ class FabricObject extends ObjectGeometry {
     } else {
       ctx.globalCompositeOperation = 'destination-in';
     }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     //ctx.scale(1 / 2, 1 / 2);
-    if (clipPath.absolutePositioned) {
-      const m = invertTransform(this.calcTransformMatrix());
-      ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-    }
-    clipPath.transform(ctx);
-    ctx.scale(1 / clipPath.zoomX, 1 / clipPath.zoomY);
-    ctx.drawImage(clipPath._cacheCanvas, -clipPath.cacheTranslationX, -clipPath.cacheTranslationY);
+    ctx.drawImage(canvasWithClipPath, 0, 0);
     ctx.restore();
   }
 
@@ -540,8 +576,9 @@ class FabricObject extends ObjectGeometry {
    * Execute the drawing operation for an object on a specified context
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {boolean} forClipping apply clipping styles
+   * @param {DrawContext} context additional context for rendering
    */
-  drawObject(ctx, forClipping) {
+  drawObject(ctx, forClipping, context) {
     const originalFill = this.fill,
       originalStroke = this.stroke;
     if (forClipping) {
@@ -552,9 +589,27 @@ class FabricObject extends ObjectGeometry {
       this._renderBackground(ctx);
     }
     this._render(ctx);
-    this._drawClipPath(ctx, this.clipPath);
+    this._drawClipPath(ctx, this.clipPath, context);
     this.fill = originalFill;
     this.stroke = originalStroke;
+  }
+  createClipPathLayer(clipPath, context) {
+    const canvas = createCanvasElementFor(context);
+    const ctx = canvas.getContext('2d');
+    ctx.translate(context.cacheTranslationX, context.cacheTranslationY);
+    ctx.scale(context.zoomX, context.zoomY);
+    clipPath._cacheCanvas = canvas;
+    context.parentClipPaths.forEach(prevClipPath => {
+      prevClipPath.transform(ctx);
+    });
+    context.parentClipPaths.push(clipPath);
+    if (clipPath.absolutePositioned) {
+      const m = invertTransform(this.calcTransformMatrix());
+      ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+    }
+    clipPath.transform(ctx);
+    clipPath.drawObject(ctx, true, context);
+    return canvas;
   }
 
   /**
@@ -562,20 +617,15 @@ class FabricObject extends ObjectGeometry {
    * @param {CanvasRenderingContext2D} ctx
    * @param {FabricObject} clipPath
    */
-  _drawClipPath(ctx, clipPath) {
+  _drawClipPath(ctx, clipPath, context) {
     if (!clipPath) {
       return;
     }
-    // needed to setup a couple of variables
-    // path canvas gets overridden with this one.
+    // needed to setup _transformDone
     // TODO find a better solution?
-    clipPath._set('canvas', this.canvas);
-    clipPath.shouldCache();
     clipPath._transformDone = true;
-    clipPath.renderCache({
-      forClipping: true
-    });
-    this.drawClipPathOnCache(ctx, clipPath);
+    const canvas = this.createClipPathLayer(clipPath, context);
+    this.drawClipPathOnCache(ctx, clipPath, canvas);
   }
 
   /**
@@ -863,14 +913,15 @@ class FabricObject extends ObjectGeometry {
   _applyPatternForTransformedGradient(ctx, filler) {
     var _pCtx$createPattern;
     const dims = this._limitCacheSize(this._getCacheCanvasDimensions()),
-      pCanvas = createCanvasElement(),
       retinaScaling = this.getCanvasRetinaScaling(),
       width = dims.x / this.scaleX / retinaScaling,
-      height = dims.y / this.scaleY / retinaScaling;
-    // in case width and height are less than 1px, we have to round up.
-    // since the pattern is no-repeat, this is fine
-    pCanvas.width = Math.ceil(width);
-    pCanvas.height = Math.ceil(height);
+      height = dims.y / this.scaleY / retinaScaling,
+      pCanvas = createCanvasElementFor({
+        // in case width and height are less than 1px, we have to round up.
+        // since the pattern is no-repeat, this is fine
+        width: Math.ceil(width),
+        height: Math.ceil(height)
+      });
     const pCtx = pCanvas.getContext('2d');
     if (!pCtx) {
       return;

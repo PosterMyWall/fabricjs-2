@@ -135,7 +135,7 @@ class Canvas extends SelectableCanvas {
   }
 
   /**
-   * Removes all event listeners
+   * Removes all event listeners, used when disposing the instance
    */
   removeListeners() {
     this.addOrRemove(removeListener, 'remove');
@@ -147,6 +147,7 @@ class Canvas extends SelectableCanvas {
     removeListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
     // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
+    clearTimeout(this._willAddMouseDown);
   }
 
   /**
@@ -509,18 +510,29 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   _onTouchStart(e) {
-    e.preventDefault();
+    // we will prevent scrolling if allowTouchScrolling is not enabled and
+    let shouldPreventScrolling = !this.allowTouchScrolling;
+    const currentActiveObject = this._activeObject;
     if (this.mainTouchId === undefined) {
       this.mainTouchId = this.getPointerId(e);
     }
     this.__onMouseDown(e);
+    // after executing fabric logic for mouse down let's see
+    // if we didn't change target or if we are drawing
+    // we want to prevent scrolling anyway
+    if (this.isDrawingMode || currentActiveObject && this._target === currentActiveObject) {
+      shouldPreventScrolling = true;
+    }
+    // prevent default, will block scrolling from start
+    shouldPreventScrolling && e.preventDefault();
     this._resetTransformEventData();
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(canvasElement);
     addListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
     // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
-    addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
+    // if we scroll don't register the touch move event
+    shouldPreventScrolling && addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(canvasElement, "".concat(eventTypePrefix, "down"), this._onMouseDown);
     //*PMW* added line

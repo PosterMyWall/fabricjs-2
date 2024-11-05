@@ -27,7 +27,7 @@ export declare class ElementsParser {
     createObject(el: Element): Promise<FabricObject | null>;
     extractPropertyDefinition(obj: NotParsedFabricObject, property: 'fill' | 'stroke' | 'clipPath', storage: Record<string, StorageType[typeof property]>): StorageType[typeof property] | undefined;
     resolveGradient(obj: NotParsedFabricObject, el: Element, property: 'fill' | 'stroke'): void;
-    resolveClipPath(obj: NotParsedFabricObject, usingElement: Element): Promise<void>;
+    resolveClipPath(obj: NotParsedFabricObject, usingElement: Element, exactOwner?: Element): Promise<void>;
 }
 export {};
 //# sourceMappingURL=elements_parser.d.ts.map

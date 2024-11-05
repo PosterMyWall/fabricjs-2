@@ -6,7 +6,7 @@ import { SHARED_ATTRIBUTES } from '../../parser/attributes.mjs';
 import { parseAttributes } from '../../parser/parseAttributes.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { graphemeSplit } from '../../util/lang_string.mjs';
-import { createCanvasElement } from '../../util/misc/dom.mjs';
+import { createCanvasElementFor } from '../../util/misc/dom.mjs';
 import { hasStyleChanged, stylesToArray, stylesFromArray } from '../../util/misc/textStyles.mjs';
 import { getPathSegmentsInfo, getPointOnPath } from '../../util/path/index.mjs';
 import '../Object/FabricObject.mjs';
@@ -25,8 +25,10 @@ let measuringContext;
  */
 function getMeasuringContext() {
   if (!measuringContext) {
-    const canvas = createCanvasElement();
-    canvas.width = canvas.height = 0;
+    const canvas = createCanvasElementFor({
+      width: 0,
+      height: 0
+    });
     measuringContext = canvas.getContext('2d');
   }
   return measuringContext;
@@ -763,10 +765,13 @@ class FabricText extends StyledText {
    * @return {CanvasPattern} a pattern to use as fill/stroke style
    */
   _applyPatternGradientTransformText(filler) {
-    const pCanvas = createCanvasElement(),
-      // TODO: verify compatibility with strokeUniform
-      width = this.width + this.strokeWidth,
+    // TODO: verify compatibility with strokeUniform
+    const width = this.width + this.strokeWidth,
       height = this.height + this.strokeWidth,
+      pCanvas = createCanvasElementFor({
+        width,
+        height
+      }),
       pCtx = pCanvas.getContext('2d');
     pCanvas.width = width;
     pCanvas.height = height;
@@ -1346,6 +1351,12 @@ class FabricText extends StyledText {
   complexity() {
     return 1;
   }
+
+  /**
+   * List of generic font families
+   * @see https://developer.mozilla.org/en-US/docs/Web/CSS/font-family#generic-name
+   */
+
   /**
    * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
    * @static
@@ -1432,7 +1443,7 @@ _defineProperty(FabricText, "textLayoutProperties", textLayoutProperties);
 _defineProperty(FabricText, "cacheProperties", [...cacheProperties, ...additionalProps]);
 _defineProperty(FabricText, "ownDefaults", textDefaultValues);
 _defineProperty(FabricText, "type", 'Text');
-_defineProperty(FabricText, "genericFonts", ['sans-serif', 'serif', 'cursive', 'fantasy', 'monospace']);
+_defineProperty(FabricText, "genericFonts", ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', 'math', 'emoji', 'fangsong']);
 /* _FROM_SVG_START_ */
 /**
  * List of attribute names to account for when parsing SVG element (used by {@link FabricText.fromElement})

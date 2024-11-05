@@ -7,7 +7,7 @@ import { Point } from '../Point.mjs';
 import { requestAnimFrame, cancelAnimFrame } from '../util/animation/AnimationFrameProvider.mjs';
 import { runningAnimations } from '../util/animation/AnimationRegistry.mjs';
 import { uid } from '../util/internals/uid.mjs';
-import { createCanvasElement, toDataURL } from '../util/misc/dom.mjs';
+import { createCanvasElementFor, toDataURL } from '../util/misc/dom.mjs';
 import { transformPoint, invertTransform } from '../util/misc/matrix.mjs';
 import { enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
 import { pick } from '../util/misc/pick.mjs';
@@ -472,6 +472,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
     if (path) {
       path._set('canvas', this);
       // needed to setup a couple of variables
+      // todo migrate to the newer one
       path.shouldCache();
       path._transformDone = true;
       path.renderCache({
@@ -506,11 +507,9 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       cleanup: t10 - t9,
       totalTime: t10 - t1
     };
-    let logMessage = '';
     for (const [key, value] of Object.entries(times)) {
-      logMessage += "".concat(key, " ").concat(String(Math.round(value)), "ms ");
     }
-    console.trace(logMessage);
+    // console.log(logMessage);
   }
 
   /**
@@ -1120,9 +1119,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * This essentially copies canvas dimensions since loadFromJSON does not affect canvas size.
    */
   cloneWithoutData() {
-    const el = createCanvasElement();
-    el.width = this.width;
-    el.height = this.height;
+    const el = createCanvasElementFor(this);
     return new this.constructor(el);
   }
 
@@ -1211,10 +1208,11 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       translateY = (vp[5] - (top || 0)) * multiplier,
       newVp = [newZoom, 0, 0, newZoom, translateX, translateY],
       originalRetina = this.enableRetinaScaling,
-      canvasEl = createCanvasElement(),
+      canvasEl = createCanvasElementFor({
+        width: scaledWidth,
+        height: scaledHeight
+      }),
       objectsToRender = filter ? this._objects.filter(obj => filter(obj)) : this._objects;
-    canvasEl.width = scaledWidth;
-    canvasEl.height = scaledHeight;
     this.enableRetinaScaling = false;
     this.viewportTransform = newVp;
     this.width = scaledWidth;

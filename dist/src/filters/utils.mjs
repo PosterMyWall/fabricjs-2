@@ -1,5 +1,5 @@
 import { getFabricWindow } from '../env/index.mjs';
-import { createCanvasElement } from '../util/misc/dom.mjs';
+import { createCanvasElementFor, createCanvasElement } from '../util/misc/dom.mjs';
 import { WebGLFilterBackend } from './WebGLFilterBackend.mjs';
 
 const isWebGLPipelineState = options => {
@@ -13,7 +13,10 @@ const isWebGLPipelineState = options => {
  * putImageData is faster than drawImage for that specific operation.
  */
 const isPutImageFaster = (width, height) => {
-  const targetCanvas = createCanvasElement();
+  const targetCanvas = createCanvasElementFor({
+    width,
+    height
+  });
   const sourceCanvas = createCanvasElement();
   const gl = sourceCanvas.getContext('webgl');
   // eslint-disable-next-line no-undef
@@ -27,8 +30,6 @@ const isPutImageFaster = (width, height) => {
     targetCanvas: targetCanvas
   };
   let startTime;
-  targetCanvas.width = width;
-  targetCanvas.height = height;
   startTime = getFabricWindow().performance.now();
   WebGLFilterBackend.prototype.copyGLTo2D.call(testContext, gl, testPipelineState);
   const drawImageTime = getFabricWindow().performance.now() - startTime;

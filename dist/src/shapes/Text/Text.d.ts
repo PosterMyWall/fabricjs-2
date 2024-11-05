@@ -707,6 +707,10 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @return {Number} complexity
      */
     complexity(): number;
+    /**
+     * List of generic font families
+     * @see https://developer.mozilla.org/en-US/docs/Web/CSS/font-family#generic-name
+     */
     static genericFonts: string[];
     /**
      * List of attribute names to account for when parsing SVG element (used by {@link FabricText.fromElement})

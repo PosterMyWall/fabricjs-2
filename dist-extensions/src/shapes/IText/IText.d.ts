@@ -3,11 +3,19 @@ import { ITextClickBehavior } from './ITextClickBehavior';
 import type { TClassProperties, TFiller, TOptions } from '../../typedefs';
 import type { SerializedTextProps, TextProps } from '../Text/Text';
 import type { ObjectToCanvasElementOptions } from '../Object/Object';
-type CursorBoundaries = {
+export type CursorBoundaries = {
     left: number;
     top: number;
     leftOffset: number;
     topOffset: number;
+};
+export type CursorRenderingData = {
+    color: string;
+    opacity: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
 };
 export declare const iTextDefaultValues: Partial<TClassProperties<IText>>;
 interface UniqueITextProps {
@@ -276,6 +284,17 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      * @param {CanvasRenderingContext2D} ctx transformed context to draw on
      */
     renderCursor(ctx: CanvasRenderingContext2D, boundaries: CursorBoundaries): void;
+    /**
+     * Return the data needed to render the cursor for given selection start
+     * The left,top are relative to the object, while width and height are prescaled
+     * to look think with canvas zoom and object scaling,
+     * so they depend on canvas and object scaling
+     */
+    getCursorRenderingData(selectionStart?: number, boundaries?: CursorBoundaries): CursorRenderingData;
+    /**
+     * Render the cursor at the given selectionStart.
+     *
+     */
     _renderCursor(ctx: CanvasRenderingContext2D, boundaries: CursorBoundaries, selectionStart: number): void;
     /**
      * Renders text selection

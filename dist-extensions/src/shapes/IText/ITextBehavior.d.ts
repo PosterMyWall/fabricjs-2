@@ -163,6 +163,10 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
      */
     enterEditing(e?: TPointerEvent): void;
     /**
+     * runs the actual logic that enter from editing state, see {@link enterEditing}
+     */
+    enterEditingImpl(): void;
+    /**
      * called by {@link Canvas#textEditingManager}
      */
     updateSelectionOnMouseMove(e: TPointerEvent): void;
@@ -221,8 +225,16 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
     _restoreEditingProps(): void;
     /**
      * runs the actual logic that exits from editing state, see {@link exitEditing}
+     * Please use exitEditingImpl, this function was kept to avoid breaking changes.
+     * Will be removed in fabric 7.0
+     * @deprecated use "exitEditingImpl"
      */
     protected _exitEditing(): void;
+    /**
+     * runs the actual logic that exits from editing state, see {@link exitEditing}
+     * But it does not fire events
+     */
+    exitEditingImpl(): void;
     /**
      * Exits from editing state and fires relevant events
      */

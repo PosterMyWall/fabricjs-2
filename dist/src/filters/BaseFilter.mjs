@@ -1,9 +1,9 @@
 import { defineProperty as _defineProperty, objectWithoutProperties as _objectWithoutProperties, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { getEnv } from '../env/index.mjs';
-import { createCanvasElement } from '../util/misc/dom.mjs';
 import { isWebGLPipelineState } from './utils.mjs';
 import { identityFragmentShader, vertexSource, highPsourceCode } from './shaders/baseFilter.mjs';
 import { FabricError } from '../util/internals/console.mjs';
+import { createCanvasElementFor } from '../util/misc/dom.mjs';
 
 const _excluded = ["type"],
   _excluded2 = ["type"];
@@ -279,9 +279,14 @@ class BaseFilter {
    */
   createHelpLayer(options) {
     if (!options.helpLayer) {
-      const helpLayer = createCanvasElement();
-      helpLayer.width = options.sourceWidth;
-      helpLayer.height = options.sourceHeight;
+      const {
+        sourceWidth,
+        sourceHeight
+      } = options;
+      const helpLayer = createCanvasElementFor({
+        width: sourceWidth,
+        height: sourceHeight
+      });
       options.helpLayer = helpLayer;
     }
   }

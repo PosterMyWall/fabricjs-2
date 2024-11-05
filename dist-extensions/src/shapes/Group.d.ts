@@ -5,6 +5,7 @@ import type { FabricObjectProps, SerializedObjectProps } from './Object/types';
 import type { ImperativeLayoutOptions, LayoutBeforeEvent, LayoutAfterEvent } from '../LayoutManager/types';
 import { LayoutManager } from '../LayoutManager/LayoutManager';
 import type { SerializedLayoutManager } from '../LayoutManager/LayoutManager';
+import type { DrawContext } from './Object/Object';
 import type { Table } from './Table';
 export interface GroupEvents extends ObjectEvents, CollectionEvents {
     'layout:before': LayoutBeforeEvent;
@@ -289,7 +290,7 @@ export declare class Group extends Group_base implements GroupProps {
      * Execute the drawing operation for an object on a specified context
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
-    drawObject(ctx: CanvasRenderingContext2D): void;
+    drawObject(ctx: CanvasRenderingContext2D, forClipping: boolean | undefined, context: DrawContext): void;
     /**
      * @override
      * @return {Boolean}

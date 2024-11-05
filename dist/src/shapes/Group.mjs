@@ -18,7 +18,6 @@ const _excluded = ["type", "objects", "layoutManager"];
  * This layout manager doesn't do anything and therefore keeps the exact layout the group had when {@link Group#toObject} was called.
  */
 class NoopLayoutManager extends LayoutManager {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   performLayout() {}
 }
 const groupDefaultValues = {
@@ -484,21 +483,22 @@ class Group extends createCollectionMixin(FabricObject) {
    * Execute the drawing operation for an object on a specified context
    * @param {CanvasRenderingContext2D} ctx Context to render on
    */
-  drawObject(ctx) {
+  drawObject(ctx, forClipping, context) {
     this._renderBackground(ctx);
     for (let i = 0; i < this._objects.length; i++) {
       var _this$canvas;
+      const obj = this._objects[i];
       // TODO: handle rendering edge case somehow
-      if ((_this$canvas = this.canvas) !== null && _this$canvas !== void 0 && _this$canvas.preserveObjectStacking && this._objects[i].group !== this) {
+      if ((_this$canvas = this.canvas) !== null && _this$canvas !== void 0 && _this$canvas.preserveObjectStacking && obj.group !== this) {
         ctx.save();
         ctx.transform(...invertTransform(this.calcTransformMatrix()));
-        this._objects[i].render(ctx);
+        obj.render(ctx);
         ctx.restore();
-      } else if (this._objects[i].group === this) {
-        this._objects[i].render(ctx);
+      } else if (obj.group === this) {
+        obj.render(ctx);
       }
     }
-    this._drawClipPath(ctx, this.clipPath);
+    this._drawClipPath(ctx, this.clipPath, context);
   }
 
   /**

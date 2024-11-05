@@ -288,6 +288,24 @@ class ITextBehavior extends FabricText {
     if (this.isEditing || !this.editable) {
       return;
     }
+    this.enterEditingImpl();
+    this.fire('editing:entered', e ? {
+      e
+    } : undefined);
+    this._fireSelectionChanged();
+    if (this.canvas) {
+      this.canvas.fire('text:editing:entered', {
+        target: this,
+        e
+      });
+      this.canvas.requestRenderAll();
+    }
+  }
+
+  /**
+   * runs the actual logic that enter from editing state, see {@link enterEditing}
+   */
+  enterEditingImpl() {
     if (this.canvas) {
       this.canvas.calcOffset();
       this.canvas.textEditingManager.exitTextEditing();
@@ -301,17 +319,6 @@ class ITextBehavior extends FabricText {
     this._setEditingProps();
     this._textBeforeEdit = this.text;
     this._tick();
-    this.fire('editing:entered', e ? {
-      e
-    } : undefined);
-    this._fireSelectionChanged();
-    if (this.canvas) {
-      this.canvas.fire('text:editing:entered', {
-        target: this,
-        e
-      });
-      this.canvas.requestRenderAll();
-    }
   }
 
   /**
@@ -532,6 +539,9 @@ class ITextBehavior extends FabricText {
 
   /**
    * runs the actual logic that exits from editing state, see {@link exitEditing}
+   * Please use exitEditingImpl, this function was kept to avoid breaking changes.
+   * Will be removed in fabric 7.0
+   * @deprecated use "exitEditingImpl"
    */
   _exitEditing() {
     const hiddenTextarea = this.hiddenTextarea;
@@ -547,10 +557,10 @@ class ITextBehavior extends FabricText {
   }
 
   /**
-   * Exits from editing state and fires relevant events
+   * runs the actual logic that exits from editing state, see {@link exitEditing}
+   * But it does not fire events
    */
-  exitEditing() {
-    const isTextChanged = this._textBeforeEdit !== this.text;
+  exitEditingImpl() {
     this._exitEditing();
     this.selectionEnd = this.selectionStart;
     this._restoreEditingProps();
@@ -558,6 +568,14 @@ class ITextBehavior extends FabricText {
       this.initDimensions();
       this.setCoords();
     }
+  }
+
+  /**
+   * Exits from editing state and fires relevant events
+   */
+  exitEditing() {
+    const isTextChanged = this._textBeforeEdit !== this.text;
+    this.exitEditingImpl();
     this.fire('editing:exited');
     isTextChanged && this.fire(MODIFIED);
     if (this.canvas) {

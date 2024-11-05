@@ -58,6 +58,15 @@ export type ObjectToCanvasElementOptions = {
 type toDataURLOptions = ObjectToCanvasElementOptions & {
     quality?: number;
 };
+export type DrawContext = {
+    parentClipPaths: FabricObject[];
+    width: number;
+    height: number;
+    cacheTranslationX: number;
+    cacheTranslationY: number;
+    zoomX: number;
+    zoomY: number;
+} | Record<string, never>;
 interface GetCornerPointsResponse {
     tl: Point;
     tr: Point;
@@ -256,6 +265,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * Legacy identifier of the class. Prefer using utils like isType or instanceOf
      * Will be removed in fabric 7 or 8.
      * The setter exists to avoid type errors in old code and possibly current deserialization code.
+     * DO NOT build new code around this type value
      * @TODO add sustainable warning message
      * @type string
      * @deprecated
@@ -360,7 +370,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      */
     render(ctx: CanvasRenderingContext2D): void;
     drawSelectionBackground(_ctx: CanvasRenderingContext2D): void;
-    renderCache(options?: any): void;
+    renderCache(this: TCachedFabricObject, options?: any): void;
     /**
      * Remove cacheCanvas and its dimensions from the objects
      */
@@ -418,19 +428,21 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @param {CanvasRenderingContext2D} ctx Context to render on
      * @param {FabricObject} clipPath
      */
-    drawClipPathOnCache(ctx: CanvasRenderingContext2D, clipPath: TCachedFabricObject): void;
+    drawClipPathOnCache(ctx: CanvasRenderingContext2D, clipPath: FabricObject, canvasWithClipPath: HTMLCanvasElement): void;
     /**
      * Execute the drawing operation for an object on a specified context
      * @param {CanvasRenderingContext2D} ctx Context to render on
      * @param {boolean} forClipping apply clipping styles
+     * @param {DrawContext} context additional context for rendering
      */
-    drawObject(ctx: CanvasRenderingContext2D, forClipping?: boolean): void;
+    drawObject(ctx: CanvasRenderingContext2D, forClipping: boolean | undefined, context: DrawContext): void;
+    private createClipPathLayer;
     /**
      * Prepare clipPath state and cache and draw it on instance's cache
      * @param {CanvasRenderingContext2D} ctx
      * @param {FabricObject} clipPath
      */
-    _drawClipPath(ctx: CanvasRenderingContext2D, clipPath?: FabricObject): void;
+    _drawClipPath(ctx: CanvasRenderingContext2D, clipPath: FabricObject | undefined, context: DrawContext): void;
     /**
      * Paint the cached copy of the object on the target context.
      * @param {CanvasRenderingContext2D} ctx Context to render on

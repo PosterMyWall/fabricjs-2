@@ -294,7 +294,7 @@ class IText extends ITextClickBehavior {
       return;
     }
     const boundaries = this._getCursorBoundaries();
-    if (this.selectionStart === this.selectionEnd) {
+    if (this.selectionStart === this.selectionEnd && !this.inCompositionMode) {
       this.renderCursor(ctx, boundaries);
     } else {
       this.renderSelection(ctx, boundaries);
@@ -384,8 +384,7 @@ class IText extends ITextClickBehavior {
    * If contextTop is not available, do nothing.
    */
   renderCursorAt(selectionStart) {
-    const boundaries = this._getCursorBoundaries(selectionStart, true);
-    this._renderCursor(this.canvas.contextTop, boundaries, selectionStart);
+    this._renderCursor(this.canvas.contextTop, this._getCursorBoundaries(selectionStart, true), selectionStart);
   }
 
   /**
@@ -396,7 +395,16 @@ class IText extends ITextClickBehavior {
   renderCursor(ctx, boundaries) {
     this._renderCursor(ctx, boundaries, this.selectionStart);
   }
-  _renderCursor(ctx, boundaries, selectionStart) {
+
+  /**
+   * Return the data needed to render the cursor for given selection start
+   * The left,top are relative to the object, while width and height are prescaled
+   * to look think with canvas zoom and object scaling,
+   * so they depend on canvas and object scaling
+   */
+  getCursorRenderingData() {
+    let selectionStart = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.selectionStart;
+    let boundaries = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this._getCursorBoundaries(selectionStart);
     const cursorLocation = this.get2DCursorLocation(selectionStart),
       lineIndex = cursorLocation.lineIndex,
       charIndex = cursorLocation.charIndex > 0 ? cursorLocation.charIndex - 1 : 0,
@@ -405,14 +413,32 @@ class IText extends ITextClickBehavior {
       cursorWidth = this.cursorWidth / multiplier,
       dy = this.getValueOfPropertyAt(lineIndex, charIndex, 'deltaY'),
       topOffset = boundaries.topOffset + (1 - this._fontSizeFraction) * this.getHeightOfLine(lineIndex) / this.lineHeight - charHeight * (1 - this._fontSizeFraction);
-    if (this.inCompositionMode) {
-      // TODO: investigate why there isn't a return inside the if,
-      // and why can't happen at the top of the function
-      this.renderSelection(ctx, boundaries);
-    }
-    ctx.fillStyle = this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, FILL);
-    ctx.globalAlpha = this._currentCursorOpacity;
-    ctx.fillRect(boundaries.left + boundaries.leftOffset - cursorWidth / 2, topOffset + boundaries.top + dy, cursorWidth, charHeight);
+    return {
+      color: this.cursorColor || this.getValueOfPropertyAt(lineIndex, charIndex, 'fill'),
+      opacity: this._currentCursorOpacity,
+      left: boundaries.left + boundaries.leftOffset - cursorWidth / 2,
+      top: topOffset + boundaries.top + dy,
+      width: cursorWidth,
+      height: charHeight
+    };
+  }
+
+  /**
+   * Render the cursor at the given selectionStart.
+   *
+   */
+  _renderCursor(ctx, boundaries, selectionStart) {
+    const {
+      color,
+      opacity,
+      left,
+      top,
+      width,
+      height
+    } = this.getCursorRenderingData(selectionStart, boundaries);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity;
+    ctx.fillRect(left, top, width, height);
   }
 
   /**
@@ -543,7 +569,7 @@ class IText extends ITextClickBehavior {
     };
   }
   dispose() {
-    this._exitEditing();
+    this.exitEditingImpl();
     this.draggableTextDelegate.dispose();
     super.dispose();
   }

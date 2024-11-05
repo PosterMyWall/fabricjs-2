@@ -1,4 +1,4 @@
-import type { ImageFormat } from '../../typedefs';
+import type { ImageFormat, TSize } from '../../typedefs';
 /**
  * Creates canvas element
  * @return {CanvasElement} initialized canvas element
@@ -15,6 +15,7 @@ export declare const createImage: () => HTMLImageElement;
  * @return {CanvasElement} initialized canvas element
  */
 export declare const copyCanvasElement: (canvas: HTMLCanvasElement) => HTMLCanvasElement;
+export declare const createCanvasElementFor: (canvas: HTMLCanvasElement | ImageData | HTMLImageElement | TSize) => HTMLCanvasElement;
 /**
  * since 2.6.0 moved from canvas instance to utility.
  * possibly useless

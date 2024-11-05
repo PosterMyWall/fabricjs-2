@@ -665,8 +665,11 @@ export class FabricImage<
       elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
     }
 
+    const t1 = performance.now();
     elementToDraw &&
       ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+    const t2 = performance.now();
+    console.log('Draw image ctx',t2-t1)
   }
 
   /**
@@ -696,9 +699,10 @@ export class FabricImage<
 
     if (this._element === videoEl) {
       // if the element is the same we need to create a new element
-      const canvasEl = createCanvasElement();
-      canvasEl.width = sourceWidth;
-      canvasEl.height = sourceHeight;
+      const canvasEl = createCanvasElementFor({
+        width: sourceWidth,
+        height: sourceHeight,
+      });
       this._element = canvasEl;
       this._filteredEl = canvasEl;
     } else {

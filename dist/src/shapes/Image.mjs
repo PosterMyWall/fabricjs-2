@@ -4,7 +4,7 @@ import { getFilterBackend } from '../filters/FilterBackend.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
 import { uid } from '../util/internals/uid.mjs';
-import { createCanvasElement } from '../util/misc/dom.mjs';
+import { createCanvasElementFor } from '../util/misc/dom.mjs';
 import { findScaleToFit, findScaleToCover } from '../util/misc/findScaleTo.mjs';
 import { loadImage, enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
 import { parsePreserveAspectRatioAttribute } from '../util/misc/svgParsing.mjs';
@@ -343,15 +343,15 @@ class FabricImage extends FabricObject {
       this._lastScaleY = scaleY;
       return;
     }
-    const canvasEl = createCanvasElement(),
-      sourceWidth = elementToFilter.width,
-      sourceHeight = elementToFilter.height;
-    canvasEl.width = sourceWidth;
-    canvasEl.height = sourceHeight;
+    const canvasEl = createCanvasElementFor(elementToFilter),
+      {
+        width,
+        height
+      } = elementToFilter;
     this._element = canvasEl;
     this._lastScaleX = filter.scaleX = scaleX;
     this._lastScaleY = filter.scaleY = scaleY;
-    getFilterBackend().applyFilters([filter], elementToFilter, sourceWidth, sourceHeight, this._element);
+    getFilterBackend().applyFilters([filter], elementToFilter, width, height, this._element);
     this._filterScalingX = canvasEl.width / this._originalElement.width;
     this._filterScalingY = canvasEl.height / this._originalElement.height;
   }
@@ -388,9 +388,10 @@ class FabricImage extends FabricObject {
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
-      const canvasEl = createCanvasElement();
-      canvasEl.width = sourceWidth;
-      canvasEl.height = sourceHeight;
+      const canvasEl = createCanvasElementFor({
+        width: sourceWidth,
+        height: sourceHeight
+      });
       this._element = canvasEl;
       this._filteredEl = canvasEl;
     } else if (this._filteredEl) {
@@ -476,7 +477,10 @@ class FabricImage extends FabricObject {
     if (this._element.nodeName === 'VIDEO') {
       elementToDraw = this._applyVideoFilter(this._element);
     }
+    const t1 = performance.now();
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+    const t2 = performance.now();
+    console.log('Draw image ctx', t2 - t1);
   }
 
   /**
@@ -503,9 +507,10 @@ class FabricImage extends FabricObject {
       sourceHeight = videoEl.height;
     if (this._element === videoEl) {
       // if the element is the same we need to create a new element
-      const canvasEl = createCanvasElement();
-      canvasEl.width = sourceWidth;
-      canvasEl.height = sourceHeight;
+      const canvasEl = createCanvasElementFor({
+        width: sourceWidth,
+        height: sourceHeight
+      });
       this._element = canvasEl;
       this._filteredEl = canvasEl;
     } else {

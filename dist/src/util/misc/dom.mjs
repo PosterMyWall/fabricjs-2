@@ -26,10 +26,14 @@ const createImage = () => getFabricDocument().createElement('img');
  */
 const copyCanvasElement = canvas => {
   var _newCanvas$getContext;
+  const newCanvas = createCanvasElementFor(canvas);
+  (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 || _newCanvas$getContext.drawImage(canvas, 0, 0);
+  return newCanvas;
+};
+const createCanvasElementFor = canvas => {
   const newCanvas = createCanvasElement();
   newCanvas.width = canvas.width;
   newCanvas.height = canvas.height;
-  (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 || _newCanvas$getContext.drawImage(canvas, 0, 0);
   return newCanvas;
 };
 
@@ -46,5 +50,5 @@ const isHTMLCanvas = canvas => {
   return !!canvas && canvas.getContext !== undefined;
 };
 
-export { copyCanvasElement, createCanvasElement, createImage, isHTMLCanvas, toDataURL };
+export { copyCanvasElement, createCanvasElement, createCanvasElementFor, createImage, isHTMLCanvas, toDataURL };
 //# sourceMappingURL=dom.mjs.map

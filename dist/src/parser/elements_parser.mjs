@@ -71,13 +71,13 @@ class ElementsParser {
 
   // TODO: resolveClipPath could be run once per clippath with minor work per object.
   // is a refactor that i m not sure is worth on this code
-  async resolveClipPath(obj, usingElement) {
+  async resolveClipPath(obj, usingElement, exactOwner) {
     const clipPathElements = this.extractPropertyDefinition(obj, 'clipPath', this.clipPaths);
     if (clipPathElements) {
       const objTransformInv = invertTransform(obj.calcTransformMatrix());
       const clipPathTag = clipPathElements[0].parentElement;
       let clipPathOwner = usingElement;
-      while (clipPathOwner.parentElement && clipPathOwner.getAttribute('clip-path') !== obj.clipPath) {
+      while (!exactOwner && clipPathOwner.parentElement && clipPathOwner.getAttribute('clip-path') !== obj.clipPath) {
         clipPathOwner = clipPathOwner.parentElement;
       }
       // move the clipPath tag as sibling to the real element that is using it
@@ -100,7 +100,11 @@ class ElementsParser {
       const clipPath = container.length === 1 ? container[0] : new Group(container);
       const gTransform = multiplyTransformMatrices(objTransformInv, clipPath.calcTransformMatrix());
       if (clipPath.clipPath) {
-        await this.resolveClipPath(clipPath, clipPathOwner);
+        await this.resolveClipPath(clipPath, clipPathOwner,
+        // this is tricky.
+        // it tries to differentiate from when clipPaths are inherited by outside groups
+        // or when are really clipPaths referencing other clipPaths
+        clipPathTag.getAttribute('clip-path') ? clipPathOwner : undefined);
       }
       const {
         scaleX,
