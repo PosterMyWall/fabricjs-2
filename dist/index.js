@@ -3532,9 +3532,11 @@
         cleanup: t10 - t9,
         totalTime: t10 - t1
       };
+      let logMessage = '';
       for (const [key, value] of Object.entries(times)) {
+        logMessage += "".concat(key, " ").concat(String(Math.round(value)), "ms ");
       }
-      // console.log(logMessage);
+      console.log(logMessage);
     }
 
     /**
