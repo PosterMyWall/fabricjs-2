@@ -564,6 +564,7 @@ export class StaticCanvas<
       return;
     }
 
+    const t1 = performance.now();
     const v = this.viewportTransform,
       path = this.clipPath;
     this.calcViewportBoundaries();
@@ -572,16 +573,21 @@ export class StaticCanvas<
     // @ts-expect-error node-canvas stuff
     ctx.patternQuality = 'best';
     this.fire('before:render', { ctx });
+    const t2 = performance.now();
     this._renderBackground(ctx);
+    const t3 = performance.now();
 
     ctx.save();
     //apply viewport transform once for all rendering process
     ctx.transform(v[0], v[1], v[2], v[3], v[4], v[5]);
+    const t4 = performance.now();
     this._renderObjects(ctx, objects);
+    const t5 = performance.now();
     ctx.restore();
     if (!this.controlsAboveOverlay && !this.skipControlsDrawing) {
       this.drawControls(ctx);
     }
+    const t6 = performance.now();
     if (path) {
       path._set('canvas', this);
       // needed to setup a couple of variables
@@ -590,16 +596,37 @@ export class StaticCanvas<
       path.renderCache({ forClipping: true });
       this.drawClipPathOnCanvas(ctx, path as TCachedFabricObject);
     }
+    const t7 = performance.now();
     this._renderOverlay(ctx);
+    const t8 = performance.now();
     if (this.controlsAboveOverlay && !this.skipControlsDrawing) {
       this.drawControls(ctx);
     }
+    const t9 = performance.now();
     this.fire('after:render', { ctx });
 
     if (this.__cleanupTask) {
       this.__cleanupTask();
       this.__cleanupTask = undefined;
     }
+    const t10 = performance.now();
+    const times = {
+      randomStartTime: t2-t1,
+      renderBackground: t3-t2,
+      transform: t4-t3,
+      renderObjects: t5-t4,
+      drawControls: t6-t5,
+      pathThingy: t7-t6,
+      renderOverlay: t8-t7,
+      drawControlsOverlay: t9-t8,
+      cleanup: t10-t9,
+      totalTime: t10-t1,
+    }
+    let logMessage = '';
+    for (const [key, value] of Object.entries(times)) {
+      logMessage += `${key} ${String(Math.round(value))}ms `;
+    }
+    console.trace(logMessage);
   }
 
   /**
