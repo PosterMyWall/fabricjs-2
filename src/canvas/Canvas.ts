@@ -218,7 +218,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
   }
 
   /**
-   * Removes all event listeners
+   * Removes all event listeners, used when disposing the instance
    */
   removeListeners() {
     this.addOrRemove(removeListener, 'remove');
@@ -249,6 +249,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this._onTouchMove as EventListener,
       addEventOptions,
     );
+    clearTimeout(this._willAddMouseDown);
   }
 
   /**
@@ -618,11 +619,24 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @param {Event} e Event object fired on mousedown
    */
   _onTouchStart(e: TouchEvent) {
-    e.preventDefault();
+    // we will prevent scrolling if allowTouchScrolling is not enabled and
+    let shouldPreventScrolling = !this.allowTouchScrolling;
+    const currentActiveObject = this._activeObject;
     if (this.mainTouchId === undefined) {
       this.mainTouchId = this.getPointerId(e);
     }
     this.__onMouseDown(e);
+    // after executing fabric logic for mouse down let's see
+    // if we didn't change target or if we are drawing
+    // we want to prevent scrolling anyway
+    if (
+      this.isDrawingMode ||
+      (currentActiveObject && this._target === currentActiveObject)
+    ) {
+      shouldPreventScrolling = true;
+    }
+    // prevent default, will block scrolling from start
+    shouldPreventScrolling && e.preventDefault();
     this._resetTransformEventData();
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
@@ -634,11 +648,13 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       addEventOptions,
     );
     // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    // if we scroll don't register the touch move event
+    shouldPreventScrolling &&
     addListener(
       doc,
       'touchmove',
       this._onTouchMove as EventListener,
-      addEventOptions
+      addEventOptions,
     );
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(
