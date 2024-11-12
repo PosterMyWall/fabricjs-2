@@ -749,41 +749,19 @@ export class FabricObject<
       return;
     }
     ctx.save();
-    const t1 = performance.now();
     this._setupCompositeOperation(ctx);
     this.drawSelectionBackground(ctx);
-    const t2 = performance.now();
     this.transform(ctx);
     this._setOpacity(ctx);
     this._setShadow(ctx);
-    const t3 = performance.now();
-    let t4 = performance.now();
-    let t5 = performance.now();
     if (this.shouldCache()) {
       (this as TCachedFabricObject).renderCache();
-      t4 = performance.now();
       (this as TCachedFabricObject).drawCacheOnCanvas(ctx);
-       t5 = performance.now();
     } else {
       this._removeCacheCanvas();
-       t4 = performance.now();
       this.drawObject(ctx, false, {});
-      t5 = performance.now();
       this.dirty = false;
     }
-    const times = {
-      drawSelectonBackground: t2-t1,
-      setBackgroundShadow: t3-t2,
-      shoudCache: this.shouldCache() ? 1 : 0,
-      rendercacheOrRemoveCache: t4-t3,
-      drawObject: t5-t4,
-      total: t5-t1,
-    }
-    let logMessage = '';
-    for (const [key, value] of Object.entries(times)) {
-      logMessage += `${key} ${String(Math.round(value))}ms `;
-    }
-    console.log(logMessage);
     ctx.restore();
   }
 

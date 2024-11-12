@@ -281,6 +281,7 @@ export declare class Group extends Group_base implements GroupProps {
      * @return {Boolean}
      */
     willDrawShadow(): boolean;
+    isGroup(): this is Group;
     /**
      * Check if instance or its group are caching, recursively up
      * @return {Boolean}

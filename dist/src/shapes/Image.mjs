@@ -477,10 +477,7 @@ class FabricImage extends FabricObject {
     if (this._element.nodeName === 'VIDEO') {
       elementToDraw = this._applyVideoFilter(this._element);
     }
-    const t1 = performance.now();
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
-    const t2 = performance.now();
-    console.log('Draw image ctx', t2 - t1);
   }
 
   /**

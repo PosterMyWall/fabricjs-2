@@ -470,6 +470,9 @@ class Group extends createCollectionMixin(FabricObject) {
     }
     return false;
   }
+  isGroup() {
+    return true;
+  }
 
   /**
    * Check if instance or its group are caching, recursively up

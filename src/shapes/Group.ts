@@ -582,6 +582,10 @@ export class Group
     return false;
   }
 
+  isGroup(): this is Group {
+    return true;
+  }
+
   /**
    * Check if instance or its group are caching, recursively up
    * @return {Boolean}
