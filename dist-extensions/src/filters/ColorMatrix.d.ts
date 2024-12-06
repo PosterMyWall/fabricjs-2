@@ -1,6 +1,6 @@
 import { BaseFilter } from './BaseFilter';
 import type { T2DPipelineState, TMatColorMatrix, TWebGLUniformLocationMap } from './typedefs';
-type ColorMatrixOwnProps = {
+export type ColorMatrixOwnProps = {
     matrix: TMatColorMatrix;
     colorsOnly: boolean;
 };
@@ -21,7 +21,7 @@ export declare const colorMatrixDefaultValues: ColorMatrixOwnProps;
    * object.filters.push(filter);
    * object.applyFilters();
    */
-export declare class ColorMatrix<Name extends string = 'ColorMatrix', OwnProps extends object = ColorMatrixOwnProps> extends BaseFilter<Name, OwnProps> {
+export declare class ColorMatrix<Name extends string = 'ColorMatrix', OwnProps extends object = ColorMatrixOwnProps, SerializedProps extends object = ColorMatrixOwnProps> extends BaseFilter<Name, OwnProps, SerializedProps> {
     /**
      * Colormatrix for pixels.
      * array of 20 floats. Numbers in positions 4, 9, 14, 19 loose meaning
@@ -58,9 +58,6 @@ export declare class ColorMatrix<Name extends string = 'ColorMatrix', OwnProps e
     sendUniformData(gl: WebGLRenderingContext, uniformLocations: TWebGLUniformLocationMap): void;
     toObject(): {
         type: Name;
-    } & OwnProps & {
-        matrix: TMatColorMatrix;
-    };
+    } & SerializedProps;
 }
-export {};
 //# sourceMappingURL=ColorMatrix.d.ts.map

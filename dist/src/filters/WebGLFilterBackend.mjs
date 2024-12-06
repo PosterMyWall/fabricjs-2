@@ -81,12 +81,8 @@ class WebGLFilterBackend {
       cachedTexture = this.getCachedTexture(cacheKey, source);
     }
     const pipelineState = {
-      originalWidth: source.width ||
-      // @ts-expect-error is this a bug? should this be naturalWidth? or is this the pipeline state?
-      source.originalWidth || 0,
-      originalHeight: source.height ||
-      // @ts-expect-error is this a bug? should this be naturalHeight? or is this the pipeline state?
-      source.originalHeight || 0,
+      originalWidth: source.width || source.naturalWidth || 0,
+      originalHeight: source.height || source.naturalHeight || 0,
       sourceWidth: width,
       sourceHeight: height,
       destinationWidth: width,

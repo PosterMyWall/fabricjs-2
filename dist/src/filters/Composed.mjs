@@ -32,7 +32,6 @@ class Composed extends BaseFilter {
    * Serialize this filter into JSON.
    * @returns {Object} A JSON representation of this filter.
    */
-  //@ts-expect-error TS doesn't like this toObject
   toObject() {
     return {
       type: this.type,

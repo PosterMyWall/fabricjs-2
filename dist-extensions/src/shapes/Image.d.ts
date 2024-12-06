@@ -297,7 +297,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      */
     static fromObject<T extends TOptions<SerializedImageProps>>({ filters: f, resizeFilter: rf, src, crossOrigin, type, ...object }: T, options?: Abortable): Promise<FabricImage<Omit<T, "type" | "crossOrigin" | "filters" | "resizeFilter" | "src"> & {
         src: string | undefined;
-        filters: BaseFilter<string, object>[];
+        filters: BaseFilter<string, object, object>[];
         resizeFilter: any;
     }, SerializedImageProps, ObjectEvents>>;
     /**

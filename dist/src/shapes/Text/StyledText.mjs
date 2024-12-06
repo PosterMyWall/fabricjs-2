@@ -74,8 +74,6 @@ class StyledText extends FabricObject {
    * has no other properties, then it is also deleted.  Finally,
    * if the line containing that character has no other characters
    * then it also is deleted.
-   *
-   * @param {string} property The property to compare between characters and text.
    */
   cleanStyle(property) {
     if (!this.styles) {
@@ -121,7 +119,6 @@ class StyledText extends FabricObject {
       graphemeCount += this._textLines[i].length;
     }
     if (allStyleObjectPropertiesMatch && stylesCount === graphemeCount) {
-      // @ts-expect-error conspiracy theory of TS
       this[property] = stylePropertyValue;
       this.removeStyle(property);
     }

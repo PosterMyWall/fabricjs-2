@@ -1,12 +1,15 @@
 import { BaseFilter } from './BaseFilter';
 import type { T2DPipelineState, TWebGLPipelineState } from './typedefs';
 type ComposedOwnProps = {
-    subFilters: BaseFilter<string, object>[];
+    subFilters: BaseFilter<string, object, object>[];
+};
+type ComposedSerializedProps = {
+    subFilters: Record<string, unknown>[];
 };
 /**
  * A container class that knows how to apply a sequence of filters to an input image.
  */
-export declare class Composed extends BaseFilter<'Composed', ComposedOwnProps> {
+export declare class Composed extends BaseFilter<'Composed', ComposedOwnProps, ComposedSerializedProps> {
     /**
      * A non sparse array of filters to apply
      */
@@ -27,8 +30,10 @@ export declare class Composed extends BaseFilter<'Composed', ComposedOwnProps> {
      * @returns {Object} A JSON representation of this filter.
      */
     toObject(): {
-        type: 'Composed';
-        subFilters: ReturnType<BaseFilter<string, object>['toObject']>[];
+        type: "Composed";
+        subFilters: ({
+            type: string;
+        } & object)[];
     };
     isNeutralState(): boolean;
     /**

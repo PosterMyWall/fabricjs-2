@@ -41,8 +41,6 @@ export declare abstract class StyledText<Props extends TOptions<FabricObjectProp
      * has no other properties, then it is also deleted.  Finally,
      * if the line containing that character has no other characters
      * then it also is deleted.
-     *
-     * @param {string} property The property to compare between characters and text.
      */
     cleanStyle(property: keyof TextStyleDeclaration): false | undefined;
     /**

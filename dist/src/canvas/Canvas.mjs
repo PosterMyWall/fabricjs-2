@@ -934,9 +934,7 @@ class Canvas extends SelectableCanvas {
    * @private
    */
   _resetTransformEventData() {
-    this._target = undefined;
-    this._pointer = undefined;
-    this._absolutePointer = undefined;
+    this._target = this._pointer = this._absolutePointer = undefined;
   }
 
   /**
@@ -1249,7 +1247,7 @@ class Canvas extends SelectableCanvas {
         }
         this._fireSelectionEvents(prevActiveObjects, e);
       } else {
-        activeObject.exitEditing && activeObject.exitEditing();
+        activeObject.isEditing && activeObject.exitEditing();
         // add the active object and the target to the active selection and set it as the active object
         const klass = classRegistry.getClass('ActiveSelection');
         const newActiveSelection = new klass([], {

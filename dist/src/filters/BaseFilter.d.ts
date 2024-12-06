@@ -1,6 +1,6 @@
 import type { T2DPipelineState, TWebGLAttributeLocationMap, TWebGLPipelineState, TWebGLProgramCacheItem, TWebGLUniformLocationMap } from './typedefs';
 import type { Abortable } from '../typedefs';
-export declare class BaseFilter<Name extends string, OwnProps extends Record<string, any> = object> {
+export declare class BaseFilter<Name extends string, OwnProps extends Record<string, any> = object, SerializedProps extends Record<string, any> = OwnProps> {
     /**
      * Filter type
      * @param {String} type
@@ -142,14 +142,14 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
      */
     toObject(): {
         type: Name;
-    } & OwnProps;
+    } & SerializedProps;
     /**
      * Returns a JSON representation of an instance
      * @return {Object} JSON
      */
     toJSON(): {
         type: Name;
-    } & OwnProps;
+    } & SerializedProps;
     static fromObject({ type, ...filterOptions }: Record<string, any>, _options: Abortable): Promise<BaseFilter<string, object>>;
 }
 //# sourceMappingURL=BaseFilter.d.ts.map

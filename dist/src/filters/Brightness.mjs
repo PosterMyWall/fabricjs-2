@@ -35,9 +35,9 @@ class Brightness extends BaseFilter {
     } = _ref;
     const brightness = Math.round(this.brightness * 255);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = data[i] + brightness;
-      data[i + 1] = data[i + 1] + brightness;
-      data[i + 2] = data[i + 2] + brightness;
+      data[i] += brightness;
+      data[i + 1] += brightness;
+      data[i + 2] += brightness;
     }
   }
   isNeutralState() {

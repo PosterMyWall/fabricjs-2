@@ -28,8 +28,6 @@ class ITextClickBehavior extends ITextKeyBehavior {
     this.__lastLastClickTime = +new Date();
     this.__lastPointer = {};
     this.on('mousedown', this.onMouseDown);
-
-    // @ts-expect-error in reality it is an IText instance
     this.draggableTextDelegate = new DraggableTextDelegate(this);
     super.initBehavior();
   }

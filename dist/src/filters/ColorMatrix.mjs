@@ -44,15 +44,14 @@ class ColorMatrix extends BaseFilter {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      if (colorsOnly) {
-        data[i] = r * m[0] + g * m[1] + b * m[2] + m[4] * 255;
-        data[i + 1] = r * m[5] + g * m[6] + b * m[7] + m[9] * 255;
-        data[i + 2] = r * m[10] + g * m[11] + b * m[12] + m[14] * 255;
-      } else {
+      data[i] = r * m[0] + g * m[1] + b * m[2] + m[4] * 255;
+      data[i + 1] = r * m[5] + g * m[6] + b * m[7] + m[9] * 255;
+      data[i + 2] = r * m[10] + g * m[11] + b * m[12] + m[14] * 255;
+      if (!colorsOnly) {
         const a = data[i + 3];
-        data[i] = r * m[0] + g * m[1] + b * m[2] + a * m[3] + m[4] * 255;
-        data[i + 1] = r * m[5] + g * m[6] + b * m[7] + a * m[8] + m[9] * 255;
-        data[i + 2] = r * m[10] + g * m[11] + b * m[12] + a * m[13] + m[14] * 255;
+        data[i] += a * m[3];
+        data[i + 1] += a * m[8];
+        data[i + 2] += a * m[13];
         data[i + 3] = r * m[15] + g * m[16] + b * m[17] + a * m[18] + m[19] * 255;
       }
     }

@@ -5,7 +5,6 @@ import { classRegistry } from '../ClassRegistry.mjs';
 function createColorMatrixFilter(key, matrix) {
   var _Class;
   const newClass = (_Class = class newClass extends ColorMatrix {
-    //@ts-expect-error TS wants matrix to be exported.
     toObject() {
       return {
         type: this.type,

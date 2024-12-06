@@ -1,6 +1,9 @@
-import { ColorMatrix } from './ColorMatrix';
+import { ColorMatrix, type ColorMatrixOwnProps } from './ColorMatrix';
 import type { TWebGLPipelineState, T2DPipelineState } from './typedefs';
-export type HueRotationOwnProps = {
+export type HueRotationOwnProps = ColorMatrixOwnProps & {
+    rotation: number;
+};
+export type HueRotationSerializedProps = {
     rotation: number;
 };
 export declare const hueRotationDefaultValues: HueRotationOwnProps;
@@ -13,7 +16,7 @@ export declare const hueRotationDefaultValues: HueRotationOwnProps;
  * object.filters.push(filter);
  * object.applyFilters();
  */
-export declare class HueRotation extends ColorMatrix<'HueRotation', HueRotationOwnProps> {
+export declare class HueRotation extends ColorMatrix<'HueRotation', HueRotationOwnProps, HueRotationSerializedProps> {
     /**
      * HueRotation value, from -1 to 1.
      */
@@ -24,7 +27,7 @@ export declare class HueRotation extends ColorMatrix<'HueRotation', HueRotationO
     isNeutralState(): boolean;
     applyTo(options: TWebGLPipelineState | T2DPipelineState): void;
     toObject(): {
-        type: 'HueRotation';
+        type: "HueRotation";
         rotation: number;
     };
 }

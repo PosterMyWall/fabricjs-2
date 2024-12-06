@@ -34,6 +34,7 @@ class Color {
    * @returns {TRGBAColorSource}
    */
   _tryParsingColor(color) {
+    color = color.toLowerCase();
     if (color in ColorNameMap) {
       color = ColorNameMap[color];
     }

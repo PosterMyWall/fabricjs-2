@@ -28,20 +28,21 @@ class Grayscale extends BaseFilter {
       }
     } = _ref;
     for (let i = 0, value; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
       switch (this.mode) {
         case 'average':
-          value = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          value = (r + g + b) / 3;
           break;
         case 'lightness':
-          value = (Math.min(data[i], data[i + 1], data[i + 2]) + Math.max(data[i], data[i + 1], data[i + 2])) / 2;
+          value = (Math.min(r, g, b) + Math.max(r, g, b)) / 2;
           break;
         case 'luminosity':
-          value = 0.21 * data[i] + 0.72 * data[i + 1] + 0.07 * data[i + 2];
+          value = 0.21 * r + 0.72 * g + 0.07 * b;
           break;
       }
-      data[i] = value;
-      data[i + 1] = value;
-      data[i + 2] = value;
+      data[i + 2] = data[i + 1] = data[i] = value;
     }
   }
   getCacheKey() {

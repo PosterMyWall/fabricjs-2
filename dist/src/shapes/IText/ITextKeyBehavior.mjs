@@ -97,10 +97,8 @@ class ITextKeyBehavior extends ITextBehavior {
     }
     const keyMap = this.direction === 'rtl' ? this.keysMapRtl : this.keysMap;
     if (e.keyCode in keyMap) {
-      // @ts-expect-error legacy method calling pattern
       this[keyMap[e.keyCode]](e);
     } else if (e.keyCode in this.ctrlKeysMapDown && (e.ctrlKey || e.metaKey)) {
-      // @ts-expect-error legacy method calling pattern
       this[this.ctrlKeysMapDown[e.keyCode]](e);
     } else {
       return;
@@ -129,7 +127,6 @@ class ITextKeyBehavior extends ITextBehavior {
       return;
     }
     if (e.keyCode in this.ctrlKeysMapUp && (e.ctrlKey || e.metaKey)) {
-      // @ts-expect-error legacy method calling pattern
       this[this.ctrlKeysMapUp[e.keyCode]](e);
     } else {
       return;
