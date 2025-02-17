@@ -1,2 +1,2 @@
-var p="6.5.3-pmw-36";export{p as version};
+var p="6.5.3-pmw-37";export{p as version};
 //# sourceMappingURL=package.json.min.mjs.map

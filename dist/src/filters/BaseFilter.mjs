@@ -63,7 +63,12 @@ class BaseFilter {
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
+    if (!gl) {
+      throw new FabricError('WebGL context could not be created');
+    }
     if (!vertexShader || !fragmentShader || !program) {
+      const error = gl.getError();
+      console.error('WebGL error:', error);
       throw new FabricError('Vertex, fragment shader or program creation error');
     }
     gl.shaderSource(vertexShader, vertexSource);
