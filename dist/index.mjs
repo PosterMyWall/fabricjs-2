@@ -422,7 +422,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.5.3-pmw-37";
+var version = "6.5.3-pmw-38";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -25096,8 +25096,11 @@ class FabricImage extends FabricObject {
     this._originalElement = element;
     this._setWidthHeight(size);
     element.classList.add(FabricImage.CSS_CANVAS);
+    console.log('________setElement', this.filters.length);
     if (this.filters.length !== 0) {
+      console.log('________setElement1', this.filters.length);
       this.applyFilters();
+      console.log('________setElement2', this.filters.length);
     }
     // resizeFilters work on the already filtered copy.
     // we need to apply resizeFilters AFTER normal filters.
@@ -25365,9 +25368,10 @@ class FabricImage extends FabricObject {
       sourceHeight = imgElement.naturalHeight || imgElement.height;
 
     //*PMW* Return here because filters need to be applied on each frame render for videos
-    if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
-      return this;
-    }
+    // if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
+    //   return this;
+    // }
+
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -25457,9 +25461,10 @@ class FabricImage extends FabricObject {
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
 
     //*PMW* if video apply filter on each frame draw
-    if (this._element.nodeName === 'VIDEO') {
-      elementToDraw = this._applyVideoFilter(this._element);
-    }
+    // if (this._element.nodeName === 'VIDEO') {
+    //   elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
+    // }
+
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
   }
 

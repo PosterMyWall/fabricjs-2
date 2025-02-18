@@ -210,7 +210,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * @param {Array} filters to be applied
      * @param {Boolean} forResizing specify if the filter operation is a resize operation
      */
-    applyFilters(filters?: BaseFilter<string, Record<string, any>>[]): this | undefined;
+    applyFilters(filters?: BaseFilter<string, Record<string, any>>[]): void;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on

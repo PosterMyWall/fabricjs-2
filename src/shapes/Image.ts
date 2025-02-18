@@ -239,8 +239,11 @@ export class FabricImage<
     this._originalElement = element;
     this._setWidthHeight(size);
     element.classList.add(FabricImage.CSS_CANVAS);
+    console.log('________setElement',this.filters.length);
     if (this.filters.length !== 0) {
+      console.log('________setElement1',this.filters.length);
       this.applyFilters();
+      console.log('________setElement2',this.filters.length);
     }
     // resizeFilters work on the already filtered copy.
     // we need to apply resizeFilters AFTER normal filters.
@@ -549,9 +552,9 @@ export class FabricImage<
         (imgElement as HTMLImageElement).naturalHeight || imgElement.height;
 
     //*PMW* Return here because filters need to be applied on each frame render for videos
-    if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
-      return this;
-    }
+    // if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
+    //   return this;
+    // }
 
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
@@ -661,9 +664,9 @@ export class FabricImage<
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
 
     //*PMW* if video apply filter on each frame draw
-    if (this._element.nodeName === 'VIDEO') {
-      elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
-    }
+    // if (this._element.nodeName === 'VIDEO') {
+    //   elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
+    // }
 
     elementToDraw &&
       ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
