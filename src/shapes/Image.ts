@@ -45,7 +45,6 @@ interface UniqueImageProps {
   cropX: number;
   cropY: number;
   imageSmoothing: boolean;
-  ignoreApplyFilters: boolean;
   filters: BaseFilter<string, Record<string, any>>[];
   resizeFilter?: Resize;
 }
@@ -57,7 +56,6 @@ export const imageDefaultValues: Partial<TClassProperties<FabricImage>> = {
   cropX: 0,
   cropY: 0,
   imageSmoothing: true,
-  ignoreApplyFilters: false,
 };
 
 export interface SerializedImageProps extends SerializedObjectProps {
@@ -77,10 +75,10 @@ const IMAGE_PROPS = ['cropX', 'cropY'] as const;
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#images}
  */
 export class FabricImage<
-    Props extends TOptions<ImageProps> = Partial<ImageProps>,
-    SProps extends SerializedImageProps = SerializedImageProps,
-    EventSpec extends ObjectEvents = ObjectEvents,
-  >
+  Props extends TOptions<ImageProps> = Partial<ImageProps>,
+  SProps extends SerializedImageProps = SerializedImageProps,
+  EventSpec extends ObjectEvents = ObjectEvents,
+>
   extends FabricObject<Props, SProps, EventSpec>
   implements ImageProps
 {
@@ -164,8 +162,6 @@ export class FabricImage<
    */
   declare imageSmoothing: boolean;
 
-  declare ignoreApplyFilters: boolean;
-
   declare preserveAspectRatio: string;
 
   protected declare src: string;
@@ -189,7 +185,6 @@ export class FabricImage<
       ...FabricImage.ownDefaults,
     };
   }
-
   /**
    * Constructor
    * Image can be initialized with any canvas drawable or a string.
@@ -210,9 +205,9 @@ export class FabricImage<
     this.setElement(
       typeof arg0 === 'string'
         ? ((
-            (this.canvas && getDocumentFromElement(this.canvas.getElement())) ||
-            getFabricDocument()
-          ).getElementById(arg0) as ImageSource)
+          (this.canvas && getDocumentFromElement(this.canvas.getElement())) ||
+          getFabricDocument()
+        ).getElementById(arg0) as ImageSource)
         : arg0,
       options,
     );
@@ -239,11 +234,8 @@ export class FabricImage<
     this._originalElement = element;
     this._setWidthHeight(size);
     element.classList.add(FabricImage.CSS_CANVAS);
-    console.log('________setElement',this.filters.length);
     if (this.filters.length !== 0) {
-      console.log('________setElement1',this.filters.length);
       this.applyFilters();
-      console.log('________setElement2',this.filters.length);
     }
     // resizeFilters work on the already filtered copy.
     // we need to apply resizeFilters AFTER normal filters.
@@ -387,14 +379,14 @@ export class FabricImage<
       svgString.push(
         '<clipPath id="imageCrop_' + clipPathId + '">\n',
         '\t<rect x="' +
-          x +
-          '" y="' +
-          y +
-          '" width="' +
-          this.width +
-          '" height="' +
-          this.height +
-          '" />\n',
+        x +
+        '" y="' +
+        y +
+        '" width="' +
+        this.width +
+        '" height="' +
+        this.height +
+        '" />\n',
         '</clipPath>\n',
       );
       clipPath = ' clip-path="url(#imageCrop_' + clipPathId + ')" ';
@@ -552,9 +544,9 @@ export class FabricImage<
         (imgElement as HTMLImageElement).naturalHeight || imgElement.height;
 
     //*PMW* Return here because filters need to be applied on each frame render for videos
-    // if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
-    //   return this;
-    // }
+    if (imgElement.nodeName === 'VIDEO') {
+      return this;
+    }
 
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
@@ -664,9 +656,9 @@ export class FabricImage<
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
 
     //*PMW* if video apply filter on each frame draw
-    // if (this._element.nodeName === 'VIDEO') {
-    //   elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
-    // }
+    if (this._element.nodeName === 'VIDEO') {
+      elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
+    }
 
     elementToDraw &&
       ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);

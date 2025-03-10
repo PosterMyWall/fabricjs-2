@@ -156,7 +156,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
         includeDefaultValues: boolean;
         excludeFromExport: boolean;
         opacity: number;
-        globalCompositeOperation: "color" | "screen" | "color-burn" | "color-dodge" | "copy" | "darken" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "lighter" | "luminosity" | "multiply" | "overlay" | "saturation" | "soft-light" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
+        globalCompositeOperation: "color" | "screen" | "copy" | "color-burn" | "color-dodge" | "darken" | "destination-atop" | "destination-in" | "destination-out" | "destination-over" | "difference" | "exclusion" | "hard-light" | "hue" | "lighten" | "lighter" | "luminosity" | "multiply" | "overlay" | "saturation" | "soft-light" | "source-atop" | "source-in" | "source-out" | "source-over" | "xor";
         backgroundColor: string;
         leanBackground: boolean;
         leanBackgroundOffset: number;

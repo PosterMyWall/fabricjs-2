@@ -26,8 +26,7 @@ const imageDefaultValues = {
   minimumScaleTrigger: 0.5,
   cropX: 0,
   cropY: 0,
-  imageSmoothing: true,
-  ignoreApplyFilters: false
+  imageSmoothing: true
 };
 const IMAGE_PROPS = ['cropX', 'cropY'];
 
@@ -38,7 +37,6 @@ class FabricImage extends FabricObject {
   static getDefaults() {
     return _objectSpread2(_objectSpread2({}, super.getDefaults()), FabricImage.ownDefaults);
   }
-
   /**
    * Constructor
    * Image can be initialized with any canvas drawable or a string.
@@ -113,11 +111,8 @@ class FabricImage extends FabricObject {
     this._originalElement = element;
     this._setWidthHeight(size);
     element.classList.add(FabricImage.CSS_CANVAS);
-    console.log('________setElement', this.filters.length);
     if (this.filters.length !== 0) {
-      console.log('________setElement1', this.filters.length);
       this.applyFilters();
-      console.log('________setElement2', this.filters.length);
     }
     // resizeFilters work on the already filtered copy.
     // we need to apply resizeFilters AFTER normal filters.
@@ -385,10 +380,9 @@ class FabricImage extends FabricObject {
       sourceHeight = imgElement.naturalHeight || imgElement.height;
 
     //*PMW* Return here because filters need to be applied on each frame render for videos
-    // if (imgElement.nodeName === 'VIDEO' || this.ignoreApplyFilters) {
-    //   return this;
-    // }
-
+    if (imgElement.nodeName === 'VIDEO') {
+      return this;
+    }
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -478,10 +472,9 @@ class FabricImage extends FabricObject {
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
 
     //*PMW* if video apply filter on each frame draw
-    // if (this._element.nodeName === 'VIDEO') {
-    //   elementToDraw = this._applyVideoFilter(this._element as HTMLVideoElement);
-    // }
-
+    if (this._element.nodeName === 'VIDEO') {
+      elementToDraw = this._applyVideoFilter(this._element);
+    }
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
   }
 

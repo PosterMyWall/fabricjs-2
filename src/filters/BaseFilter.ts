@@ -98,12 +98,17 @@ export class BaseFilter<
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
 
+    gl.canvas.addEventListener('webglcontextlost', (event) => {
+      console.warn('WebGL context lost');
+      event.preventDefault();
+    });
+
     if (!gl) {
       throw new FabricError('WebGL context could not be created');
     }
 
     if (!vertexShader || !fragmentShader || !program) {
-      const error = gl.getError();
+      const error = gl.getError().toString(16);
       console.error('WebGL error:', error);
       throw new FabricError(
         'Vertex, fragment shader or program creation error',
