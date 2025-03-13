@@ -107,23 +107,6 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
-     * *PMW* added property to allow group selection on mobile phones.
-     * @type Boolean
-     * @default
-     */
-    _defineProperty(this, "enableGroupSelection", false);
-    /**
-     * *PMW* added property to disable the drag group selection.
-     * @type Boolean
-     * @default
-     */
-    _defineProperty(this, "disableGroupSelector", false);
-    /**
-     * *PMW* added variable to mark when canvas is being two-finger panned.
-     * @type Boolean
-     */
-    _defineProperty(this, "isCanvasTwoFingerPanning", false);
-    /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number
@@ -478,7 +461,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.5.3-pmw-39";
+var version = "6.6.1";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -1652,6 +1635,9 @@ const toDataURL = (canvasEl, format, quality) => canvasEl.toDataURL("image/".con
 const isHTMLCanvas = canvas => {
   return !!canvas && canvas.getContext !== undefined;
 };
+const toBlob = (canvasEl, format, quality) => new Promise((resolve, _) => {
+  canvasEl.toBlob(resolve, "image/".concat(format), quality);
+});
 
 /**
  * Transforms degrees to radians.
@@ -4031,20 +4017,10 @@ let StaticCanvas$1 = class StaticCanvas extends createCollectionMixin(CommonMeth
    */
   _setSVGObjects(markup, reviver) {
     this.forEachObject(fabricObject => {
-      // *PMW*: Attaching pmw id
-      const uid = fabricObject.__PMWID;
       if (fabricObject.excludeFromExport) {
         return;
       }
-      // *PMW*
-      if (uid) {
-        markup.push("<g id=\"".concat(uid, "\">\n"));
-      }
       this._setSVGObject(markup, fabricObject, reviver);
-      // *PMW*
-      if (uid) {
-        markup.push("</g id=\"".concat(uid, "\">\n"));
-      }
     });
   }
 
@@ -4222,6 +4198,17 @@ let StaticCanvas$1 = class StaticCanvas extends createCollectionMixin(CommonMeth
     } = options;
     const finalMultiplier = multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
     return toDataURL(this.toCanvasElement(finalMultiplier, options), format, quality);
+  }
+  toBlob() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    const {
+      format = 'png',
+      quality = 1,
+      multiplier = 1,
+      enableRetinaScaling = false
+    } = options;
+    const finalMultiplier = multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
+    return toBlob(this.toCanvasElement(finalMultiplier, options), format, quality);
   }
 
   /**
@@ -5214,22 +5201,15 @@ const fabricObjectDefaultValues = {
   paintFirst: FILL,
   fill: 'rgb(0,0,0)',
   fillRule: 'nonzero',
-  __PMWID: '',
-  erasable: false,
   stroke: null,
   strokeDashArray: null,
-  leanBackground: false,
-  leanBackgroundOffset: 0,
   strokeDashOffset: 0,
   strokeLineCap: 'butt',
   strokeLineJoin: 'miter',
-  pmwBmBtnText: '',
-  pmwBmBtnIcon: '',
   strokeMiterLimit: 4,
   globalCompositeOperation: 'source-over',
   backgroundColor: '',
   shadow: null,
-  uniformScaling: true,
   visible: true,
   includeDefaultValues: true,
   excludeFromExport: false,
@@ -7213,7 +7193,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
   }
 
   /**
-   * When set to `true`, force the object to have its own cache, even if it is inside a group
+   * When returns `true`, force the object to have its own cache, even if it is inside a group
    * it may be needed when your object behave in a particular way on the cache and always needs
    * its own isolated canvas to render correctly.
    * Created to be overridden
@@ -7221,6 +7201,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
    * @returns Boolean
    */
   needsItsOwnCache() {
+    // TODO re-evaluate this shadow condition
     if (this.paintFirst === STROKE && this.hasFill() && this.hasStroke() && !!this.shadow) {
       return true;
     }
@@ -7234,13 +7215,13 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
    * Decide if the object should cache or not. Create its own cache level
    * objectCaching is a global flag, wins over everything
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group outside is cached.
    * Read as: cache if is needed, or if the feature is enabled but we are not already caching.
    * @return {Boolean}
    */
   shouldCache() {
-    this.ownCaching = this.needsItsOwnCache() || this.objectCaching && (!this.parent || !this.parent.isOnACache());
+    this.ownCaching = this.objectCaching && (!this.parent || !this.parent.isOnACache()) || this.needsItsOwnCache();
     return this.ownCaching;
   }
 
@@ -7340,7 +7321,10 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
   }
 
   /**
-   * Check if cache is dirty
+   * Check if cache is dirty and if is dirty clear the context.
+   * This check has a big side effect, it changes the underlying cache canvas if necessary.
+   * Do not call this method on your own to check if the cache is dirty, because if it is,
+   * it is also going to wipe the cache. This is badly designed and needs to be fixed.
    * @param {Boolean} skipCanvas skip canvas checks because this object is painted
    * on parent canvas.
    */
@@ -7377,25 +7361,9 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
     if (!this.backgroundColor) {
       return;
     }
-    if (this.leanBackground) {
-      ctx.save();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.beginPath();
-      const offset = this.leanBackgroundOffset / 4,
-        slant = this.leanBackgroundOffset / 2,
-        yFix = this.leanBackgroundOffset / 10;
-      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
-      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    } else {
-      const dim = this._getNonTransformedDimensions();
-      ctx.fillStyle = this.backgroundColor;
-      ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
-    }
+    const dim = this._getNonTransformedDimensions();
+    ctx.fillStyle = this.backgroundColor;
+    ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
     // if there is background color no other shadows
     // should be casted
     this._removeShadow(ctx);
@@ -7729,24 +7697,6 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
       boundingRect = this.getBoundingRect(),
       shadow = this.shadow,
       shadowOffset = new Point();
-
-    /*________________________ *PMW* added portion start ________________________*/
-    // extends bounding box to cater to font of text objects inside group item (text/slideshow item).
-    // This is used to prevent text from getting cut off during pdf generation.
-
-    if (options.expandBoundingBoxByFont && this.isGroup()) {
-      let maxWidthToAdd = 0,
-        maxHeightToAdd = 0;
-      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
-      if (maxFontSize > 0) {
-        maxWidthToAdd = boundingRect.width * 0.75;
-        maxHeightToAdd = boundingRect.height * 0.75;
-      }
-      boundingRect.width += maxWidthToAdd;
-      boundingRect.height += maxHeightToAdd;
-    }
-    /*________________________ *PMW* added portion end ________________________*/
-
     if (shadow) {
       const shadowBlur = shadow.blur;
       const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
@@ -7787,36 +7737,6 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
     canvas.destroy();
     return canvasEl;
   }
-  isGroup() {
-    return false;
-  }
-
-  /**
-   * *PMW*
-   */
-  getCornerPoints(center) {
-    const angle = this.angle;
-    let width = this.getScaledWidth();
-    const height = this.getScaledHeight();
-    const x = center.x;
-    const y = center.y;
-    const theta = degreesToRadians(angle);
-    if (width < 0) {
-      width = Math.abs(width);
-    }
-    const sinTh = Math.sin(theta),
-      cosTh = Math.cos(theta),
-      _angle = width > 0 ? Math.atan(height / width) : 0,
-      _hypotenuse = width / Math.cos(_angle) / 2,
-      offsetX = Math.cos(_angle + theta) * _hypotenuse,
-      offsetY = Math.sin(_angle + theta) * _hypotenuse;
-    return {
-      tl: new Point(x - offsetX, y - offsetY),
-      tr: new Point(x - offsetX + width * cosTh, y - offsetY + width * sinTh),
-      bl: new Point(x - offsetX - height * sinTh, y - offsetY + height * cosTh),
-      br: new Point(x + offsetX, y + offsetY)
-    };
-  }
 
   /**
    * Converts an object into a data-url-like string
@@ -7836,6 +7756,10 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
   toDataURL() {
     let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     return toDataURL(this.toCanvasElement(options), options.format || 'png', options.quality || 1);
+  }
+  toBlob() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    return toBlob(this.toCanvasElement(options), options.format || 'png', options.quality || 1);
   }
 
   /**
@@ -8310,24 +8234,6 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
   }
 };
 /**
- * *PMW property added*
- * Whether to render a rectangle background or a tilted background
- */
-/**
- * *PMW property added*
- * Leanness of background
- */
-/**
- * *PMW* new property
- * PosterMyWall property for the default text of the button.
- * @default
- */
-/**
- * *PMW* new property
- * An svg of the icon place in the pmw bottom-middle button
- * @default
- */
-/**
  * This list of properties is used to check if the state of an object is changed.
  * This state change now is only used for children of groups to understand if a group
  * needs its cache regenerated during a .set call
@@ -8510,12 +8416,6 @@ class Control {
      * @default true
      */
     _defineProperty(this, "visible", true);
-    /**
-     * *PMW* added to use in cursor styling
-     * Whether the control is disabled or not
-     * @default false
-     */
-    _defineProperty(this, "disabled", false);
     /**
      * Name of the action that the control will likely execute.
      * This is optional. FabricJS uses to identify what the user is doing for some
@@ -8856,10 +8756,7 @@ const rotationWithSnapping = wrapWithFireEvent(ROTATING, wrapWithFixedAnchor(rot
 function scaleIsProportional(eventData, fabricObject) {
   const canvas = fabricObject.canvas,
     uniformIsToggled = eventData[canvas.uniScaleKey];
-
-  // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
-  // *PMW* changed canvas.uniScaleKey behaviour to not set unform scaling false in case of true but only to true in case of false
-  return fabricObject.uniformScaling || !fabricObject.uniformScaling && uniformIsToggled;
+  return canvas.uniformScaling && !uniformIsToggled || !canvas.uniformScaling && uniformIsToggled;
 }
 
 /**
@@ -9606,9 +9503,6 @@ class InteractiveFabricObject extends FabricObject$1 {
    */
   _renderControls(ctx) {
     let styleOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    if (config.isCanvasTwoFingerPanning) {
-      return;
-    }
     const {
       hasBorders,
       hasControls
@@ -9948,8 +9842,7 @@ const isTransparent = (ctx, x, y, tolerance) => {
   // Split image data - for tolerance > 1, pixelDataSize = 4;
   for (let i = 3; i < data.length; i += 4) {
     const alphaChannel = data[i];
-    //*PMW* changing transparent pixel threshold value
-    if (alphaChannel > 2) {
+    if (alphaChannel > 0) {
       return false;
     }
   }
@@ -10975,7 +10868,6 @@ function parseAttributes(element, attributes, cssRules) {
 
 const _excluded$c = ["left", "top", "width", "height", "visible"];
 const rectDefaultValues = {
-  uniformRoundness: false,
   rx: 0,
   ry: 0
 };
@@ -10995,7 +10887,6 @@ class Rect extends FabricObject {
     this.setOptions(options);
     this._initRxRy();
   }
-
   /**
    * Initializes rx/ry attributes
    * @private
@@ -11023,16 +10914,9 @@ class Rect extends FabricObject {
     } = this;
     const x = -w / 2;
     const y = -h / 2;
-    let rx = this.rx ? this.rx : 0;
-    let ry = this.ry ? this.ry : 0;
+    const rx = this.rx ? Math.min(this.rx, w / 2) : 0;
+    const ry = this.ry ? Math.min(this.ry, h / 2) : 0;
     const isRounded = rx !== 0 || ry !== 0;
-    if (this.uniformRoundness) {
-      const scaling = this.getObjectScaling();
-      rx = rx / scaling.x;
-      ry = ry / scaling.y;
-    }
-    rx = Math.min(rx, w / 2);
-    ry = Math.min(ry, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rx, y);
     ctx.lineTo(x + w - rx, y);
@@ -11525,9 +11409,6 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
-  caterCacheForTextChildren: false,
-  selected: false,
-  useSelectedFlag: false,
   interactive: false
 };
 
@@ -11559,20 +11440,6 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
-     * *PMW property added*
-     * Whether to cater to the text children objects for caching.
-     */
-    /**
-     * *PMW property added*
-     * Whether the object is currently selected.
-     * This is being used in GraphicItemSlideshowMediator to handle text editing.
-     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
-     */
-    /**
-     * *PMW property added*
-     * Whether the PMW added selected flag should be used.
-     */
-    /**
      * Used to allow targeting of object inside groups.
      * set to true if you want to select an object inside a group.\
      * **REQUIRES** `subTargetCheck` set to true
@@ -11596,71 +11463,6 @@ class Group extends createCollectionMixin(FabricObject) {
     Object.assign(this, Group.ownDefaults);
     this.setOptions(options);
     this.groupInit(objects, options);
-  }
-
-  /**
-   * *PMW function added*
-   * Called everytime a group object is deselected. The useSelectedFlag is used and only true when the group object is slideshow item. See docs of 'selected' property.
-   */
-  onDeselect(options) {
-    if (this.useSelectedFlag) {
-      this.selected = false;
-    }
-    return super.onDeselect(options);
-  }
-
-  /**
-   * *PMW* function added
-   * Expands cache dimensions to cater to any text children objects present inside the group.
-   * This is to prevent any part of the font rendering outside the selector box getting cut.
-   * @private
-   * @return {Object}.x width of object to be cached
-   * @return {Object}.y height of object to be cached
-   * @return {Object}.width width of canvas
-   * @return {Object}.height height of canvas
-   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
-   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
-   */
-  _getCacheCanvasDimensions() {
-    if (this.caterCacheForTextChildren) {
-      const dims = super._getCacheCanvasDimensions();
-      let widthToAdd = 0;
-      let heightToAdd = 0;
-      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
-      if (maxFontSize > 0) {
-        widthToAdd = maxFontSize * dims.zoomX;
-        heightToAdd = maxFontSize * dims.zoomY;
-      }
-      dims.width += widthToAdd;
-      dims.height += heightToAdd;
-      return dims;
-    }
-    return super._getCacheCanvasDimensions();
-  }
-
-  /**
-   * *PMW funtion added*
-   * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
-   * @private
-   */
-  _getMaxExpandedFontSizeFromTextChildren() {
-    const groupObjects = this.getObjects();
-    let maxFontSize = 0;
-    for (const groupObject of groupObjects) {
-      if ('fontSize' in groupObject) {
-        const fontSize = groupObject.fontSize;
-        if (fontSize > maxFontSize) {
-          // @ts-ignore
-          maxFontSize = fontSize * groupObject.cacheExpansionFactor;
-        }
-      } else if (groupObject instanceof Group) {
-        const maxFontSizeInGroup = groupObject._getMaxExpandedFontSizeFromTextChildren();
-        if (maxFontSizeInGroup > maxFontSize) {
-          maxFontSize = maxFontSizeInGroup;
-        }
-      }
-    }
-    return maxFontSize;
   }
 
   /**
@@ -11938,9 +11740,9 @@ class Group extends createCollectionMixin(FabricObject) {
   }
 
   /**
-   * Decide if the object should cache or not. Create its own cache level
+   * Decide if the group should cache or not. Create its own cache level
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group is already cached.
    * @return {Boolean}
    */
@@ -11971,9 +11773,6 @@ class Group extends createCollectionMixin(FabricObject) {
       }
     }
     return false;
-  }
-  isGroup() {
-    return true;
   }
 
   /**
@@ -12030,9 +11829,6 @@ class Group extends createCollectionMixin(FabricObject) {
     this._transformDone = true;
     super.render(ctx);
     this._transformDone = false;
-  }
-  isTable() {
-    return false;
   }
 
   /**
@@ -12140,105 +11936,6 @@ class Group extends createCollectionMixin(FabricObject) {
     }
     return this._createBaseClipPathSVGMarkup(svgString, {
       reviver
-    });
-  }
-
-  /**
-   * *PMW*
-   * Aligns the items in the group horizontally.
-   * @param {String} type Must be either 'left', 'right' or 'center'
-   */
-  horizontalAlignment(type) {
-    var _this$canvas2;
-    const groupWidth = this.width,
-      objects = this._objects,
-      padding = this.padding;
-    let i = 0,
-      corners,
-      tl,
-      offsetX;
-    switch (type) {
-      case 'left':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
-          tl = corners.tl.x;
-          const minX = Math.min(tl, corners.tr.x, corners.bl.x, corners.br.x);
-          offsetX = minX < tl ? tl - minX : 0;
-          objects[i].set('left', -groupWidth / 2 + padding + offsetX);
-        }
-        break;
-      case 'right':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
-          tl = corners.tl.x;
-          const maxX = Math.max(tl, corners.tr.x, corners.bl.x, corners.br.x);
-          offsetX = maxX > tl ? maxX - tl : 0;
-          objects[i].set('left', groupWidth / 2 - offsetX - padding);
-        }
-        break;
-      case 'center':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints({
-            x: 0,
-            y: objects[i].top
-          });
-          objects[i].set('left', corners.tl.x);
-        }
-        break;
-      default:
-        return;
-    }
-    (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 || _this$canvas2.fire('object:modified', {
-      target: this
-    });
-  }
-
-  /**
-   * *PMW* Aligns the items in the group vertically.
-   * @param {String} type Must be either 'top', 'bottom' or 'center'
-   */
-  verticalAlignment(type) {
-    var _this$canvas3;
-    const groupHeight = this.height,
-      objects = this._objects,
-      padding = this.padding;
-    let i = 0,
-      corners,
-      tl,
-      offsetY;
-    switch (type) {
-      case 'top':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
-          tl = corners.tl.y;
-          const minY = Math.min(tl, corners.tr.y, corners.bl.y, corners.br.y);
-          offsetY = minY < tl ? tl - minY : 0;
-          objects[i].set('top', -groupHeight / 2 + padding + offsetY);
-        }
-        break;
-      case 'bottom':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
-          tl = corners.tl.y;
-          const maxY = Math.max(tl, corners.tr.y, corners.bl.y, corners.br.y);
-          offsetY = maxY > tl ? maxY - tl : 0;
-          objects[i].set('top', groupHeight / 2 - padding - offsetY);
-        }
-        break;
-      case 'center':
-        for (i = 0; i < objects.length; i++) {
-          corners = objects[i].getCornerPoints({
-            x: objects[i].left,
-            y: 0
-          });
-          objects[i].set('top', corners.tl.y);
-        }
-        break;
-      default:
-        return;
-    }
-    (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 || _this$canvas3.fire('object:modified', {
-      target: this
     });
   }
 
@@ -13417,6 +13114,7 @@ var index$1 = /*#__PURE__*/Object.freeze({
   string: lang_string,
   stylesFromArray: stylesFromArray,
   stylesToArray: stylesToArray,
+  toBlob: toBlob,
   toDataURL: toDataURL,
   toFixed: toFixed,
   transformPath: transformPath,
@@ -13908,9 +13606,7 @@ class SelectableCanvas extends StaticCanvas$1 {
   _shouldClearSelection(e, target) {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
-    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target &&
-    // *PMW* added code: (&& !fabric.enableGroupSelection)
-    !config.enableGroupSelection && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
+    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
   }
 
   /**
@@ -14789,18 +14485,30 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
      * @private
      */
     /**
-     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+     * Holds a reference to a setTimeout timer for event synchronization
+     * @type number
+     * @private
      */
-    _defineProperty(this, "touchProps", void 0);
     /**
-     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
+     * Holds a reference to an object on the canvas that is receiving the drag over event.
+     * @type FabricObject
+     * @private
      */
-    _defineProperty(this, "allowedTouchDriftDeviance", 5);
+    /**
+     * Holds a reference to an object on the canvas from where the drag operation started
+     * @type FabricObject
+     * @private
+     */
+    /**
+     * Holds a reference to an object on the canvas that is the current drop target
+     * May differ from {@link _draggedoverTarget}
+     * @todo inspect whether {@link _draggedoverTarget} and {@link _dropTarget} should be merged somehow
+     * @type FabricObject
+     * @private
+     */
     _defineProperty(this, "_isClick", void 0);
     _defineProperty(this, "textEditingManager", new TextEditingManager(this));
-    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp',
-    //*PMW* Added support for drift deviance
-    '_onTouchMove', '_onTouchEnd', '_onResize',
+    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp', '_onTouchEnd', '_onResize',
     // '_onGesture',
     // '_onDrag',
     // '_onShake',
@@ -14865,8 +14573,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     removeListener(doc, "".concat(eventTypePrefix, "up"), this._onMouseUp);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
     removeListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
-    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
-    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
+    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
     clearTimeout(this._willAddMouseDown);
   }
 
@@ -15230,40 +14937,30 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   _onTouchStart(e) {
-    //*PMW* Multiple changes in 6.4.3 reverted from this function to fix contextual menu opening on mobile on touch hold. Investigate and add those back
-    e.preventDefault();
+    // we will prevent scrolling if allowTouchScrolling is not enabled and
+    let shouldPreventScrolling = !this.allowTouchScrolling;
+    const currentActiveObject = this._activeObject;
     if (this.mainTouchId === undefined) {
       this.mainTouchId = this.getPointerId(e);
     }
     this.__onMouseDown(e);
+    // after executing fabric logic for mouse down let's see
+    // if we didn't change target or if we are drawing
+    // we want to prevent scrolling anyway
+    if (this.isDrawingMode || currentActiveObject && this._target === currentActiveObject) {
+      shouldPreventScrolling = true;
+    }
+    // prevent default, will block scrolling from start
+    shouldPreventScrolling && e.preventDefault();
     this._resetTransformEventData();
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(canvasElement);
     addListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
-    addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
+    // if we scroll don't register the touch move event
+    shouldPreventScrolling && addListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(canvasElement, "".concat(eventTypePrefix, "down"), this._onMouseDown);
-    //*PMW* added line
-    this.onTouchStartAfter(e);
-  }
-
-  /**
-   * @private
-   * @param {Event} e Event object fired on mousedown
-   */
-  onTouchStartAfter(e) {
-    this.fire('after:touchstart', {
-      e: e,
-      target: this.findTarget(e)
-    });
-    this.touchProps = {
-      numOfTouches: e.touches.length,
-      totalDrift: 0,
-      x: e.touches[0].pageX,
-      y: e.touches[0].pageY
-    };
   }
 
   /**
@@ -15296,8 +14993,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     const eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(this.upperCanvasEl);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
-    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
+    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
     if (this._willAddMouseDown) {
       clearTimeout(this._willAddMouseDown);
     }
@@ -15337,25 +15033,6 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     // we must not prevent the event's default behavior in order for the window to start dragging
     !activeObject.shouldStartDragging(e)) && e.preventDefault && e.preventDefault();
     this.__onMouseMove(e);
-  }
-
-  /**
-   * *PMW* added function. Calculates drift deviance since touch start. If total number of touches is one, and totalDrift is less than allowedTouchDriftDeviance, then we don't skip the onMouseMove call.
-   * @param {Event} e Event object fired on touchmove
-   */
-  _onTouchMove(e) {
-    if (this.touchProps && this.touchProps.numOfTouches === 1) {
-      const event = e;
-      const dx = event.touches[0].pageX - this.touchProps.x;
-      const dy = event.touches[0].pageY - this.touchProps.y;
-      this.touchProps.totalDrift += Math.sqrt(dx * dx + dy * dy);
-      this.touchProps.x = event.touches[0].pageX;
-      this.touchProps.y = event.touches[0].pageY;
-      if (this.touchProps.totalDrift < this.allowedTouchDriftDeviance) {
-        return;
-      }
-    }
-    this._onMouseMove(e);
   }
 
   /**
@@ -15461,9 +15138,6 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
       this.requestRenderAll();
     } else if (!isClick && !((_this$_activeObject = this._activeObject) !== null && _this$_activeObject !== void 0 && _this$_activeObject.isEditing)) {
       this.renderTop();
-    }
-    if (config.isCanvasTwoFingerPanning) {
-      config.isCanvasTwoFingerPanning = false;
     }
   }
   _basicEventHandler(eventType, options) {
@@ -15571,10 +15245,6 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e) {
-    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
-    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
-      return;
-    }
     this._isClick = true;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'down:before');
@@ -15617,7 +15287,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
-    if (this.selection && !config.disableGroupSelector && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
+    if (this.selection && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,
@@ -15632,8 +15302,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
         this.setActiveObject(target, e);
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
-      // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
-      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
+      if (target === this._activeObject && (handle || !grouped)) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
@@ -15680,9 +15349,6 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousemove
    */
   __onMouseMove(e) {
-    if (config.isCanvasTwoFingerPanning) {
-      return;
-    }
     this._isClick = false;
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'move:before');
@@ -15911,9 +15577,7 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     const isAS = isActiveSelection(activeObject);
     if (
     // check if an active object exists on canvas and if the user is pressing the `selectionKey` while canvas supports multi selection.
-    !!activeObject && (
-    // *PMW*
-    config.enableGroupSelection || this._isSelectionKeyPressed(e)) && this.selection &&
+    !!activeObject && this._isSelectionKeyPressed(e) && this.selection &&
     // on top of that the user also has to hit a target that is selectable.
     !!target && target.selectable && (
     // group target and active object only if they are different objects
@@ -15944,11 +15608,6 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
           }
         }
         if (target.group === activeObject) {
-          // *PMW* . Use of custom variable. Preventing unselection of object tapped on, from active selection to enable drag. We have written custom code for unselection of object on mouse up instead of mouse down to enable dragging.
-          if (config.enableGroupSelection) {
-            return;
-          }
-
           // `target` is part of active selection => remove it
           activeObject.remove(target);
           this._hoveredTarget = target;
@@ -18747,335 +18406,8 @@ _defineProperty(Polygon, "type", 'Polygon');
 classRegistry.setClass(Polygon);
 classRegistry.setSVGClass(Polygon);
 
-class Tabs extends Group {
-  static async fromObject(object) {
-    return FabricObject$1._fromObject(_objectSpread2({
-      type: 'tabs'
-    }, object));
-  }
-}
-/**
- * Type of an object
- * @type String
- * @default
- */
-_defineProperty(Tabs, "type", 'tabs');
-classRegistry.setClass(Tabs);
-classRegistry.setClass(Tabs, 'tabs');
-
-class Table extends Group {
-  constructor() {
-    let objects = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    super(objects, options);
-    /**
-     * Number of table rows
-     */
-    _defineProperty(this, "rows", 0);
-    /**
-     * Number of table columns
-     */
-    _defineProperty(this, "columns", 0);
-    /**
-     * Layout style
-     */
-    _defineProperty(this, "layoutType", '');
-    /**
-     * Background color 1 for alternate table background
-     */
-    _defineProperty(this, "alternateBackgroundColor1", null);
-    /**
-     * Background color 2 for alternate table background
-     */
-    _defineProperty(this, "alternateBackgroundColor2", null);
-    /**
-     * Background color for highlighted rows
-     */
-    _defineProperty(this, "highlightedRowsBackgroundColor", null);
-    /**
-     * Array containing indices of highlighted rows
-     */
-    _defineProperty(this, "highlightedRows", []);
-    /**
-     * 2D array containing table data
-     */
-    _defineProperty(this, "tableArray", [[]]);
-    /**
-     * Spacing Between rows of table
-     */
-    _defineProperty(this, "ySpacing", 0);
-    /**
-     * Spacing Between column of table
-     */
-    _defineProperty(this, "xSpacing", 0);
-    _defineProperty(this, "fontSize", 0);
-    /**
-     * Property used for showing the 'edit content' button
-     */
-    _defineProperty(this, "hasButton", true);
-  }
-  render(ctx) {
-    this._transformDone = true;
-    super.render(ctx);
-    ctx.save();
-    this.transform(ctx);
-    this.renderTableBorders(ctx);
-    ctx.restore();
-    this._transformDone = false;
-  }
-
-  /**
-   * Draws the table/schedule border
-   * @param {CanvasRenderingContext2D} ctx context to draw on
-   */
-  renderTableBorders(ctx) {
-    if (!this.stroke || this.strokeWidth === 0) {
-      return;
-    }
-    ctx.save();
-    this._setStrokeStyles(ctx, this);
-    ctx.strokeRect(-(this.width / 2), -(this.height / 2), this.width, this.height);
-
-    // if custom table layout them draw rows and column border too
-    if (this.isTableLayout()) {
-      this.drawColumnBorders(ctx);
-      this.drawRowBorders(ctx);
-    }
-    ctx.restore();
-  }
-  isTable() {
-    return true;
-  }
-
-  /**
-   * This function is responsible for rendering the background of table.
-   * It loops over all the rows in the table and draws the appropriate color rectangle for each row.
-   * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
-   * @param {CanvasRenderingContext2D} ctx context to render on
-   */
-  _renderBackground(ctx) {
-    if (this.highlightedRows.length == 0 && !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2) || !this.isTableLayout()) {
-      super._renderBackground(ctx);
-      return;
-    }
-    const backgroundData = this.getTableBackGroundData();
-    ctx.save();
-    const objects = this.getObjects();
-    let top = null;
-    let height = null;
-    let renderBackground = false;
-    for (let i = 0; i < backgroundData.length; i++) {
-      renderBackground = false;
-      if (backgroundData[i] != 'none') {
-        if (top == null) {
-          if (i == 0) {
-            top = -this.height / 2;
-          } else {
-            top = objects[i].top - this.ySpacing / 2;
-          }
-        }
-        if (backgroundData[i] != backgroundData[i + 1]) {
-          // set height of rectangle to render
-          height = Math.abs(top - objects[i].top) + this.getHeightOfRow(i) + this.ySpacing / 2;
-          renderBackground = true;
-          switch (backgroundData[i]) {
-            case 'highlight':
-              // @ts-ignore
-              ctx.fillStyle = this.highlightedRowsBackgroundColor;
-              break;
-            case 'color':
-              ctx.fillStyle = this.backgroundColor;
-              break;
-            case 'alternate1':
-              // @ts-ignore
-              ctx.fillStyle = this.alternateBackgroundColor1;
-              break;
-            case 'alternate2':
-              // @ts-ignore
-              ctx.fillStyle = this.alternateBackgroundColor2;
-              break;
-          }
-        } else {
-          renderBackground = false;
-        }
-        if (renderBackground) {
-          var _height;
-          ctx.fillRect(-this.width / 2, top, this.width, (_height = height) !== null && _height !== void 0 ? _height : 0);
-          top = null;
-          height = null;
-        }
-      }
-    }
-    ctx.restore();
-  }
-
-  /**
-   * Returns an array containing string values corresponding to rows background color.
-   * 'highlight' for selected rows
-   * 'color' for when colored background is selected by user
-   * 'alternate1' for even rows when alternate background is selected
-   * 'alternate2' for odd rows when alternate background is selected
-   * 'none' for transparent background
-   * @returns {Array}
-   */
-  getTableBackGroundData() {
-    const data = [];
-    for (let i = 0; i < this.rows; i++) {
-      if (this.highlightedRows.indexOf(i) != -1) {
-        data.push('highlight');
-      } else if (this.backgroundColor != null) {
-        data.push('color');
-      } else if (this.alternateBackgroundColor1 && this.alternateBackgroundColor2) {
-        if (i % 2 == 0) {
-          data.push('alternate1');
-        } else {
-          data.push('alternate2');
-        }
-      } else {
-        data.push('none');
-      }
-    }
-    return data;
-  }
-
-  /**
-   * Returns the height of an item in a given row with max height,
-   * this value is basically the minimum space in y-axis needed by this row in a table.
-   * @param {Number} row
-   * @returns {Number}
-   */
-  getHeightOfRow(row) {
-    let height = 0,
-      h;
-    for (let i = 0; i < this.columns; i++) {
-      h = this.tableArray[i][row].calcTextHeight();
-      if (h > height) {
-        height = h;
-      }
-    }
-    return height;
-  }
-
-  /**
-   * Returns the width of an item in a given column with max width,
-   * this value is basically the minimum space in x-axis needed by this column in a table.
-   * @param {Number} column column index
-   * @returns {Number} minimum width required by this column
-   */
-  getWidthOfColumn(column) {
-    let width = 0,
-      w;
-    for (let i = 0; i < this.rows; i++) {
-      w = this.tableArray[column][i].calcTextWidth();
-      if (w > width) {
-        width = w;
-      }
-    }
-    return width;
-  }
-
-  /**
-   * renders border for table columns
-   * @param {CanvasRenderingContext2D} ctx context to render on
-   */
-  drawColumnBorders(ctx) {
-    const objects = this.getObjects();
-    let x = this.rows,
-      maxWidth,
-      w,
-      itemIndex;
-    for (let i = 2; i <= this.columns; i++) {
-      maxWidth = 0;
-      while (objects[x] && objects[x].column == i) {
-        w = objects[x].width;
-        if (w > maxWidth) {
-          maxWidth = w;
-          itemIndex = x;
-        }
-        x++;
-      }
-      if (itemIndex) {
-        ctx.beginPath();
-        ctx.moveTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2));
-        ctx.lineTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2) + this.height);
-        ctx.stroke();
-      }
-    }
-  }
-
-  /**
-   * renders border for table rows
-   * @param {CanvasRenderingContext2D} ctx context to render on
-   */
-  drawRowBorders(ctx) {
-    const objects = this.getObjects();
-    for (let i = 1; i < this.rows; i++) {
-      const startX = -this.width / 2,
-        startY = objects[i].top - this.ySpacing / 2,
-        endX = startX + this.width,
-        endY = startY;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(endX, endY);
-      ctx.stroke();
-    }
-  }
-
-  /**
-   * Returns true if design is simple table structure('custom-table' or 'layout-1'), false otherwise
-   * @returns {boolean}
-   */
-  isTableLayout() {
-    return this.layoutType == 'layout-1' || this.layoutType == 'custom-table';
-  }
-}
-/**
- * Type of an object
- * @type String
- * @default
- */
-_defineProperty(Table, "type", 'table');
-classRegistry.setClass(Table);
-classRegistry.setClass(Table, 'table');
-
-//*PMW* class addded for menu
-class CustomBorderTable extends Table {
-  /**
-   * Renders vertical borders for table Style Menu Layouts
-   * @param {CanvasRenderingContext2D} ctx context to render on
-   */
-  drawColumnBorders(ctx) {
-    const groups = this.getObjects();
-    let w,
-      maxWidth = 0,
-      left = 0;
-    for (let i = 0; i < groups.length; i++) {
-      // @ts-ignore
-      const items = groups[i].getObjects();
-      w = items[1].width;
-      if (w > maxWidth) {
-        maxWidth = w;
-        left = this.width / 2 - maxWidth;
-      }
-    }
-    const oldPadding = 11;
-    ctx.beginPath();
-    ctx.moveTo(left - oldPadding * 2, -(this.height / 2));
-    ctx.lineTo(left - oldPadding * 2, -(this.height / 2) + this.height);
-    ctx.stroke();
-  }
-
-  /**
-   * Returns true if design is simple table structure('layout-13'), false otherwise
-   * @returns {boolean}
-   */
-  isTableLayout() {
-    return this.layoutType == 'layout-13';
-  }
-}
-
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
-const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
+const textDecorationProperties = ['underline', 'overline', 'linethrough'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
 const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
 const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor'];
@@ -19094,9 +18426,6 @@ const textDefaultValues = {
   underline: false,
   overline: false,
   linethrough: false,
-  squigglyline: false,
-  ignoreDelegatedSet: false,
-  squigglylineColor: '',
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
@@ -19117,13 +18446,11 @@ const textDefaultValues = {
   pathStartOffset: 0,
   pathSide: LEFT,
   pathAlign: 'baseline',
-  cacheExpansionFactor: 1,
   _fontSizeFraction: 0.222,
   offsets: {
     underline: 0.1,
     linethrough: -0.315,
-    overline: -0.88,
-    squigglyline: 0.1
+    overline: -0.88
   },
   _fontSizeMult: 1.13,
   charSpacing: 0,
@@ -19812,7 +19139,7 @@ class FabricText extends StyledText {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+    dims.height += fontSize * dims.zoomY;
     return dims;
   }
 
@@ -19829,7 +19156,6 @@ class FabricText extends StyledText {
     this._renderText(ctx);
     this._renderTextDecoration(ctx, 'overline');
     this._renderTextDecoration(ctx, 'linethrough');
-    this._renderTextDecoration(ctx, 'squigglyline'); // *PMW*
   }
 
   /**
@@ -20195,10 +19521,7 @@ class FabricText extends StyledText {
       height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       lineHeight = this.getHeightOfLine(i);
-      // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
-      // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
-      // *PMW* preventing height to be smaller than selector size.
-      height += i === len - 1 && this.lineHeight < 1 ? lineHeight / this.lineHeight : lineHeight;
+      height += i === len - 1 ? lineHeight / this.lineHeight : lineHeight;
     }
     return height;
   }
@@ -20590,11 +19913,10 @@ class FabricText extends StyledText {
     return width;
   }
   _getWidthOfCharSpacing() {
-    //*PMW* change char spacing to be applied the same on every size
-    // if (this.charSpacing !== 0) {
-    //   return this.fontSize * this.charSpacing / 1000;
-    // }
-    return this.charSpacing;
+    if (this.charSpacing !== 0) {
+      return this.fontSize * this.charSpacing / 1000;
+    }
+    return 0;
   }
 
   /**
@@ -20660,18 +19982,11 @@ class FabricText extends StyledText {
           if (this.direction === 'rtl') {
             drawStart = this.width - drawStart - boxWidth;
           }
-          // *PMW*
-          const opts = {
-            type: type,
-            boxWidth: boxWidth,
-            decoration: lastDecoration,
-            fill: lastFill,
-            x: drawStart,
-            y: top + offsetY * size + dy,
-            w: boxWidth,
-            h: this.fontSize / 15
-          };
-          this._renderTextLineDecoration(ctx, opts);
+          if (lastDecoration && lastFill) {
+            // bug? verify lastFill is a valid fill here.
+            ctx.fillStyle = lastFill;
+            ctx.fillRect(drawStart, top + offsetY * size + dy, boxWidth, this.fontSize / 15);
+          }
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastDecoration = currentDecoration;
@@ -20687,147 +20002,12 @@ class FabricText extends StyledText {
         drawStart = this.width - drawStart - boxWidth;
       }
       ctx.fillStyle = currentFill;
-      // *PMW*
-      const opts = {
-        type: type,
-        boxWidth: boxWidth,
-        decoration: currentDecoration,
-        fill: currentFill,
-        x: drawStart,
-        y: top + offsetY * size + dy,
-        w: boxWidth - charSpacing,
-        h: this.fontSize / 15
-      };
-      this._renderTextLineDecoration(ctx, opts);
+      currentDecoration && currentFill && ctx.fillRect(drawStart, top + offsetY * size + dy, boxWidth - charSpacing, this.fontSize / 15);
       topOffset += heightOfLine;
     }
-
     // if there is text background color no
     // other shadows should be casted
-    // *PMW* need shadow to be applied on text with styles as well,
-    // this._removeShadow(ctx);
-  }
-
-  /**
-   * *PMW*
-   * @private
-   * @param {CanvasRenderingContext2D} ctx Context to render on
-   * @param {Object} opts
-   */
-  _renderTextLineDecoration(ctx, opts) {
-    if (opts.type === 'squigglyline') {
-      const polyPoints = [],
-        scaleX = 0.35,
-        scaleY = 0.45,
-        funct = function (x) {
-          const g = x % 6;
-          if (g <= 3) {
-            return g * 5;
-          }
-          return (6 - g) * 5;
-        };
-      ctx.fillStyle = this.squigglylineColor ? this.squigglylineColor : opts.fill;
-      for (let x = 0; x < opts.boxWidth; x += 0.5) {
-        polyPoints.push({
-          x: x - 10,
-          y: funct(x * scaleX) * scaleY
-        });
-      }
-      for (let j = 0; j < polyPoints.length; j++) {
-        opts.decoration && opts.fill && ctx.fillRect(opts.x + polyPoints[j].x + 8, opts.y + polyPoints[j].y, 2, 2);
-      }
-    } else {
-      // *PMW* use first color of gradient instead of last fill for text styles (underline, linethrough),
-      // Issue is fixed on updated method obj.set('textDecoration', 'underline') can use that one once
-      // it has support for multiple styles at a time and selection styles
-      if (opts.fill && typeof opts.fill !== 'string' && opts.fill.colorStops && opts.fill.colorStops.length) {
-        ctx.fillStyle = opts.fill.colorStops[0].color;
-      } else if (opts.fill && typeof opts.fill !== 'string' && opts.fill.source) {
-        //Use pattern for underline, linethrough on text mask
-        const pattern = ctx.createPattern(opts.fill.source, 'repeat');
-        if (pattern) {
-          ctx.fillStyle = pattern;
-        }
-      }
-      // *PMW*
-      opts.decoration && opts.fill && ctx.fillRect(opts.x, opts.y, opts.w, opts.h);
-    }
-  }
-
-  /**
-   * *PMW*
-   * Draws a background for the object big as its untrasformed dimensions
-   * @private
-   * @param {CanvasRenderingContext2D} ctx Context to render on
-   */
-  _renderBackground(ctx) {
-    if (!this.backgroundColor) {
-      return;
-    }
-    const dim = this._getNonTransformedDimensions();
-    let scaleX = this.scaleX,
-      scaleY = this.scaleY;
-    ctx.fillStyle = this.backgroundColor;
-    if (this.group) {
-      scaleX *= this.group.scaleX;
-      scaleY *= this.group.scaleY;
-    }
-    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
-    // if there is background color no other shadows
-    // should be casted
     this._removeShadow(ctx);
-  }
-  getCharOffset(position) {
-    let topOffset = 0,
-      leftOffset = 0;
-    const cursorPosition = this.get2DCursorLocation(position),
-      charIndex = cursorPosition.charIndex,
-      lineIndex = cursorPosition.lineIndex;
-    for (let i = 0; i < lineIndex; i++) {
-      topOffset += this.getHeightOfLine(i);
-    }
-    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
-    const bound = this.__charBounds[lineIndex][charIndex];
-    bound && (leftOffset = bound.left);
-    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
-      leftOffset -= this._getWidthOfCharSpacing();
-    }
-    return {
-      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
-      y: topOffset
-    };
-  }
-
-  /**
-   * *PMW*
-   * Find new selection index representing start of current word according to current selection index
-   * @param {Number} startFrom Current selection index
-   * @return {Number} selection start index
-   */
-  findSelectedWordLeft(startFrom) {
-    let offset = 0,
-      index = startFrom - 1;
-    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index > -1) {
-      offset++;
-      index--;
-    }
-    return startFrom - offset;
-  }
-
-  /**
-   * *PMW*
-   * Find new selection index representing end of current word according to current selection index
-   * @param {Number} startFrom Current selection index
-   * @return {Number} selection end index
-   */
-  findSelectedWordRight(startFrom) {
-    let offset = 0,
-      index = startFrom;
-    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index < this._text.length) {
-      offset++;
-      index++;
-    }
-    return startFrom + offset;
   }
 
   /**
@@ -20986,8 +20166,6 @@ class FabricText extends StyledText {
         underline: textDecoration.includes('underline'),
         overline: textDecoration.includes('overline'),
         linethrough: textDecoration.includes('line-through'),
-        /*PMW*/
-        squigglyline: textDecoration.includes('squiggly-line'),
         // we initialize this as 0
         strokeWidth: 0,
         fontSize
@@ -23195,8 +22373,6 @@ const iTextDefaultValues = _objectSpread2({
   selectionColor: 'rgba(17,119,255,0.3)',
   isEditing: false,
   editable: true,
-  column: 0,
-  dataType: '',
   editingBorderColor: 'rgba(102,153,255,0.25)',
   cursorWidth: 2,
   cursorColor: '',
@@ -23323,54 +22499,6 @@ class IText extends ITextClickBehavior {
       this[property] = index;
     }
     this._updateTextarea();
-  }
-
-  /**
-   * *PMW*
-   * Returns location of cursor on canvas
-   */
-  getCharOffset(position) {
-    let topOffset = 0,
-      leftOffset = 0;
-    const cursorPosition = this.get2DCursorLocation(position),
-      charIndex = cursorPosition.charIndex,
-      lineIndex = cursorPosition.lineIndex;
-    for (let i = 0; i < lineIndex; i++) {
-      topOffset += this.getHeightOfLine(i);
-    }
-    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
-    const bound = this.__charBounds[lineIndex][charIndex];
-    bound && (leftOffset = bound.left);
-    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
-      leftOffset -= this._getWidthOfCharSpacing();
-    }
-    return {
-      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
-      y: topOffset
-    };
-  }
-
-  /**
-   * *PMW*
-   * Draws a background for the object big as its untrasformed dimensions
-   * @private
-   */
-  _renderBackground(ctx) {
-    if (!this.backgroundColor) {
-      return;
-    }
-    const dim = this._getNonTransformedDimensions();
-    let scaleX = this.scaleX,
-      scaleY = this.scaleY;
-    ctx.fillStyle = this.backgroundColor;
-    if (this.group) {
-      scaleX *= this.group.scaleX;
-      scaleY *= this.group.scaleY;
-    }
-    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
-    // if there is background color no other shadows
-    // should be casted
-    this._removeShadow(ctx);
   }
 
   /**
@@ -24613,11 +23741,7 @@ class ActiveSelection extends Group {
   }
 
   /**
-   * Decide if the object should cache or not. Create its own cache level
-   * objectCaching is a global flag, wins over everything
-   * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
-   * Generally you do not cache objects in groups because the group outside is cached.
+   * Decide if the object should cache or not. The Active selection never caches
    * @return {Boolean}
    */
   shouldCache() {
@@ -25143,13 +24267,14 @@ class FabricImage extends FabricObject {
    * @param {Partial<TSize>} [size] Options object
    */
   setElement(element) {
+    var _element$classList;
     let size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this.removeTexture(this.cacheKey);
     this.removeTexture("".concat(this.cacheKey, "_filtered"));
     this._element = element;
     this._originalElement = element;
     this._setWidthHeight(size);
-    element.classList.add(FabricImage.CSS_CANVAS);
+    (_element$classList = element.classList) === null || _element$classList === void 0 || _element$classList.add(FabricImage.CSS_CANVAS);
     if (this.filters.length !== 0) {
       this.applyFilters();
     }
@@ -25417,11 +24542,6 @@ class FabricImage extends FabricObject {
     const imgElement = this._originalElement,
       sourceWidth = imgElement.naturalWidth || imgElement.width,
       sourceHeight = imgElement.naturalHeight || imgElement.height;
-
-    //*PMW* Return here because filters need to be applied on each frame render for videos
-    if (imgElement.nodeName === 'VIDEO') {
-      return this;
-    }
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -25442,7 +24562,7 @@ class FabricImage extends FabricObject {
       this._lastScaleX = 1;
       this._lastScaleY = 1;
     }
-    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
+    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element, this.cacheKey);
     if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
       this._filterScalingX = this._element.width / this._originalElement.width;
       this._filterScalingY = this._element.height / this._originalElement.height;
@@ -25473,11 +24593,11 @@ class FabricImage extends FabricObject {
   }
 
   /**
-   * Decide if the object should cache or not. Create its own cache level
+   * Decide if the FabricImage should cache or not. Create its own cache level
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group outside is cached.
-   * This is the special image version where we would like to avoid caching where possible.
+   * This is the special Image version where we would like to avoid caching where possible.
    * Essentially images do not benefit from caching. They may require caching, and in that
    * case we do it. Also caching an image usually ends in a loss of details.
    * A full performance audit should be done.
@@ -25487,7 +24607,7 @@ class FabricImage extends FabricObject {
     return this.needsItsOwnCache();
   }
   _renderFill(ctx) {
-    let elementToDraw = this._element;
+    const elementToDraw = this._element;
     if (!elementToDraw) {
       return;
     }
@@ -25509,57 +24629,7 @@ class FabricImage extends FabricObject {
       y = -h / 2,
       maxDestW = Math.min(w, elWidth / scaleX - cropX),
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
-
-    //*PMW* if video apply filter on each frame draw
-    if (this._element.nodeName === 'VIDEO') {
-      elementToDraw = this._applyVideoFilter(this._element);
-    }
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
-  }
-
-  /**
-   * *PMW* function added
-   * Applies filter of video element using webgl backend
-   * @param elementToDraw
-   * @return {*|CanvasElement}
-   * @private
-   */
-  _applyVideoFilter(elementToDraw) {
-    let filters = this.filters || [];
-    filters = filters.filter(function (filter) {
-      return filter;
-    });
-    if (filters.length === 0) {
-      this._element = this._originalElement;
-      this._filteredEl = undefined;
-      this._filterScalingX = 1;
-      this._filterScalingY = 1;
-      return this._element;
-    }
-    const videoEl = elementToDraw,
-      sourceWidth = videoEl.width,
-      sourceHeight = videoEl.height;
-    if (this._element === videoEl) {
-      // if the element is the same we need to create a new element
-      const canvasEl = createCanvasElementFor({
-        width: sourceWidth,
-        height: sourceHeight
-      });
-      this._element = canvasEl;
-      this._filteredEl = canvasEl;
-    } else {
-      var _getContext;
-      // clear the existing element to get new filter data
-      (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 || _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
-    }
-    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
-    if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
-      this._filterScalingX = this._element.width / this._originalElement.width;
-      this._filterScalingY = this._element.height / this._originalElement.height;
-    }
-    const modifiedElementToDraw = this._element;
-    this._element = videoEl;
-    return modifiedElementToDraw;
   }
 
   /**
@@ -25671,7 +24741,9 @@ class FabricImage extends FabricObject {
 
   /**
    * Default CSS class name for canvas
+   * Will be removed from fabric 7
    * @static
+   * @deprecated
    * @type String
    * @default
    */
@@ -26688,16 +25760,7 @@ class BaseFilter {
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
-    gl.canvas.addEventListener('webglcontextlost', event => {
-      console.warn('WebGL context lost');
-      event.preventDefault();
-    });
-    if (!gl) {
-      throw new FabricError('WebGL context could not be created');
-    }
     if (!vertexShader || !fragmentShader || !program) {
-      const error = gl.getError().toString(16);
-      console.error('WebGL error:', error);
       throw new FabricError('Vertex, fragment shader or program creation error');
     }
     gl.shaderSource(vertexShader, vertexSource);
@@ -29067,5 +28130,5 @@ class Canvas extends Canvas$1 {
   }
 }
 
-export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv$1 as getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
+export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv$1 as getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
 //# sourceMappingURL=index.node.mjs.map

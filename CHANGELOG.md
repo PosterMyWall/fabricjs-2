@@ -2,6 +2,21 @@
 
 ## [next]
 
+## [6.6.1]
+
+- fix(): FabricImage was missing cachekey when filtering [#10441](https://github.com/fabricjs/fabric.js/pull/10441)
+
+## [6.6.0]
+
+- feat(): Add webp to ImageFormat [#10435](https://github.com/fabricjs/fabric.js/pull/10435)
+- fix(): Allow for node-canvas images to work with the FabricImage class by making classList optional. [#10412](https://github.com/fabricjs/fabric.js/pull/10412)
+- fix(): Allow for brush subclassing moving some properties from private to protected. [#10416](https://github.com/fabricjs/fabric.js/pull/10416)
+- feat(): Add method toBlob. [#3283](https://github.com/fabricjs/fabric.js/issues/3283)
+
+## [6.5.4]
+
+- docs() perf(): Reorder caching conditions for most common scenario and docs fixes. [#10366](https://github.com/fabricjs/fabric.js/pull/10366)
+
 ## [6.5.3]
 
 - fix(ColorMatrix): Restore correct alpha for JS colorMatrix filter [#10313](https://github.com/fabricjs/fabric.js/pull/10313)
