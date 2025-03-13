@@ -7,7 +7,7 @@ import { Point } from '../Point.mjs';
 import { requestAnimFrame, cancelAnimFrame } from '../util/animation/AnimationFrameProvider.mjs';
 import { runningAnimations } from '../util/animation/AnimationRegistry.mjs';
 import { uid } from '../util/internals/uid.mjs';
-import { createCanvasElementFor, toDataURL } from '../util/misc/dom.mjs';
+import { createCanvasElementFor, toDataURL, toBlob } from '../util/misc/dom.mjs';
 import { transformPoint, invertTransform } from '../util/misc/matrix.mjs';
 import { enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
 import { pick } from '../util/misc/pick.mjs';
@@ -1146,6 +1146,17 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
     } = options;
     const finalMultiplier = multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
     return toDataURL(this.toCanvasElement(finalMultiplier, options), format, quality);
+  }
+  toBlob() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    const {
+      format = 'png',
+      quality = 1,
+      multiplier = 1,
+      enableRetinaScaling = false
+    } = options;
+    const finalMultiplier = multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
+    return toBlob(this.toCanvasElement(finalMultiplier, options), format, quality);
   }
 
   /**

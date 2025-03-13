@@ -25,9 +25,9 @@ export declare class PencilBrush extends BaseBrush {
      * @type {ModifierKey | undefined | null}
      */
     straightLineKey: ModifierKey | undefined | null;
-    private _points;
-    private _hasStraightLine;
-    private oldEnd?;
+    protected _points: Point[];
+    protected _hasStraightLine: boolean;
+    protected oldEnd?: Point;
     constructor(canvas: Canvas);
     needsFullRender(): boolean;
     static drawSegment(ctx: CanvasRenderingContext2D, p1: Point, p2: Point): Point;

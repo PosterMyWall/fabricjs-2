@@ -7,7 +7,7 @@ import { Shadow } from '../../Shadow.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { runningAnimations } from '../../util/animation/AnimationRegistry.mjs';
 import { capValue } from '../../util/misc/capValue.mjs';
-import { createCanvasElement, createCanvasElementFor, toDataURL } from '../../util/misc/dom.mjs';
+import { createCanvasElement, createCanvasElementFor, toDataURL, toBlob } from '../../util/misc/dom.mjs';
 import { qrDecompose, invertTransform } from '../../util/misc/matrix.mjs';
 import { enlivenObjectEnlivables } from '../../util/misc/objectEnlive.mjs';
 import { saveObjectTransform, resetObjectTransform } from '../../util/misc/objectTransforms.mjs';
@@ -468,7 +468,7 @@ class FabricObject extends ObjectGeometry {
   }
 
   /**
-   * When set to `true`, force the object to have its own cache, even if it is inside a group
+   * When returns `true`, force the object to have its own cache, even if it is inside a group
    * it may be needed when your object behave in a particular way on the cache and always needs
    * its own isolated canvas to render correctly.
    * Created to be overridden
@@ -476,6 +476,7 @@ class FabricObject extends ObjectGeometry {
    * @returns Boolean
    */
   needsItsOwnCache() {
+    // TODO re-evaluate this shadow condition
     if (this.paintFirst === STROKE && this.hasFill() && this.hasStroke() && !!this.shadow) {
       return true;
     }
@@ -489,13 +490,13 @@ class FabricObject extends ObjectGeometry {
    * Decide if the object should cache or not. Create its own cache level
    * objectCaching is a global flag, wins over everything
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group outside is cached.
    * Read as: cache if is needed, or if the feature is enabled but we are not already caching.
    * @return {Boolean}
    */
   shouldCache() {
-    this.ownCaching = this.needsItsOwnCache() || this.objectCaching && (!this.parent || !this.parent.isOnACache());
+    this.ownCaching = this.objectCaching && (!this.parent || !this.parent.isOnACache()) || this.needsItsOwnCache();
     return this.ownCaching;
   }
 
@@ -595,7 +596,10 @@ class FabricObject extends ObjectGeometry {
   }
 
   /**
-   * Check if cache is dirty
+   * Check if cache is dirty and if is dirty clear the context.
+   * This check has a big side effect, it changes the underlying cache canvas if necessary.
+   * Do not call this method on your own to check if the cache is dirty, because if it is,
+   * it is also going to wipe the cache. This is badly designed and needs to be fixed.
    * @param {Boolean} skipCanvas skip canvas checks because this object is painted
    * on parent canvas.
    */
@@ -1091,6 +1095,10 @@ class FabricObject extends ObjectGeometry {
   toDataURL() {
     let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     return toDataURL(this.toCanvasElement(options), options.format || 'png', options.quality || 1);
+  }
+  toBlob() {
+    let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    return toBlob(this.toCanvasElement(options), options.format || 'png', options.quality || 1);
   }
 
   /**

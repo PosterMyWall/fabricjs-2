@@ -29,7 +29,11 @@ export type TBBox = {
     top: number;
 } & TSize;
 export type Percent = `${number}%`;
-export type ImageFormat = 'jpeg' | 'png';
+/**
+ * In order to support webp on node canvas a workaround is needed and is shared here:
+ * https://github.com/Automattic/node-canvas/issues/1258
+ */
+export type ImageFormat = 'jpeg' | 'png' | 'webp';
 export type SVGElementName = 'linearGradient' | 'radialGradient' | 'stop';
 export type SupportedSVGUnit = 'mm' | 'cm' | 'in' | 'pt' | 'pc' | 'em';
 /**

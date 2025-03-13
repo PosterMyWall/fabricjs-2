@@ -593,6 +593,7 @@ export declare class StaticCanvas<EventSpec extends StaticCanvasEvents = StaticC
      * });
      */
     toDataURL(options?: TDataUrlOptions): string;
+    toBlob(options?: TDataUrlOptions): Promise<Blob | null>;
     /**
      * Create a new HTMLCanvas element painted with the current canvas content.
      * No need to resize the actual one or repaint it.

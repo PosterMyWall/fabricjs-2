@@ -26,4 +26,5 @@ export declare const createCanvasElementFor: (canvas: HTMLCanvasElement | ImageD
  */
 export declare const toDataURL: (canvasEl: HTMLCanvasElement, format: ImageFormat, quality: number) => string;
 export declare const isHTMLCanvas: (canvas?: HTMLCanvasElement | string) => canvas is HTMLCanvasElement;
+export declare const toBlob: (canvasEl: HTMLCanvasElement, format?: ImageFormat, quality?: number) => Promise<Blob | null>;
 //# sourceMappingURL=dom.d.ts.map

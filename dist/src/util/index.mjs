@@ -6,7 +6,7 @@ export { rotatePoint } from './misc/rotatePoint.mjs';
 export { projectStrokeOnPoints } from './misc/projectStroke/index.mjs';
 export { calcDimensionsMatrix, composeMatrix, createRotateMatrix, createScaleMatrix, createSkewXMatrix, createSkewYMatrix, createTranslateMatrix, invertTransform, isIdentityMatrix, multiplyTransformMatrices, multiplyTransformMatrixArray, qrDecompose, transformPoint } from './misc/matrix.mjs';
 export { hasStyleChanged, stylesFromArray, stylesToArray } from './misc/textStyles.mjs';
-export { copyCanvasElement, createCanvasElement, createImage, toDataURL } from './misc/dom.mjs';
+export { copyCanvasElement, createCanvasElement, createImage, toBlob, toDataURL } from './misc/dom.mjs';
 export { toFixed } from './misc/toFixed.mjs';
 export { getSvgAttributes, matrixToSVG, parsePreserveAspectRatioAttribute, parseUnit } from './misc/svgParsing.mjs';
 export { groupSVGElements } from './misc/groupSVGElements.mjs';

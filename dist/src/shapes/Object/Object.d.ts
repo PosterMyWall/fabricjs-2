@@ -398,7 +398,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      */
     hasFill(): boolean | "" | null;
     /**
-     * When set to `true`, force the object to have its own cache, even if it is inside a group
+     * When returns `true`, force the object to have its own cache, even if it is inside a group
      * it may be needed when your object behave in a particular way on the cache and always needs
      * its own isolated canvas to render correctly.
      * Created to be overridden
@@ -410,7 +410,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * Decide if the object should cache or not. Create its own cache level
      * objectCaching is a global flag, wins over everything
      * needsItsOwnCache should be used when the object drawing method requires
-     * a cache step. None of the fabric classes requires it.
+     * a cache step.
      * Generally you do not cache objects in groups because the group outside is cached.
      * Read as: cache if is needed, or if the feature is enabled but we are not already caching.
      * @return {Boolean}
@@ -449,7 +449,10 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      */
     drawCacheOnCanvas(this: TCachedFabricObject, ctx: CanvasRenderingContext2D): void;
     /**
-     * Check if cache is dirty
+     * Check if cache is dirty and if is dirty clear the context.
+     * This check has a big side effect, it changes the underlying cache canvas if necessary.
+     * Do not call this method on your own to check if the cache is dirty, because if it is,
+     * it is also going to wipe the cache. This is badly designed and needs to be fixed.
      * @param {Boolean} skipCanvas skip canvas checks because this object is painted
      * on parent canvas.
      */
@@ -599,6 +602,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @return {String} Returns a data: URL containing a representation of the object in the format specified by options.format
      */
     toDataURL(options?: toDataURLOptions): string;
+    toBlob(options?: toDataURLOptions): Promise<Blob | null>;
     /**
      * Returns true if any of the specified types is identical to the type of an instance
      * @param {String} type Type to check against

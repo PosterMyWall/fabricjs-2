@@ -269,9 +269,9 @@ export declare class Group extends Group_base implements GroupProps {
      */
     _exitGroup(object: FabricObject, removeParentTransform?: boolean): void;
     /**
-     * Decide if the object should cache or not. Create its own cache level
+     * Decide if the group should cache or not. Create its own cache level
      * needsItsOwnCache should be used when the object drawing method requires
-     * a cache step. None of the fabric classes requires it.
+     * a cache step.
      * Generally you do not cache objects in groups because the group is already cached.
      * @return {Boolean}
      */

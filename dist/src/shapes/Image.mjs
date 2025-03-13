@@ -104,13 +104,14 @@ class FabricImage extends FabricObject {
    * @param {Partial<TSize>} [size] Options object
    */
   setElement(element) {
+    var _element$classList;
     let size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this.removeTexture(this.cacheKey);
     this.removeTexture("".concat(this.cacheKey, "_filtered"));
     this._element = element;
     this._originalElement = element;
     this._setWidthHeight(size);
-    element.classList.add(FabricImage.CSS_CANVAS);
+    (_element$classList = element.classList) === null || _element$classList === void 0 || _element$classList.add(FabricImage.CSS_CANVAS);
     if (this.filters.length !== 0) {
       this.applyFilters();
     }
@@ -403,7 +404,7 @@ class FabricImage extends FabricObject {
       this._lastScaleX = 1;
       this._lastScaleY = 1;
     }
-    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
+    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element, this.cacheKey);
     if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
       this._filterScalingX = this._element.width / this._originalElement.width;
       this._filterScalingY = this._element.height / this._originalElement.height;
@@ -434,11 +435,11 @@ class FabricImage extends FabricObject {
   }
 
   /**
-   * Decide if the object should cache or not. Create its own cache level
+   * Decide if the FabricImage should cache or not. Create its own cache level
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group outside is cached.
-   * This is the special image version where we would like to avoid caching where possible.
+   * This is the special Image version where we would like to avoid caching where possible.
    * Essentially images do not benefit from caching. They may require caching, and in that
    * case we do it. Also caching an image usually ends in a loss of details.
    * A full performance audit should be done.
@@ -632,7 +633,9 @@ class FabricImage extends FabricObject {
 
   /**
    * Default CSS class name for canvas
+   * Will be removed from fabric 7
    * @static
+   * @deprecated
    * @type String
    * @default
    */

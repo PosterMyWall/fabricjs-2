@@ -8,7 +8,7 @@ export type { TComposeMatrixArgs, TQrDecomposeOut, TRotateMatrixArgs, TScaleMatr
 export { transformPoint, invertTransform, composeMatrix, qrDecompose, createTranslateMatrix, createRotateMatrix, createScaleMatrix, createSkewXMatrix, createSkewYMatrix, calcDimensionsMatrix, multiplyTransformMatrices, multiplyTransformMatrixArray, isIdentityMatrix, } from './misc/matrix';
 export type { TextStyleArray } from './misc/textStyles';
 export { stylesFromArray, stylesToArray, hasStyleChanged, } from './misc/textStyles';
-export { createCanvasElement, createImage, copyCanvasElement, toDataURL, } from './misc/dom';
+export { createCanvasElement, createImage, copyCanvasElement, toDataURL, toBlob, } from './misc/dom';
 export { toFixed } from './misc/toFixed';
 export { matrixToSVG, parsePreserveAspectRatioAttribute, parseUnit, getSvgAttributes, } from './misc/svgParsing';
 export { groupSVGElements } from './misc/groupSVGElements';

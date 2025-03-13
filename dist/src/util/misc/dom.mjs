@@ -49,6 +49,9 @@ const toDataURL = (canvasEl, format, quality) => canvasEl.toDataURL("image/".con
 const isHTMLCanvas = canvas => {
   return !!canvas && canvas.getContext !== undefined;
 };
+const toBlob = (canvasEl, format, quality) => new Promise((resolve, _) => {
+  canvasEl.toBlob(resolve, "image/".concat(format), quality);
+});
 
-export { copyCanvasElement, createCanvasElement, createCanvasElementFor, createImage, isHTMLCanvas, toDataURL };
+export { copyCanvasElement, createCanvasElement, createCanvasElementFor, createImage, isHTMLCanvas, toBlob, toDataURL };
 //# sourceMappingURL=dom.mjs.map
