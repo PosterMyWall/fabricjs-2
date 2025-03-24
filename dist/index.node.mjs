@@ -478,7 +478,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.6.1-pmw-40";
+var version = "6.6.1-pmw-41";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -26710,16 +26710,7 @@ class BaseFilter {
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
-    gl.canvas.addEventListener('webglcontextlost', event => {
-      console.warn('WebGL context lost');
-      event.preventDefault();
-    });
-    if (!gl) {
-      throw new FabricError('WebGL context could not be created');
-    }
     if (!vertexShader || !fragmentShader || !program) {
-      const error = gl.getError().toString(16);
-      console.error('WebGL error:', error);
       throw new FabricError('Vertex, fragment shader or program creation error');
     }
     gl.shaderSource(vertexShader, vertexSource);
