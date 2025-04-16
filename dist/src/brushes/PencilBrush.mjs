@@ -238,6 +238,7 @@ class PencilBrush extends BaseBrush {
       adjustedDistance = Math.pow(distance / zoom, 2),
       l = points.length - 1,
       newPoints = [lastPoint];
+    // TODO investigate why this is not i < l
     for (let i = 1; i < l - 1; i++) {
       cDistance = Math.pow(lastPoint.x - points[i].x, 2) + Math.pow(lastPoint.y - points[i].y, 2);
       if (cDistance >= adjustedDistance) {

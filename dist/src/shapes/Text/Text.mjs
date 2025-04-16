@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { STROKE, BOTTOM, TOP, CENTER, RIGHT, FILL, LEFT, DEFAULT_SVG_FONT_SIZE } from '../../constants.mjs';
 import { StyledText } from './StyledText.mjs';
@@ -12,11 +12,10 @@ import { getPathSegmentsInfo, getPointOnPath } from '../../util/path/index.mjs';
 import '../Object/FabricObject.mjs';
 import { TextSVGExportMixin } from './TextSVGExportMixin.mjs';
 import { applyMixins } from '../../util/applyMixins.mjs';
-import { JUSTIFY, JUSTIFY_CENTER, JUSTIFY_RIGHT, JUSTIFY_LEFT, additionalProps, textLayoutProperties, textDefaultValues } from './constants.mjs';
+import { textLayoutProperties, additionalProps, textDefaultValues, JUSTIFY, JUSTIFY_CENTER, JUSTIFY_RIGHT, JUSTIFY_LEFT } from './constants.mjs';
 import { isFiller } from '../../util/typeAssertions.mjs';
 import { cacheProperties } from '../Object/defaultValues.mjs';
 
-const _excluded = ["textAnchor", "textDecoration", "dx", "dy", "top", "left", "fontSize", "strokeWidth"];
 let measuringContext;
 
 /**
@@ -48,7 +47,10 @@ function getMeasuringContext() {
  */
 class FabricText extends StyledText {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), FabricText.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...FabricText.ownDefaults
+    };
   }
   constructor(text, options) {
     super();
@@ -197,7 +199,7 @@ class FabricText extends StyledText {
    * @return {String} String representation of text object
    */
   toString() {
-    return "#<Text (".concat(this.complexity(), "): { \"text\": \"").concat(this.text, "\", \"fontFamily\": \"").concat(this.fontFamily, "\" }>");
+    return `#<Text (${this.complexity()}): { "text": "${this.text}", "fontFamily": "${this.fontFamily}" }>`;
   }
 
   /**
@@ -1246,8 +1248,8 @@ class FabricText extends StyledText {
       fontSize = this.fontSize
     } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     let forMeasuring = arguments.length > 1 ? arguments[1] : undefined;
-    const parsedFontFamily = fontFamily.includes("'") || fontFamily.includes('"') || fontFamily.includes(',') || FabricText.genericFonts.includes(fontFamily.toLowerCase()) ? fontFamily : "\"".concat(fontFamily, "\"");
-    return [fontStyle, fontWeight, "".concat(forMeasuring ? this.CACHE_FONT_SIZE : fontSize, "px"), parsedFontFamily].join(' ');
+    const parsedFontFamily = fontFamily.includes("'") || fontFamily.includes('"') || fontFamily.includes(',') || FabricText.genericFonts.includes(fontFamily.toLowerCase()) ? fontFamily : `"${fontFamily}"`;
+    return [fontStyle, fontWeight, `${forMeasuring ? this.CACHE_FONT_SIZE : fontSize}px`, parsedFontFamily].join(' ');
   }
 
   /**
@@ -1309,11 +1311,13 @@ class FabricText extends StyledText {
    */
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return _objectSpread2(_objectSpread2({}, super.toObject([...additionalProps, ...propertiesToInclude])), {}, {
-      styles: stylesToArray(this.styles, this.text)
-    }, this.path ? {
-      path: this.path.toObject()
-    } : {});
+    return {
+      ...super.toObject([...additionalProps, ...propertiesToInclude]),
+      styles: stylesToArray(this.styles, this.text),
+      ...(this.path ? {
+        path: this.path.toObject()
+      } : {})
+    };
   }
   set(key, value) {
     const {
@@ -1366,24 +1370,26 @@ class FabricText extends StyledText {
    */
   static async fromElement(element, options, cssRules) {
     const parsedAttributes = parseAttributes(element, FabricText.ATTRIBUTE_NAMES, cssRules);
-    const _options$parsedAttrib = _objectSpread2(_objectSpread2({}, options), parsedAttributes),
-      {
-        textAnchor = LEFT,
-        textDecoration = '',
-        dx = 0,
-        dy = 0,
-        top = 0,
-        left = 0,
-        fontSize = DEFAULT_SVG_FONT_SIZE,
-        strokeWidth = 1
-      } = _options$parsedAttrib,
-      restOfOptions = _objectWithoutProperties(_options$parsedAttrib, _excluded);
+    const {
+      textAnchor = LEFT,
+      textDecoration = '',
+      dx = 0,
+      dy = 0,
+      top = 0,
+      left = 0,
+      fontSize = DEFAULT_SVG_FONT_SIZE,
+      strokeWidth = 1,
+      ...restOfOptions
+    } = {
+      ...options,
+      ...parsedAttributes
+    };
     const textContent = (element.textContent || '').replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
 
     // this code here is probably the usual issue for SVG center find
     // this can later looked at again and probably removed.
 
-    const text = new this(textContent, _objectSpread2({
+    const text = new this(textContent, {
         left: left + dx,
         top: top + dy,
         underline: textDecoration.includes('underline'),
@@ -1393,8 +1399,9 @@ class FabricText extends StyledText {
         squigglyline: textDecoration.includes('squiggly-line'),
         // we initialize this as 0
         strokeWidth: 0,
-        fontSize
-      }, restOfOptions)),
+        fontSize,
+        ...restOfOptions
+      }),
       textHeightScaleFactor = text.getScaledHeight() / text.height,
       lineHeightDiff = (text.height + text.strokeWidth) * text.lineHeight - text.height,
       scaledDiff = lineHeightDiff * textHeightScaleFactor,
@@ -1427,9 +1434,10 @@ class FabricText extends StyledText {
    * @returns {Promise<FabricText>}
    */
   static fromObject(object) {
-    return this._fromObject(_objectSpread2(_objectSpread2({}, object), {}, {
+    return this._fromObject({
+      ...object,
       styles: stylesFromArray(object.styles || {}, object.text)
-    }), {
+    }, {
       extraParam: 'text'
     });
   }

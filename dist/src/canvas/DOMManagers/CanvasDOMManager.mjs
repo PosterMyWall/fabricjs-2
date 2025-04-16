@@ -1,18 +1,10 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { getFabricDocument, getEnv } from '../../env/index.mjs';
-import { NONE } from '../../constants.mjs';
-import '../../util/misc/vectors.mjs';
-import '../../Point.mjs';
-import '../../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
 import { createCanvasElement } from '../../util/misc/dom.mjs';
-import '../../config.mjs';
-import '../../shapes/Group.mjs';
-import '../../cache.mjs';
-import '../../parser/constants.mjs';
-import { setStyle } from '../../util/dom_style.mjs';
-import '../../util/animation/AnimationRegistry.mjs';
+import { setStyle } from '../../util/internals/dom_style.mjs';
 import { makeElementUnselectable, setCanvasDimensions, setCSSDimensions } from './util.mjs';
 import { StaticCanvasDOMManager } from './StaticCanvasDOMManager.mjs';
+import { NONE } from '../../constants.mjs';
 
 class CanvasDOMManager extends StaticCanvasDOMManager {
   constructor(arg0) {
@@ -85,9 +77,10 @@ class CanvasDOMManager extends StaticCanvasDOMManager {
       styles,
       allowTouchScrolling
     } = options;
-    setStyle(element, _objectSpread2(_objectSpread2({}, styles), {}, {
+    setStyle(element, {
+      ...styles,
       'touch-action': allowTouchScrolling ? 'manipulation' : NONE
-    }));
+    });
     makeElementUnselectable(element);
   }
   setDimensions(size, retinaScaling) {

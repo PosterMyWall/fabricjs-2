@@ -31,7 +31,7 @@ class Cache {
       this.charWidthsCache[fontFamily] = {};
     }
     const fontCache = this.charWidthsCache[fontFamily];
-    const cacheKey = "".concat(fontStyle.toLowerCase(), "_").concat((fontWeight + '').toLowerCase());
+    const cacheKey = `${fontStyle.toLowerCase()}_${(fontWeight + '').toLowerCase()}`;
     if (!fontCache[cacheKey]) {
       fontCache[cacheKey] = {};
     }

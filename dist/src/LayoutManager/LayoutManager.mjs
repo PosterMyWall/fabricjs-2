@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../Point.mjs';
 import { MODIFIED, MOVING, RESIZING, ROTATING, SCALING, SKEWING, CHANGED, MODIFY_POLY, MODIFY_PATH, iMatrix, CENTER } from '../constants.mjs';
 import { invertTransform } from '../util/misc/matrix.mjs';
@@ -7,8 +7,6 @@ import { FitContentLayout } from './LayoutStrategies/FitContentLayout.mjs';
 import { LAYOUT_TYPE_OBJECT_MODIFIED, LAYOUT_TYPE_OBJECT_MODIFYING, LAYOUT_TYPE_INITIALIZATION, LAYOUT_TYPE_ADDED, LAYOUT_TYPE_REMOVED, LAYOUT_TYPE_IMPERATIVE } from './constants.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 
-const _excluded = ["strategy"],
-  _excluded2 = ["target", "strategy", "bubbles", "prevStrategy"];
 const LAYOUT_MANAGER = 'layoutManager';
 class LayoutManager {
   constructor() {
@@ -18,15 +16,15 @@ class LayoutManager {
     this._subscriptions = new Map();
   }
   performLayout(context) {
-    const strictContext = _objectSpread2(_objectSpread2({
+    const strictContext = {
       bubbles: true,
-      strategy: this.strategy
-    }, context), {}, {
+      strategy: this.strategy,
+      ...context,
       prevStrategy: this._prevLayoutStrategy,
       stopPropagation() {
         this.bubbles = false;
       }
-    });
+    };
     this.onBeforeLayout(strictContext);
     const layoutResult = this.getLayoutResult(strictContext);
     if (layoutResult) {
@@ -110,12 +108,16 @@ class LayoutManager {
       context
     });
     if (type === LAYOUT_TYPE_IMPERATIVE && context.deep) {
-      const tricklingContext = _objectWithoutProperties(context, _excluded);
+      const {
+        strategy: _,
+        ...tricklingContext
+      } = context;
       // traverse the tree
-      target.forEachObject(object => object.layoutManager && object.layoutManager.performLayout(_objectSpread2(_objectSpread2({}, tricklingContext), {}, {
+      target.forEachObject(object => object.layoutManager && object.layoutManager.performLayout({
+        ...tricklingContext,
         bubbles: false,
         target: object
-      })));
+      }));
     }
   }
   getLayoutResult(context) {
@@ -207,12 +209,12 @@ class LayoutManager {
   }
   onAfterLayout(context, layoutResult) {
     const {
-        target,
-        strategy,
-        bubbles,
-        prevStrategy: _
-      } = context,
-      bubblingContext = _objectWithoutProperties(context, _excluded2);
+      target,
+      strategy,
+      bubbles,
+      prevStrategy: _,
+      ...bubblingContext
+    } = context;
     const {
       canvas
     } = target;
@@ -234,9 +236,10 @@ class LayoutManager {
       //  add target to context#path
       (bubblingContext.path || (bubblingContext.path = [])).push(target);
       //  all parents should invalidate their layout
-      parent.layoutManager.performLayout(_objectSpread2(_objectSpread2({}, bubblingContext), {}, {
+      parent.layoutManager.performLayout({
+        ...bubblingContext,
         target: parent
-      }));
+      });
     }
     target.set('dirty', true);
   }

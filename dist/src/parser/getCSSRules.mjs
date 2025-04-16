@@ -1,5 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-
 /**
  * Returns CSS rules for a given SVG document
  * @param {HTMLElement} doc SVG document to parse
@@ -50,7 +48,10 @@ function getCSSRules(doc) {
         if (_rule === '') {
           return;
         }
-        allRules[_rule] = _objectSpread2(_objectSpread2({}, allRules[_rule] || {}), ruleObj);
+        allRules[_rule] = {
+          ...(allRules[_rule] || {}),
+          ...ruleObj
+        };
       });
     });
   }

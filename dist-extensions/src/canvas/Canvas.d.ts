@@ -1,4 +1,4 @@
-import type { CanvasEvents, DragEventData, ObjectEvents, TPointerEvent, TPointerEventNames, Transform } from '../EventTypeDefs';
+import type { CanvasEvents, DragEventData, ObjectEvents, TEventsExtraData, TPointerEvent, TPointerEventNames, Transform } from '../EventTypeDefs';
 import { Point } from '../Point';
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { CanvasOptions, TCanvasOptions } from './CanvasOptions';
@@ -58,6 +58,12 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @private
      */
     private _dropTarget;
+    /**
+     * a boolean that keeps track of the click state during a cycle of mouse down/up.
+     * If a mouse move occurs it becomes false.
+     * Is true by default, turns false on mouse move.
+     * Used to determine if a mouseUp is a click
+     */
     private _isClick;
     textEditingManager: TextEditingManager;
     constructor(el?: string | HTMLCanvasElement, options?: TCanvasOptions);
@@ -157,7 +163,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @private
      * @param {Event} e Event object fired on mousedown
      */
-    private _onDoubleClick;
+    private _onClick;
     /**
      * Return a the id of an event.
      * returns either the pointerId or the identifier or 0 for the mouse event
@@ -231,7 +237,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {TPointerEvent} e event from mouse
      * @param {TPointerEventNames} eventType
      */
-    _handleEvent<T extends TPointerEventNames>(e: TPointerEvent, eventType: T): void;
+    _handleEvent<T extends TPointerEventNames>(e: TPointerEvent, eventType: T, extraData?: TEventsExtraData[T]): void;
     /**
      * @private
      * @param {Event} e Event object fired on mousedown

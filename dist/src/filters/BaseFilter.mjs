@@ -1,12 +1,10 @@
-import { defineProperty as _defineProperty, objectWithoutProperties as _objectWithoutProperties, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { getEnv } from '../env/index.mjs';
 import { isWebGLPipelineState } from './utils.mjs';
 import { identityFragmentShader, vertexSource, highPsourceCode } from './shaders/baseFilter.mjs';
 import { FabricError } from '../util/internals/console.mjs';
 import { createCanvasElementFor } from '../util/misc/dom.mjs';
 
-const _excluded = ["type"],
-  _excluded2 = ["type"];
 const regex = new RegExp(highPsourceCode, 'g');
 class BaseFilter {
   /**
@@ -31,8 +29,10 @@ class BaseFilter {
    * @param {Object} [options] Options object
    */
   constructor() {
-    let _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-      options = _objectWithoutProperties(_ref, _excluded);
+    let {
+      type,
+      ...options
+    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     Object.assign(this, this.constructor.defaults, options);
   }
   getFragmentSource() {
@@ -69,18 +69,18 @@ class BaseFilter {
     gl.shaderSource(vertexShader, vertexSource);
     gl.compileShader(vertexShader);
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-      throw new FabricError("Vertex shader compile error for ".concat(this.type, ": ").concat(gl.getShaderInfoLog(vertexShader)));
+      throw new FabricError(`Vertex shader compile error for ${this.type}: ${gl.getShaderInfoLog(vertexShader)}`);
     }
     gl.shaderSource(fragmentShader, fragmentSource);
     gl.compileShader(fragmentShader);
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-      throw new FabricError("Fragment shader compile error for ".concat(this.type, ": ").concat(gl.getShaderInfoLog(fragmentShader)));
+      throw new FabricError(`Fragment shader compile error for ${this.type}: ${gl.getShaderInfoLog(fragmentShader)}`);
     }
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      throw new FabricError("Shader link error for \"".concat(this.type, "\" ").concat(gl.getProgramInfoLog(program)));
+      throw new FabricError(`Shader link error for "${this.type}" ${gl.getProgramInfoLog(program)}`);
     }
     const uniformLocations = this.getUniformLocations(gl, program) || {};
     uniformLocations.uStepW = gl.getUniformLocation(program, 'uStepW');
@@ -299,12 +299,13 @@ class BaseFilter {
    */
   toObject() {
     const defaultKeys = Object.keys(this.constructor.defaults || {});
-    return _objectSpread2({
-      type: this.type
-    }, defaultKeys.reduce((acc, key) => {
-      acc[key] = this[key];
-      return acc;
-    }, {}));
+    return {
+      type: this.type,
+      ...defaultKeys.reduce((acc, key) => {
+        acc[key] = this[key];
+        return acc;
+      }, {})
+    };
   }
 
   /**
@@ -315,8 +316,11 @@ class BaseFilter {
     // delegate, not alias
     return this.toObject();
   }
-  static async fromObject(_ref2, _options) {
-    let filterOptions = _objectWithoutProperties(_ref2, _excluded2);
+  static async fromObject(_ref, _options) {
+    let {
+      type,
+      ...filterOptions
+    } = _ref;
     return new this(filterOptions);
   }
 }

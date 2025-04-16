@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { DEFAULT_SVG_FONT_SIZE } from '../constants.mjs';
 import { parseUnit } from '../util/misc/svgParsing.mjs';
 import { svgValidParentsRegEx, cPath, fSize } from './constants.mjs';
@@ -31,20 +30,26 @@ function parseAttributes(element, attributes, cssRules) {
       fontSize = parentFontSize = parseUnit(parentAttributes.fontSize);
     }
   }
-  const ownAttributes = _objectSpread2(_objectSpread2(_objectSpread2({}, attributes.reduce((memo, attr) => {
-    const value = element.getAttribute(attr);
-    if (value) {
-      memo[attr] = value;
-    }
-    return memo;
-  }, {})), getGlobalStylesForElement(element, cssRules)), parseStyleAttribute(element));
+  const ownAttributes = {
+    ...attributes.reduce((memo, attr) => {
+      const value = element.getAttribute(attr);
+      if (value) {
+        memo[attr] = value;
+      }
+      return memo;
+    }, {}),
+    // add values parsed from style, which take precedence over attributes
+    // (see: http://www.w3.org/TR/SVG/styling.html#UsingPresentationAttributes)
+    ...getGlobalStylesForElement(element, cssRules),
+    ...parseStyleAttribute(element)
+  };
   if (ownAttributes[cPath]) {
     element.setAttribute(cPath, ownAttributes[cPath]);
   }
   if (ownAttributes[fSize]) {
     // looks like the minimum should be 9px when dealing with ems. this is what looks like in browsers.
     fontSize = parseUnit(ownAttributes[fSize], parentFontSize);
-    ownAttributes[fSize] = "".concat(fontSize);
+    ownAttributes[fSize] = `${fontSize}`;
   }
 
   // this should have its own complex type
@@ -57,7 +62,10 @@ function parseAttributes(element, attributes, cssRules) {
   if (normalizedStyle && normalizedStyle.font) {
     parseFontDeclaration(normalizedStyle.font, normalizedStyle);
   }
-  const mergedAttrs = _objectSpread2(_objectSpread2({}, parentAttributes), normalizedStyle);
+  const mergedAttrs = {
+    ...parentAttributes,
+    ...normalizedStyle
+  };
   return svgValidParentsRegEx.test(element.nodeName) ? mergedAttrs : setStrokeFillOpacity(mergedAttrs);
 }
 

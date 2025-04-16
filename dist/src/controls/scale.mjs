@@ -71,7 +71,7 @@ const scaleCursorStyleHandler = (eventData, control, fabricObject) => {
     return NOT_ALLOWED_CURSOR;
   }
   const n = findCornerQuadrant(fabricObject, control);
-  return "".concat(scaleMap[n], "-resize");
+  return `${scaleMap[n]}-resize`;
 };
 
 /**

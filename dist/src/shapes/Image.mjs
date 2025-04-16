@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { getFabricDocument, getEnv } from '../env/index.mjs';
 import { getFilterBackend } from '../filters/FilterBackend.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
@@ -15,8 +15,6 @@ import { FILL, NONE } from '../constants.mjs';
 import { getDocumentFromElement } from '../util/dom_misc.mjs';
 import { log } from '../util/internals/console.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
-
-const _excluded = ["filters", "resizeFilter", "src", "crossOrigin", "type"];
 
 // @todo Would be nice to have filtering code not imported directly.
 
@@ -35,7 +33,10 @@ const IMAGE_PROPS = ['cropX', 'cropY'];
  */
 class FabricImage extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), FabricImage.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...FabricImage.ownDefaults
+    };
   }
   /**
    * Constructor
@@ -85,7 +86,7 @@ class FabricImage extends FabricObject {
     this.filters = [];
     Object.assign(this, FabricImage.ownDefaults);
     this.setOptions(options);
-    this.cacheKey = "texture".concat(uid());
+    this.cacheKey = `texture${uid()}`;
     this.setElement(typeof arg0 === 'string' ? (this.canvas && getDocumentFromElement(this.canvas.getElement()) || getFabricDocument()).getElementById(arg0) : arg0, options);
   }
 
@@ -104,14 +105,12 @@ class FabricImage extends FabricObject {
    * @param {Partial<TSize>} [size] Options object
    */
   setElement(element) {
-    var _element$classList;
     let size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     this.removeTexture(this.cacheKey);
-    this.removeTexture("".concat(this.cacheKey, "_filtered"));
+    this.removeTexture(`${this.cacheKey}_filtered`);
     this._element = element;
     this._originalElement = element;
     this._setWidthHeight(size);
-    (_element$classList = element.classList) === null || _element$classList === void 0 || _element$classList.add(FabricImage.CSS_CANVAS);
     if (this.filters.length !== 0) {
       this.applyFilters();
     }
@@ -140,7 +139,7 @@ class FabricImage extends FabricObject {
   dispose() {
     super.dispose();
     this.removeTexture(this.cacheKey);
-    this.removeTexture("".concat(this.cacheKey, "_filtered"));
+    this.removeTexture(`${this.cacheKey}_filtered`);
     this._cacheContext = null;
     ['_originalElement', '_element', '_filteredEl', '_cacheCanvas'].forEach(elementKey => {
       const el = this[elementKey];
@@ -204,13 +203,15 @@ class FabricImage extends FabricObject {
     this.filters.forEach(filterObj => {
       filterObj && filters.push(filterObj.toObject());
     });
-    return _objectSpread2(_objectSpread2({}, super.toObject([...IMAGE_PROPS, ...propertiesToInclude])), {}, {
+    return {
+      ...super.toObject([...IMAGE_PROPS, ...propertiesToInclude]),
       src: this.getSrc(),
       crossOrigin: this.getCrossOrigin(),
-      filters
-    }, this.resizeFilter ? {
-      resizeFilter: this.resizeFilter.toObject()
-    } : {});
+      filters,
+      ...(this.resizeFilter ? {
+        resizeFilter: this.resizeFilter.toObject()
+      } : {})
+    };
   }
 
   /**
@@ -246,15 +247,15 @@ class FabricImage extends FabricObject {
     if (!this.imageSmoothing) {
       imageRendering = ' image-rendering="optimizeSpeed"';
     }
-    imageMarkup.push('\t<image ', 'COMMON_PARTS', "xlink:href=\"".concat(this.getSvgSrc(true), "\" x=\"").concat(x - this.cropX, "\" y=\"").concat(y - this.cropY
+    imageMarkup.push('\t<image ', 'COMMON_PARTS', `xlink:href="${this.getSvgSrc(true)}" x="${x - this.cropX}" y="${y - this.cropY
     // we're essentially moving origin of transformation from top/left corner to the center of the shape
     // by wrapping it in container <g> element with actual transformation, then offsetting object to the top/left
     // so that object's center aligns with container's left/top
-    , "\" width=\"").concat(element.width || element.naturalWidth, "\" height=\"").concat(element.height || element.naturalHeight, "\"").concat(imageRendering).concat(clipPath, "></image>\n"));
+    }" width="${element.width || element.naturalWidth}" height="${element.height || element.naturalHeight}"${imageRendering}${clipPath}></image>\n`);
     if (this.stroke || this.strokeDashArray) {
       const origFill = this.fill;
       this.fill = null;
-      strokeSvg = ["\t<rect x=\"".concat(x, "\" y=\"").concat(y, "\" width=\"").concat(this.width, "\" height=\"").concat(this.height, "\" style=\"").concat(this.getSvgStyles(), "\" />\n")];
+      strokeSvg = [`\t<rect x="${x}" y="${y}" width="${this.width}" height="${this.height}" style="${this.getSvgStyles()}" />\n`];
       this.fill = origFill;
     }
     if (this.paintFirst !== FILL) {
@@ -322,7 +323,7 @@ class FabricImage extends FabricObject {
    * @return {String} String representation of an instance
    */
   toString() {
-    return "#<Image: { src: \"".concat(this.getSrc(), "\" }>");
+    return `#<Image: { src: "${this.getSrc()}" }>`;
   }
   applyResizeFilters() {
     const filter = this.resizeFilter,
@@ -367,7 +368,7 @@ class FabricImage extends FabricObject {
     this.set('dirty', true);
 
     // needs to clear out or WEBGL will not resize correctly
-    this.removeTexture("".concat(this.cacheKey, "_filtered"));
+    this.removeTexture(`${this.cacheKey}_filtered`);
     if (filters.length === 0) {
       this._element = this._originalElement;
       // this is unsafe and needs to be rethinkend
@@ -632,12 +633,9 @@ class FabricImage extends FabricObject {
   }
 
   /**
-   * Default CSS class name for canvas
-   * Will be removed from fabric 7
+   * List of attribute names to account for when parsing SVG element (used by {@link FabricImage.fromElement})
    * @static
-   * @deprecated
-   * @type String
-   * @default
+   * @see {@link http://www.w3.org/TR/SVG/struct.html#ImageElement}
    */
 
   /**
@@ -650,25 +648,28 @@ class FabricImage extends FabricObject {
    */
   static fromObject(_ref, options) {
     let {
-        filters: f,
-        resizeFilter: rf,
-        src,
-        crossOrigin,
-        type
-      } = _ref,
-      object = _objectWithoutProperties(_ref, _excluded);
-    return Promise.all([loadImage(src, _objectSpread2(_objectSpread2({}, options), {}, {
+      filters: f,
+      resizeFilter: rf,
+      src,
+      crossOrigin,
+      type,
+      ...object
+    } = _ref;
+    return Promise.all([loadImage(src, {
+      ...options,
       crossOrigin
-    })), f && enlivenObjects(f, options),
-    // TODO: redundant - handled by enlivenObjectEnlivables
-    rf && enlivenObjects([rf], options), enlivenObjectEnlivables(object, options)]).then(_ref2 => {
-      let [el, filters = [], [resizeFilter] = [], hydratedProps = {}] = _ref2;
-      return new this(el, _objectSpread2(_objectSpread2({}, object), {}, {
-        // TODO: this creates a difference between image creation and restoring from JSON
+    }), f && enlivenObjects(f, options),
+    // redundant - handled by enlivenObjectEnlivables, but nicely explicit
+    rf ? enlivenObjects([rf], options) : [], enlivenObjectEnlivables(object, options)]).then(_ref2 => {
+      let [el, filters = [], [resizeFilter], hydratedProps = {}] = _ref2;
+      return new this(el, {
+        ...object,
+        // TODO: passing src creates a difference between image creation and restoring from JSON
         src,
         filters,
-        resizeFilter
-      }, hydratedProps));
+        resizeFilter,
+        ...hydratedProps
+      });
     });
   }
 
@@ -703,7 +704,7 @@ class FabricImage extends FabricObject {
     let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     let cssRules = arguments.length > 2 ? arguments[2] : undefined;
     const parsedAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
-    return this.fromURL(parsedAttributes['xlink:href'], options, parsedAttributes).catch(err => {
+    return this.fromURL(parsedAttributes['xlink:href'] || parsedAttributes['href'], options, parsedAttributes).catch(err => {
       log('log', 'Unable to parse Image', err);
       return null;
     });
@@ -712,13 +713,7 @@ class FabricImage extends FabricObject {
 _defineProperty(FabricImage, "type", 'Image');
 _defineProperty(FabricImage, "cacheProperties", [...cacheProperties, ...IMAGE_PROPS]);
 _defineProperty(FabricImage, "ownDefaults", imageDefaultValues);
-_defineProperty(FabricImage, "CSS_CANVAS", 'canvas-img');
-/**
- * List of attribute names to account for when parsing SVG element (used by {@link FabricImage.fromElement})
- * @static
- * @see {@link http://www.w3.org/TR/SVG/struct.html#ImageElement}
- */
-_defineProperty(FabricImage, "ATTRIBUTE_NAMES", [...SHARED_ATTRIBUTES, 'x', 'y', 'width', 'height', 'preserveAspectRatio', 'xlink:href', 'crossOrigin', 'image-rendering']);
+_defineProperty(FabricImage, "ATTRIBUTE_NAMES", [...SHARED_ATTRIBUTES, 'x', 'y', 'width', 'height', 'preserveAspectRatio', 'xlink:href', 'href', 'crossOrigin', 'image-rendering']);
 classRegistry.setClass(FabricImage);
 classRegistry.setSVGClass(FabricImage);
 

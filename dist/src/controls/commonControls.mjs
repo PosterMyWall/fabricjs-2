@@ -1,10 +1,9 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { ROTATE, RESIZING } from '../constants.mjs';
 import { changeWidth } from './changeWidth.mjs';
 import { Control } from './Control.mjs';
-import { rotationWithSnapping, rotationStyleHandler } from './rotate.mjs';
-import { scaleCursorStyleHandler, scalingEqually } from './scale.mjs';
-import { scaleSkewCursorStyleHandler, scalingXOrSkewingY, scaleOrSkewActionName, scalingYOrSkewingX } from './scaleSkew.mjs';
+import { rotationStyleHandler, rotationWithSnapping } from './rotate.mjs';
+import { scalingEqually, scaleCursorStyleHandler } from './scale.mjs';
+import { scaleOrSkewActionName, scalingYOrSkewingX, scaleSkewCursorStyleHandler, scalingXOrSkewingY } from './scaleSkew.mjs';
 
 // use this function if you want to generate new controls for every instance
 const createObjectDefaultControls = () => ({
@@ -86,7 +85,10 @@ const createResizeControls = () => ({
     actionName: RESIZING
   })
 });
-const createTextboxDefaultControls = () => _objectSpread2(_objectSpread2({}, createObjectDefaultControls()), createResizeControls());
+const createTextboxDefaultControls = () => ({
+  ...createObjectDefaultControls(),
+  ...createResizeControls()
+});
 
 export { createObjectDefaultControls, createResizeControls, createTextboxDefaultControls };
 //# sourceMappingURL=commonControls.mjs.map

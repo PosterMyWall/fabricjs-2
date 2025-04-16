@@ -8,7 +8,7 @@
  */
 const capitalize = function (string) {
   let firstLetterOnly = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  return "".concat(string.charAt(0).toUpperCase()).concat(firstLetterOnly ? string.slice(1) : string.slice(1).toLowerCase());
+  return `${string.charAt(0).toUpperCase()}${firstLetterOnly ? string.slice(1) : string.slice(1).toLowerCase()}`;
 };
 
 /**

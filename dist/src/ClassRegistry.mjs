@@ -25,7 +25,7 @@ class ClassRegistry {
   getClass(classType) {
     const constructor = this[JSON].get(classType);
     if (!constructor) {
-      throw new FabricError("No class registered for ".concat(classType));
+      throw new FabricError(`No class registered for ${classType}`);
     }
     return constructor;
   }

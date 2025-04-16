@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { SCALE_X, SCALE_Y, iMatrix, CENTER, LEFT, TOP } from '../../constants.mjs';
 import { Intersection } from '../../Intersection.mjs';
 import { Point } from '../../Point.mjs';
@@ -509,7 +508,7 @@ class ObjectGeometry extends CommonMethods {
    */
   _getTransformedDimensions() {
     let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    const dimOptions = _objectSpread2({
+    const dimOptions = {
       // if scaleX or scaleY are negative numbers,
       // this will return dimensions that are negative.
       // and this will break assumptions around the codebase
@@ -519,8 +518,10 @@ class ObjectGeometry extends CommonMethods {
       skewY: this.skewY,
       width: this.width,
       height: this.height,
-      strokeWidth: this.strokeWidth
-    }, options);
+      strokeWidth: this.strokeWidth,
+      // TODO remove this spread. is visible in the performance inspection
+      ...options
+    };
     // stroke is applied before/after transformations are applied according to `strokeUniform`
     const strokeWidth = dimOptions.strokeWidth;
     let preScalingStrokeValue = strokeWidth,

@@ -1,3 +1,3 @@
 export * from './Gradient';
-export * from './typedefs';
+export type * from './typedefs';
 //# sourceMappingURL=index.d.ts.map

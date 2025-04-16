@@ -1,4 +1,4 @@
-import { STROKE, FILL, reNewline, LEFT } from '../../constants.mjs';
+import { STROKE, FILL, LEFT, reNewline } from '../../constants.mjs';
 
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
 const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];

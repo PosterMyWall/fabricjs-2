@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
 
@@ -8,7 +8,10 @@ const triangleDefaultValues = {
 };
 class Triangle extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Triangle.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Triangle.ownDefaults
+    };
   }
 
   /**
@@ -44,7 +47,7 @@ class Triangle extends FabricObject {
   _toSVG() {
     const widthBy2 = this.width / 2,
       heightBy2 = this.height / 2,
-      points = "".concat(-widthBy2, " ").concat(heightBy2, ",0 ").concat(-heightBy2, ",").concat(widthBy2, " ").concat(heightBy2);
+      points = `${-widthBy2} ${heightBy2},0 ${-heightBy2},${widthBy2} ${heightBy2}`;
     return ['<polygon ', 'COMMON_PARTS', 'points="', points, '" />'];
   }
 }

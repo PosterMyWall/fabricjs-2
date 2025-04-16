@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { config } from '../config.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
@@ -11,10 +11,9 @@ import { projectStrokeOnPoints } from '../util/misc/projectStroke/index.mjs';
 import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { toFixed } from '../util/misc/toFixed.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
-import { LEFT, TOP, CENTER, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y } from '../constants.mjs';
+import { SKEW_X, SKEW_Y, LEFT, TOP, CENTER, SCALE_X, SCALE_Y } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
-const _excluded = ["left", "top"];
 const polylineDefaultValues = {
   /**
    * @deprecated transient option soon to be removed in favor of a different design
@@ -23,7 +22,10 @@ const polylineDefaultValues = {
 };
 class Polyline extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Polyline.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Polyline.ownDefaults
+    };
   }
 
   /**
@@ -79,7 +81,7 @@ class Polyline extends FabricObject {
    * @private
    */
   _calcDimensions(options) {
-    options = _objectSpread2({
+    options = {
       scaleX: this.scaleX,
       scaleY: this.scaleY,
       skewX: this.skewX,
@@ -88,8 +90,9 @@ class Polyline extends FabricObject {
       strokeLineJoin: this.strokeLineJoin,
       strokeMiterLimit: this.strokeMiterLimit,
       strokeUniform: this.strokeUniform,
-      strokeWidth: this.strokeWidth
-    }, options || {});
+      strokeWidth: this.strokeWidth,
+      ...(options || {})
+    };
     const points = this.exactBoundingBox ? this._projectStrokeOnPoints(options).map(projection => projection.projectedPoint) : this.points;
     if (points.length === 0) {
       return {
@@ -104,10 +107,11 @@ class Polyline extends FabricObject {
     }
     const bbox = makeBoundingBoxFromPoints(points),
       // Remove scale effect, since it's applied after
-      matrix = calcDimensionsMatrix(_objectSpread2(_objectSpread2({}, options), {}, {
+      matrix = calcDimensionsMatrix({
+        ...options,
         scaleX: 1,
         scaleY: 1
-      })),
+      }),
       bboxNoStroke = makeBoundingBoxFromPoints(this.points.map(p => transformPoint(p, matrix, true))),
       scale = new Point(this.scaleX, this.scaleY);
     let offsetX = bbox.left + bbox.width / 2,
@@ -118,11 +122,12 @@ class Polyline extends FabricObject {
       // offsetY relies on offsetX being already changed by the line above
       offsetY = offsetY - offsetX * Math.tan(degreesToRadians(this.skewY));
     }
-    return _objectSpread2(_objectSpread2({}, bbox), {}, {
+    return {
+      ...bbox,
       pathOffset: new Point(offsetX, offsetY),
       strokeOffset: new Point(bboxNoStroke.left, bboxNoStroke.top).subtract(new Point(bbox.left, bbox.top)).multiply(scale),
       strokeDiff: new Point(bbox.width, bbox.height).subtract(new Point(bboxNoStroke.width, bboxNoStroke.height)).multiply(scale)
-    });
+    };
   }
 
   /**
@@ -226,7 +231,8 @@ class Polyline extends FabricObject {
    */
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return _objectSpread2(_objectSpread2({}, super.toObject(propertiesToInclude)), {}, {
+    return {
+      ...super.toObject(propertiesToInclude),
       points: this.points.map(_ref => {
         let {
           x,
@@ -237,7 +243,7 @@ class Polyline extends FabricObject {
           y
         };
       })
-    });
+    };
   }
 
   /**
@@ -253,7 +259,7 @@ class Polyline extends FabricObject {
     for (let i = 0, len = this.points.length; i < len; i++) {
       points.push(toFixed(this.points[i].x - diffX, NUM_FRACTION_DIGITS), ',', toFixed(this.points[i].y - diffY, NUM_FRACTION_DIGITS), ' ');
     }
-    return ["<".concat(this.constructor.type.toLowerCase(), " "), 'COMMON_PARTS', "points=\"".concat(points.join(''), "\" />\n")];
+    return [`<${this.constructor.type.toLowerCase()} `, 'COMMON_PARTS', `points="${points.join('')}" />\n`];
   }
 
   /**
@@ -305,9 +311,17 @@ class Polyline extends FabricObject {
    */
   static async fromElement(element, options, cssRules) {
     const points = parsePointsAttribute(element.getAttribute('points')),
-      _parseAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded);
-    return new this(points, _objectSpread2(_objectSpread2({}, parsedAttributes), options));
+      // we omit left and top to instruct the constructor to position the object using the bbox
+
+      {
+        left,
+        top,
+        ...parsedAttributes
+      } = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
+    return new this(points, {
+      ...parsedAttributes,
+      ...options
+    });
   }
 
   /* _FROM_SVG_END_ */

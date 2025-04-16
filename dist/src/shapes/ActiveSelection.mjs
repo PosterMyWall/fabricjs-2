@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { Group } from './Group.mjs';
 import { LAYOUT_TYPE_REMOVED, LAYOUT_TYPE_ADDED } from '../LayoutManager/constants.mjs';
@@ -22,7 +22,10 @@ const activeSelectionDefaultValues = {
  */
 class ActiveSelection extends Group {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), ActiveSelection.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...ActiveSelection.ownDefaults
+    };
   }
 
   /**
@@ -184,7 +187,7 @@ class ActiveSelection extends Group {
    * @return {String}
    */
   toString() {
-    return "#<ActiveSelection: (".concat(this.complexity(), ")>");
+    return `#<ActiveSelection: (${this.complexity()})>`;
   }
 
   /**
@@ -212,11 +215,11 @@ class ActiveSelection extends Group {
   _renderControls(ctx, styleOverride, childrenOverride) {
     ctx.save();
     ctx.globalAlpha = this.isMoving ? this.borderOpacityWhenMoving : 1;
-    const options = _objectSpread2(_objectSpread2({
-      hasControls: false
-    }, childrenOverride), {}, {
+    const options = {
+      hasControls: false,
+      ...childrenOverride,
       forActiveSelection: true
-    });
+    };
     for (let i = 0; i < this._objects.length; i++) {
       this._objects[i]._renderControls(ctx, options);
     }

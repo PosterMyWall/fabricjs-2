@@ -34,7 +34,7 @@ class Resize extends BaseFilter {
   }
   getCacheKey() {
     const filterWindow = this.getFilterWindow();
-    return "".concat(this.type, "_").concat(filterWindow);
+    return `${this.type}_${filterWindow}`;
   }
   getFragmentSource() {
     const filterWindow = this.getFilterWindow();
@@ -58,9 +58,24 @@ class Resize extends BaseFilter {
   generateShader(filterWindow) {
     const offsets = new Array(filterWindow);
     for (let i = 1; i <= filterWindow; i++) {
-      offsets[i - 1] = "".concat(i, ".0 * uDelta");
+      offsets[i - 1] = `${i}.0 * uDelta`;
     }
-    return "\n      precision highp float;\n      uniform sampler2D uTexture;\n      uniform vec2 uDelta;\n      varying vec2 vTexCoord;\n      uniform float uTaps[".concat(filterWindow, "];\n      void main() {\n        vec4 color = texture2D(uTexture, vTexCoord);\n        float sum = 1.0;\n        ").concat(offsets.map((offset, i) => "\n              color += texture2D(uTexture, vTexCoord + ".concat(offset, ") * uTaps[").concat(i, "] + texture2D(uTexture, vTexCoord - ").concat(offset, ") * uTaps[").concat(i, "];\n              sum += 2.0 * uTaps[").concat(i, "];\n            ")).join('\n'), "\n        gl_FragColor = color / sum;\n      }\n    ");
+    return `
+      precision highp float;
+      uniform sampler2D uTexture;
+      uniform vec2 uDelta;
+      varying vec2 vTexCoord;
+      uniform float uTaps[${filterWindow}];
+      void main() {
+        vec4 color = texture2D(uTexture, vTexCoord);
+        float sum = 1.0;
+        ${offsets.map((offset, i) => `
+              color += texture2D(uTexture, vTexCoord + ${offset}) * uTaps[${i}] + texture2D(uTexture, vTexCoord - ${offset}) * uTaps[${i}];
+              sum += 2.0 * uTaps[${i}];
+            `).join('\n')}
+        gl_FragColor = color / sum;
+      }
+    `;
   }
   applyToForWebgl(options) {
     options.passes++;

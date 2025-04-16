@@ -25,7 +25,7 @@ const canvasDefaults = {
   fireMiddleClick: false,
   enablePointerEvents: false,
   containerClass: 'canvas-container',
-  preserveObjectStacking: false
+  preserveObjectStacking: true
 };
 
 export { canvasDefaults };

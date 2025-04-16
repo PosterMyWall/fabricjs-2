@@ -7,6 +7,7 @@ export type ResizeOwnProps = {
     scaleY: number;
     lanczosLobes: number;
 };
+export type ResizeSerializedProps = ResizeOwnProps;
 export declare const resizeDefaultValues: ResizeOwnProps;
 type ResizeDuring2DResize = Resize & {
     rcpScaleX: number;

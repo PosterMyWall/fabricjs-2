@@ -3,6 +3,7 @@ import { ITextClickBehavior } from './ITextClickBehavior';
 import type { TClassProperties, TFiller, TOptions } from '../../typedefs';
 import type { SerializedTextProps, TextProps } from '../Text/Text';
 import type { ObjectToCanvasElementOptions } from '../Object/Object';
+import type { FabricObject } from '../Object/FabricObject';
 export type CursorBoundaries = {
     left: number;
     top: number;
@@ -245,6 +246,14 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      */
     renderCursorOrSelection(): void;
     /**
+     * Finds and returns an array of clip paths that are applied to the parent
+     * group(s) of the current FabricObject instance. The object's hierarchy is
+     * traversed upwards (from the current object towards the root of the canvas),
+     * checking each parent object for the presence of a `clipPath` that is not
+     * absolutely positioned.
+     */
+    findAncestorsWithClipPath(): FabricObject[];
+    /**
      * Returns cursor boundaries (left, top, leftOffset, topOffset)
      * left/top are left/top of entire text box
      * leftOffset/topOffset are offset from that left/top point of a text box
@@ -293,7 +302,7 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
     getCursorRenderingData(selectionStart?: number, boundaries?: CursorBoundaries): CursorRenderingData;
     /**
      * Render the cursor at the given selectionStart.
-     *
+     * @param {CanvasRenderingContext2D} ctx transformed context to draw on
      */
     _renderCursor(ctx: CanvasRenderingContext2D, boundaries: CursorBoundaries, selectionStart: number): void;
     /**

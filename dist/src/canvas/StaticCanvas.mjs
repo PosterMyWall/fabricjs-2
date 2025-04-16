@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { config } from '../config.mjs';
 import { CENTER, VERSION } from '../constants.mjs';
 import { createCollectionMixin, isCollection } from '../Collection.mjs';
@@ -11,7 +11,7 @@ import { createCanvasElementFor, toDataURL, toBlob } from '../util/misc/dom.mjs'
 import { transformPoint, invertTransform } from '../util/misc/matrix.mjs';
 import { enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
 import { pick } from '../util/misc/pick.mjs';
-import { matrixToSVG } from '../util/misc/svgParsing.mjs';
+import { matrixToSVG } from '../util/misc/svgExport.mjs';
 import { toFixed } from '../util/misc/toFixed.mjs';
 import { isFiller, isTextObject, isPattern } from '../util/typeAssertions.mjs';
 import { StaticCanvasDOMManager } from './DOMManagers/StaticCanvasDOMManager.mjs';
@@ -188,36 +188,6 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
   }
 
   /**
-   * Sets width of this canvas instance
-   * @param {Number|String} value                         Value to set width to
-   * @param {Object}        [options]                     Options object
-   * @param {Boolean}       [options.backstoreOnly=false] Set the given dimensions only as canvas backstore dimensions
-   * @param {Boolean}       [options.cssOnly=false]       Set the given dimensions only as css dimensions
-   * @deprecated will be removed in 7.0
-   */
-
-  setWidth(value, options) {
-    return this.setDimensions({
-      width: value
-    }, options);
-  }
-
-  /**s
-   * Sets height of this canvas instance
-   * @param {Number|String} value                         Value to set height to
-   * @param {Object}        [options]                     Options object
-   * @param {Boolean}       [options.backstoreOnly=false] Set the given dimensions only as canvas backstore dimensions
-   * @param {Boolean}       [options.cssOnly=false]       Set the given dimensions only as css dimensions
-   * @deprecated will be removed in 7.0
-   */
-
-  setHeight(value, options) {
-    return this.setDimensions({
-      height: value
-    }, options);
-  }
-
-  /**
    * Internal use only
    * @protected
    */
@@ -227,10 +197,11 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       backstoreOnly = false
     } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     if (!cssOnly) {
-      const size = _objectSpread2({
+      const size = {
         width: this.width,
-        height: this.height
-      }, dimensions);
+        height: this.height,
+        ...dimensions
+      };
       this.elements.setDimensions(size, this.getRetinaScaling());
       this.hasLostContext = true;
       this.width = size.width;
@@ -521,10 +492,10 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @param {string} property 'background' or 'overlay'
    */
   _renderBackgroundOrOverlay(ctx, property) {
-    const fill = this["".concat(property, "Color")],
-      object = this["".concat(property, "Image")],
+    const fill = this[`${property}Color`],
+      object = this[`${property}Image`],
       v = this.viewportTransform,
-      needsVpt = this["".concat(property, "Vpt")];
+      needsVpt = this[`${property}Vpt`];
     if (!fill && !object) {
       return;
     }
@@ -580,19 +551,6 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    */
   _renderOverlay(ctx) {
     this._renderBackgroundOrOverlay(ctx, 'overlay');
-  }
-
-  /**
-   * Returns coordinates of a center of canvas.
-   * Returned value is an object with top and left properties
-   * @return {Object} object with "top" and "left" number values
-   * @deprecated migrate to `getCenterPoint`
-   */
-  getCenter() {
-    return {
-      top: this.height / 2,
-      left: this.width / 2
-    };
   }
 
   /**
@@ -692,15 +650,14 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * this alias is provided because if you call JSON.stringify on an instance,
    * the toJSON object will be invoked if it exists.
    * Having a toJSON method means you can do JSON.stringify(myCanvas)
+   * JSON does not support additional properties because toJSON has its own signature
    * @return {Object} JSON compatible object
    * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#serialization}
    * @see {@link http://jsfiddle.net/fabricjs/pec86/|jsFiddle demo}
-   * @example <caption>JSON without additional properties</caption>
-   * var json = canvas.toJSON();
-   * @example <caption>JSON with additional properties included</caption>
-   * var json = canvas.toJSON(['lockMovementX', 'lockMovementY', 'lockRotation', 'lockScalingX', 'lockScalingY']);
-   * @example <caption>JSON without default values</caption>
-   * var json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = JSON.stringify(canvas);
    */
   toJSON() {
     return this.toObject();
@@ -721,13 +678,15 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
   _toObjectMethod(methodName, propertiesToInclude) {
     const clipPath = this.clipPath;
     const clipPathData = clipPath && !clipPath.excludeFromExport ? this._toObject(clipPath, methodName, propertiesToInclude) : null;
-    return _objectSpread2(_objectSpread2(_objectSpread2({
-      version: VERSION
-    }, pick(this, propertiesToInclude)), {}, {
-      objects: this._objects.filter(object => !object.excludeFromExport).map(instance => this._toObject(instance, methodName, propertiesToInclude))
-    }, this.__serializeBgOverlay(methodName, propertiesToInclude)), clipPathData ? {
-      clipPath: clipPathData
-    } : null);
+    return {
+      version: VERSION,
+      ...pick(this, propertiesToInclude),
+      objects: this._objects.filter(object => !object.excludeFromExport).map(instance => this._toObject(instance, methodName, propertiesToInclude)),
+      ...this.__serializeBgOverlay(methodName, propertiesToInclude),
+      ...(clipPathData ? {
+        clipPath: clipPathData
+      } : null)
+    };
   }
 
   /**
@@ -825,7 +784,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
     this._setSVGPreamble(markup, options);
     this._setSVGHeader(markup, options);
     if (this.clipPath) {
-      markup.push("<g clip-path=\"url(#".concat(this.clipPath.clipPathId, ")\" >\n"));
+      markup.push(`<g clip-path="url(#${this.clipPath.clipPathId})" >\n`);
     }
     this._setSVGBgOverlayColor(markup, 'background');
     this._setSVGBgOverlayImage(markup, 'backgroundImage', reviver);
@@ -853,26 +812,26 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @private
    */
   _setSVGHeader(markup, options) {
-    const width = options.width || "".concat(this.width),
-      height = options.height || "".concat(this.height),
+    const width = options.width || `${this.width}`,
+      height = options.height || `${this.height}`,
       NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS,
       optViewBox = options.viewBox;
     let viewBox;
     if (optViewBox) {
-      viewBox = "viewBox=\"".concat(optViewBox.x, " ").concat(optViewBox.y, " ").concat(optViewBox.width, " ").concat(optViewBox.height, "\" ");
+      viewBox = `viewBox="${optViewBox.x} ${optViewBox.y} ${optViewBox.width} ${optViewBox.height}" `;
     } else if (this.svgViewportTransformation) {
       const vpt = this.viewportTransform;
-      viewBox = "viewBox=\"".concat(toFixed(-vpt[4] / vpt[0], NUM_FRACTION_DIGITS), " ").concat(toFixed(-vpt[5] / vpt[3], NUM_FRACTION_DIGITS), " ").concat(toFixed(this.width / vpt[0], NUM_FRACTION_DIGITS), " ").concat(toFixed(this.height / vpt[3], NUM_FRACTION_DIGITS), "\" ");
+      viewBox = `viewBox="${toFixed(-vpt[4] / vpt[0], NUM_FRACTION_DIGITS)} ${toFixed(-vpt[5] / vpt[3], NUM_FRACTION_DIGITS)} ${toFixed(this.width / vpt[0], NUM_FRACTION_DIGITS)} ${toFixed(this.height / vpt[3], NUM_FRACTION_DIGITS)}" `;
     } else {
-      viewBox = "viewBox=\"0 0 ".concat(this.width, " ").concat(this.height, "\" ");
+      viewBox = `viewBox="0 0 ${this.width} ${this.height}" `;
     }
     markup.push('<svg ', 'xmlns="http://www.w3.org/2000/svg" ', 'xmlns:xlink="http://www.w3.org/1999/xlink" ', 'version="1.1" ', 'width="', width, '" ', 'height="', height, '" ', viewBox, 'xml:space="preserve">\n', '<desc>Created with Fabric.js ', VERSION, '</desc>\n', '<defs>\n', this.createSVGFontFacesMarkup(), this.createSVGRefElementsMarkup(), this.createSVGClipPathMarkup(options), '</defs>\n');
   }
   createSVGClipPathMarkup(options) {
     const clipPath = this.clipPath;
     if (clipPath) {
-      clipPath.clipPathId = "CLIPPATH_".concat(uid());
-      return "<clipPath id=\"".concat(clipPath.clipPathId, "\" >\n").concat(clipPath.toClipPathSVG(options.reviver), "</clipPath>\n");
+      clipPath.clipPathId = `CLIPPATH_${uid()}`;
+      return `<clipPath id="${clipPath.clipPathId}" >\n${clipPath.toClipPathSVG(options.reviver)}</clipPath>\n`;
     }
     return '';
   }
@@ -883,9 +842,9 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    */
   createSVGRefElementsMarkup() {
     return ['background', 'overlay'].map(prop => {
-      const fill = this["".concat(prop, "Color")];
+      const fill = this[`${prop}Color`];
       if (isFiller(fill)) {
-        const shouldTransform = this["".concat(prop, "Vpt")],
+        const shouldTransform = this[`${prop}Vpt`],
           vpt = this.viewportTransform,
           object = {
             // otherwise circular dependency
@@ -943,9 +902,9 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
         });
       });
     });
-    const fontListMarkup = Object.keys(fontList).map(fontFamily => "\t\t@font-face {\n\t\t\tfont-family: '".concat(fontFamily, "';\n\t\t\tsrc: url('").concat(fontPaths[fontFamily], "');\n\t\t}\n")).join('');
+    const fontListMarkup = Object.keys(fontList).map(fontFamily => `\t\t@font-face {\n\t\t\tfont-family: '${fontFamily}';\n\t\t\tsrc: url('${fontPaths[fontFamily]}');\n\t\t}\n`).join('');
     if (fontListMarkup) {
-      return "\t<style type=\"text/css\"><![CDATA[\n".concat(fontListMarkup, "]]></style>\n");
+      return `\t<style type="text/css"><![CDATA[\n${fontListMarkup}]]></style>\n`;
     }
     return '';
   }
@@ -962,12 +921,12 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       }
       // *PMW*
       if (uid) {
-        markup.push("<g id=\"".concat(uid, "\">\n"));
+        markup.push(`<g id="${uid}">\n`);
       }
       this._setSVGObject(markup, fabricObject, reviver);
       // *PMW*
       if (uid) {
-        markup.push("</g id=\"".concat(uid, "\">\n"));
+        markup.push(`</g id="${uid}">\n`);
       }
     });
   }
@@ -995,7 +954,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @private
    */
   _setSVGBgOverlayColor(markup, property) {
-    const filler = this["".concat(property, "Color")];
+    const filler = this[`${property}Color`];
     if (!filler) {
       return;
     }
@@ -1003,9 +962,9 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
       const repeat = filler.repeat || '',
         finalWidth = this.width,
         finalHeight = this.height,
-        shouldInvert = this["".concat(property, "Vpt")],
+        shouldInvert = this[`${property}Vpt`],
         additionalTransform = shouldInvert ? matrixToSVG(invertTransform(this.viewportTransform)) : '';
-      markup.push("<rect transform=\"".concat(additionalTransform, " translate(").concat(finalWidth / 2, ",").concat(finalHeight / 2, ")\" x=\"").concat(filler.offsetX - finalWidth / 2, "\" y=\"").concat(filler.offsetY - finalHeight / 2, "\" width=\"").concat((repeat === 'repeat-y' || repeat === 'no-repeat') && isPattern(filler) ? filler.source.width : finalWidth, "\" height=\"").concat((repeat === 'repeat-x' || repeat === 'no-repeat') && isPattern(filler) ? filler.source.height : finalHeight, "\" fill=\"url(#SVGID_").concat(filler.id, ")\"></rect>\n"));
+      markup.push(`<rect transform="${additionalTransform} translate(${finalWidth / 2},${finalHeight / 2})" x="${filler.offsetX - finalWidth / 2}" y="${filler.offsetY - finalHeight / 2}" width="${(repeat === 'repeat-y' || repeat === 'no-repeat') && isPattern(filler) ? filler.source.width : finalWidth}" height="${(repeat === 'repeat-x' || repeat === 'no-repeat') && isPattern(filler) ? filler.source.height : finalHeight}" fill="url(#SVGID_${filler.id})"></rect>\n`);
     } else {
       markup.push('<rect x="0" y="0" width="100%" height="100%" ', 'fill="', filler, '"', '></rect>\n');
     }
@@ -1281,7 +1240,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @return {String} string representation of an instance
    */
   toString() {
-    return "#<Canvas (".concat(this.complexity(), "): { objects: ").concat(this._objects.length, " }>");
+    return `#<Canvas (${this.complexity()}): { objects: ${this._objects.length} }>`;
   }
 }
 _defineProperty(StaticCanvas, "ownDefaults", staticCanvasDefaults);

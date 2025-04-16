@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { kRect } from '../constants.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
@@ -6,7 +6,6 @@ import { classRegistry } from '../ClassRegistry.mjs';
 import { FabricObject } from './Object/FabricObject.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
-const _excluded = ["left", "top", "width", "height", "visible"];
 const rectDefaultValues = {
   uniformRoundness: false,
   rx: 0,
@@ -15,7 +14,10 @@ const rectDefaultValues = {
 const RECT_PROPS = ['rx', 'ry'];
 class Rect extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Rect.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Rect.ownDefaults
+    };
   }
 
   /**
@@ -102,7 +104,7 @@ class Rect extends FabricObject {
       rx,
       ry
     } = this;
-    return ['<rect ', 'COMMON_PARTS', "x=\"".concat(-width / 2, "\" y=\"").concat(-height / 2, "\" rx=\"").concat(rx, "\" ry=\"").concat(ry, "\" width=\"").concat(width, "\" height=\"").concat(height, "\" />\n")];
+    return ['<rect ', 'COMMON_PARTS', `x="${-width / 2}" y="${-height / 2}" rx="${rx}" ry="${ry}" width="${width}" height="${height}" />\n`];
   }
 
   /**
@@ -122,22 +124,23 @@ class Rect extends FabricObject {
    * @param {Object} [options] Options object
    */
   static async fromElement(element, options, cssRules) {
-    const _parseAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      {
-        left = 0,
-        top = 0,
-        width = 0,
-        height = 0,
-        visible = true
-      } = _parseAttributes,
-      restOfparsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded);
-    return new this(_objectSpread2(_objectSpread2(_objectSpread2({}, options), restOfparsedAttributes), {}, {
+    const {
+      left = 0,
+      top = 0,
+      width = 0,
+      height = 0,
+      visible = true,
+      ...restOfparsedAttributes
+    } = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
+    return new this({
+      ...options,
+      ...restOfparsedAttributes,
       left,
       top,
       width,
       height,
       visible: Boolean(visible && width && height)
-    }));
+    });
   }
 
   /* _FROM_SVG_END_ */

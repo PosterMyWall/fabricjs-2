@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { isPercent } from '../../parser/percent.mjs';
 import { parseGradientUnits, parseType } from './misc.mjs';
 
@@ -56,9 +55,10 @@ function parseRadialCoords(el) {
   };
 }
 function parseCoords(el, size) {
-  return convertPercentUnitsToValues(parseType(el) === 'linear' ? parseLinearCoords(el) : parseRadialCoords(el), _objectSpread2(_objectSpread2({}, size), {}, {
+  return convertPercentUnitsToValues(parseType(el) === 'linear' ? parseLinearCoords(el) : parseRadialCoords(el), {
+    ...size,
     gradientUnits: parseGradientUnits(el)
-  }));
+  });
 }
 
 export { parseCoords, parseLinearCoords, parseRadialCoords };

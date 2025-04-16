@@ -1,6 +1,6 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../../Point.mjs';
-import { setStyle } from '../../util/dom_style.mjs';
+import { setStyle } from '../../util/internals/dom_style.mjs';
 import { cloneStyles } from '../../util/internals/cloneStyles.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
 import { NONE, CHANGED } from '../../constants.mjs';
@@ -119,10 +119,10 @@ class DraggableTextDelegate {
     //  position drag image offscreen
     setStyle(dragImage, {
       position: 'fixed',
-      left: "".concat(-dragImage.width, "px"),
+      left: `${-dragImage.width}px`,
       border: NONE,
-      width: "".concat(dragImage.width / retinaScaling, "px"),
-      height: "".concat(dragImage.height / retinaScaling, "px")
+      width: `${dragImage.width / retinaScaling}px`,
+      height: `${dragImage.height / retinaScaling}px`
     });
     this.__dragImageDisposer && this.__dragImageDisposer();
     this.__dragImageDisposer = () => {
@@ -145,10 +145,11 @@ class DraggableTextDelegate {
         selectionEnd: target.selectionEnd
       };
       const value = target._text.slice(selection.selectionStart, selection.selectionEnd).join('');
-      const data = _objectSpread2({
+      const data = {
         text: target.text,
-        value
-      }, selection);
+        value,
+        ...selection
+      };
       e.dataTransfer.setData('text/plain', value);
       e.dataTransfer.setData('application/fabric', JSON.stringify({
         value: value,

@@ -12,6 +12,7 @@ export {
   isBetweenVectors,
   magnitude,
 } from './misc/vectors';
+export {isSerializableFiller} from './typeAssertions';
 export {
   degreesToRadians,
   radiansToDegrees,

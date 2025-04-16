@@ -1,11 +1,10 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { FabricImage } from '../shapes/Image.mjs';
 import { createCanvasElement } from '../util/misc/dom.mjs';
 import { BaseFilter } from './BaseFilter.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { fragmentSource, vertexSource } from './shaders/blendImage.mjs';
 
-const _excluded = ["type", "image"];
 const blendImageDefaultValues = {
   mode: 'multiply',
   alpha: 1
@@ -29,7 +28,7 @@ const blendImageDefaultValues = {
  */
 class BlendImage extends BaseFilter {
   getCacheKey() {
-    return "".concat(this.type, "_").concat(this.mode);
+    return `${this.type}_${this.mode}`;
   }
   getFragmentSource() {
     return fragmentSource[this.mode];
@@ -137,9 +136,10 @@ class BlendImage extends BaseFilter {
    * @return {Object} Object representation of an instance
    */
   toObject() {
-    return _objectSpread2(_objectSpread2({}, super.toObject()), {}, {
+    return {
+      ...super.toObject(),
       image: this.image && this.image.toObject()
-    });
+    };
   }
 
   /**
@@ -152,13 +152,14 @@ class BlendImage extends BaseFilter {
    */
   static async fromObject(_ref2, options) {
     let {
-        type,
-        image
-      } = _ref2,
-      filterOptions = _objectWithoutProperties(_ref2, _excluded);
-    return FabricImage.fromObject(image, options).then(enlivedImage => new this(_objectSpread2(_objectSpread2({}, filterOptions), {}, {
+      type,
+      image,
+      ...filterOptions
+    } = _ref2;
+    return FabricImage.fromObject(image, options).then(enlivedImage => new this({
+      ...filterOptions,
       image: enlivedImage
-    })));
+    }));
   }
 }
 /**

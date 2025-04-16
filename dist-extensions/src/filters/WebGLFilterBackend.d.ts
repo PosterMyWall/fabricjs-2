@@ -82,7 +82,7 @@ export declare class WebGLFilterBackend {
      * This filter is very useful for LUTs filters. If you need interpolation use gl.LINEAR
      * @returns {WebGLTexture}
      */
-    createTexture(gl: WebGLRenderingContext, width: number, height: number, textureImageSource?: TexImageSource, filter?: WebGLRenderingContextBase['NEAREST'] | WebGLRenderingContextBase['LINEAR']): WebGLTexture | null;
+    createTexture(gl: WebGLRenderingContext, width: number, height: number, textureImageSource?: TexImageSource, filter?: WebGLRenderingContextBase['NEAREST'] | WebGLRenderingContextBase['LINEAR']): WebGLTexture;
     /**
      * Can be optionally used to get a texture from the cache array
      *

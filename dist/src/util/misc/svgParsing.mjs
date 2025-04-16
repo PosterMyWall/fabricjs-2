@@ -1,6 +1,6 @@
 import { Color } from '../../color/Color.mjs';
 import { config } from '../../config.mjs';
-import { DEFAULT_SVG_FONT_SIZE, NONE, FILL } from '../../constants.mjs';
+import { DEFAULT_SVG_FONT_SIZE, FILL, NONE } from '../../constants.mjs';
 import { toFixed } from './toFixed.mjs';
 
 /**
@@ -82,13 +82,6 @@ const parsePreserveAspectRatioAttribute = attribute => {
 };
 
 /**
- * given an array of 6 number returns something like `"matrix(...numbers)"`
- * @param {TMat2D} transform an array with 6 numbers
- * @return {String} transform matrix for svg
- */
-const matrixToSVG = transform => 'matrix(' + transform.map(value => toFixed(value, config.NUM_FRACTION_DIGITS)).join(' ') + ')';
-
-/**
  * Adobe Illustrator (at least CS5) is unable to render rgba()-based fill values
  * we work around it by "moving" alpha channel into opacity attribute and setting fill's alpha to 1
  * @param prop
@@ -103,7 +96,7 @@ const colorPropToSVG = function (prop, value) {
   if (!value) {
     colorValue = 'none';
   } else if (value.toLive) {
-    colorValue = "url(#SVGID_".concat(value.id, ")");
+    colorValue = `url(#SVGID_${value.id})`;
   } else {
     const color = new Color(value),
       opacity = color.getAlpha();
@@ -113,9 +106,9 @@ const colorPropToSVG = function (prop, value) {
     }
   }
   if (inlineStyle) {
-    return "".concat(prop, ": ").concat(colorValue, "; ").concat(opacityValue ? "".concat(prop, "-opacity: ").concat(opacityValue, "; ") : '');
+    return `${prop}: ${colorValue}; ${opacityValue ? `${prop}-opacity: ${opacityValue}; ` : ''}`;
   } else {
-    return "".concat(prop, "=\"").concat(colorValue, "\" ").concat(opacityValue ? "".concat(prop, "-opacity=\"").concat(opacityValue, "\" ") : '');
+    return `${prop}="${colorValue}" ${opacityValue ? `${prop}-opacity="${opacityValue}" ` : ''}`;
   }
 };
 const createSVGRect = function (color, _ref) {
@@ -128,8 +121,8 @@ const createSVGRect = function (color, _ref) {
   let precision = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : config.NUM_FRACTION_DIGITS;
   const svgColor = colorPropToSVG(FILL, color, false);
   const [x, y, w, h] = [left, top, width, height].map(value => toFixed(value, precision));
-  return "<rect ".concat(svgColor, " x=\"").concat(x, "\" y=\"").concat(y, "\" width=\"").concat(w, "\" height=\"").concat(h, "\"></rect>");
+  return `<rect ${svgColor} x="${x}" y="${y}" width="${w}" height="${h}"></rect>`;
 };
 
-export { colorPropToSVG, createSVGRect, getSvgAttributes, matrixToSVG, parsePreserveAspectRatioAttribute, parseUnit };
+export { colorPropToSVG, createSVGRect, getSvgAttributes, parsePreserveAspectRatioAttribute, parseUnit };
 //# sourceMappingURL=svgParsing.mjs.map

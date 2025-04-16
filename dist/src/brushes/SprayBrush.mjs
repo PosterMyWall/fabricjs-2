@@ -15,7 +15,7 @@ function getUniqueRects(rects) {
   const uniqueRects = {};
   const uniqueRectsArray = [];
   for (let i = 0, key; i < rects.length; i++) {
-    key = "".concat(rects[i].left).concat(rects[i].top);
+    key = `${rects[i].left}${rects[i].top}`;
     if (!uniqueRects[key]) {
       uniqueRects[key] = true;
       uniqueRectsArray.push(rects[i]);

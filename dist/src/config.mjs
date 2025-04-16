@@ -1,4 +1,4 @@
-import { objectSpread2 as _objectSpread2, defineProperty as _defineProperty } from '../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../_virtual/_rollupPluginBabelHelpers.mjs';
 
 class BaseConfiguration {
   constructor() {
@@ -139,7 +139,10 @@ class Configuration extends BaseConfiguration {
    */
   addFonts() {
     let paths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    this.fontPaths = _objectSpread2(_objectSpread2({}, this.fontPaths), paths);
+    this.fontPaths = {
+      ...this.fontPaths,
+      ...paths
+    };
   }
   removeFonts() {
     let fontFamilys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];

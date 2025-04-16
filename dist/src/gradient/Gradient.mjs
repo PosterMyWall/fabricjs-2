@@ -1,10 +1,9 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-import { Color } from '../color/Color.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { iMatrix } from '../constants.mjs';
 import { parseTransformAttribute } from '../parser/parseTransformAttribute.mjs';
 import { uid } from '../util/internals/uid.mjs';
 import { pick } from '../util/misc/pick.mjs';
-import { matrixToSVG } from '../util/misc/svgParsing.mjs';
+import { matrixToSVG } from '../util/misc/svgExport.mjs';
 import { radialDefaultCoords, linearDefaultCoords } from './constants.mjs';
 import { parseColorStops } from './parser/parseColorStops.mjs';
 import { parseCoords } from './parser/parseCoords.mjs';
@@ -32,12 +31,15 @@ class Gradient {
     Object.assign(this, {
       type,
       gradientUnits,
-      coords: _objectSpread2(_objectSpread2({}, type === 'radial' ? radialDefaultCoords : linearDefaultCoords), coords),
+      coords: {
+        ...(type === 'radial' ? radialDefaultCoords : linearDefaultCoords),
+        ...coords
+      },
       colorStops,
       offsetX,
       offsetY,
       gradientTransform,
-      id: id ? "".concat(id, "_").concat(uid()) : uid()
+      id: id ? `${id}_${uid()}` : uid()
     });
   }
 
@@ -48,11 +50,9 @@ class Gradient {
    */
   addColorStop(colorStops) {
     for (const position in colorStops) {
-      const color = new Color(colorStops[position]);
       this.colorStops.push({
         offset: parseFloat(position),
-        color: color.toRgb(),
-        opacity: color.getAlpha()
+        color: colorStops[position]
       });
     }
     return this;
@@ -64,15 +64,20 @@ class Gradient {
    * @return {object}
    */
   toObject(propertiesToInclude) {
-    return _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
+    return {
+      ...pick(this, propertiesToInclude),
       type: this.type,
-      coords: _objectSpread2({}, this.coords),
-      colorStops: this.colorStops.map(colorStop => _objectSpread2({}, colorStop)),
+      coords: {
+        ...this.coords
+      },
+      colorStops: this.colorStops.map(colorStop => ({
+        ...colorStop
+      })),
       offsetX: this.offsetX,
       offsetY: this.offsetY,
       gradientUnits: this.gradientUnits,
       gradientTransform: this.gradientTransform ? [...this.gradientTransform] : undefined
-    });
+    };
   }
 
   /* _TO_SVG_START_ */
@@ -89,7 +94,9 @@ class Gradient {
       transform = this.gradientTransform ? this.gradientTransform.concat() : iMatrix.concat(),
       gradientUnits = this.gradientUnits === 'pixels' ? 'userSpaceOnUse' : 'objectBoundingBox';
     // colorStops must be sorted ascending, and guarded against deep mutations
-    const colorStops = this.colorStops.map(colorStop => _objectSpread2({}, colorStop)).sort((a, b) => {
+    const colorStops = this.colorStops.map(colorStop => ({
+      ...colorStop
+    })).sort((a, b) => {
       return a.offset - b.offset;
     });
     let offsetX = -this.offsetX,
@@ -108,7 +115,7 @@ class Gradient {
     }
     transform[4] -= offsetX;
     transform[5] -= offsetY;
-    const commonAttributes = ["id=\"SVGID_".concat(this.id, "\""), "gradientUnits=\"".concat(gradientUnits, "\""), "gradientTransform=\"".concat(preTransform ? preTransform + ' ' : '').concat(matrixToSVG(transform), "\""), ''].join(' ');
+    const commonAttributes = [`id="SVGID_${this.id}"`, `gradientUnits="${gradientUnits}"`, `gradientTransform="${preTransform ? preTransform + ' ' : ''}${matrixToSVG(transform)}"`, ''].join(' ');
     if (this.type === 'linear') {
       const {
         x1,
@@ -149,10 +156,9 @@ class Gradient {
     colorStops.forEach(_ref => {
       let {
         color,
-        offset,
-        opacity
+        offset
       } = _ref;
-      markup.push('<stop ', 'offset="', offset * 100 + '%', '" style="stop-color:', color, typeof opacity !== 'undefined' ? ';stop-opacity: ' + opacity : ';', '"/>\n');
+      markup.push(`<stop offset="${offset * 100}%" style="stop-color:${color};"/>\n`);
     });
     markup.push(this.type === 'linear' ? '</linearGradient>' : '</radialGradient>', '\n');
     return markup.join('');
@@ -177,10 +183,9 @@ class Gradient {
     this.colorStops.forEach(_ref2 => {
       let {
         color,
-        opacity,
         offset
       } = _ref2;
-      gradient.addColorStop(offset, typeof opacity !== 'undefined' ? new Color(color).setAlpha(opacity).toRgba() : color);
+      gradient.addColorStop(offset, color);
     });
     return gradient;
   }
@@ -189,10 +194,13 @@ class Gradient {
       colorStops,
       gradientTransform
     } = options;
-    return new this(_objectSpread2(_objectSpread2({}, options), {}, {
-      colorStops: colorStops ? colorStops.map(colorStop => _objectSpread2({}, colorStop)) : undefined,
+    return new this({
+      ...options,
+      colorStops: colorStops ? colorStops.map(colorStop => ({
+        ...colorStop
+      })) : undefined,
       gradientTransform: gradientTransform ? [...gradientTransform] : undefined
-    }));
+    });
   }
 
   /* _FROM_SVG_START_ */
@@ -243,7 +251,7 @@ class Gradient {
   static fromElement(el, instance, svgOptions) {
     const gradientUnits = parseGradientUnits(el);
     const center = instance._findCenterFromElement();
-    return new this(_objectSpread2({
+    return new this({
       id: el.getAttribute('id') || undefined,
       type: parseType(el),
       coords: parseCoords(el, {
@@ -252,14 +260,15 @@ class Gradient {
       }),
       colorStops: parseColorStops(el, svgOptions.opacity),
       gradientUnits,
-      gradientTransform: parseTransformAttribute(el.getAttribute('gradientTransform') || '')
-    }, gradientUnits === 'pixels' ? {
-      offsetX: instance.width / 2 - center.x,
-      offsetY: instance.height / 2 - center.y
-    } : {
-      offsetX: 0,
-      offsetY: 0
-    }));
+      gradientTransform: parseTransformAttribute(el.getAttribute('gradientTransform') || ''),
+      ...(gradientUnits === 'pixels' ? {
+        offsetX: instance.width / 2 - center.x,
+        offsetY: instance.height / 2 - center.y
+      } : {
+        offsetX: 0,
+        offsetY: 0
+      })
+    });
   }
   /* _FROM_SVG_END_ */
 }

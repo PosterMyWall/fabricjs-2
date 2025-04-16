@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Gradient } from '../gradient/Gradient.mjs';
 import { Group } from '../shapes/Group.mjs';
 import { FabricImage } from '../shapes/Image.mjs';
@@ -62,9 +61,10 @@ class ElementsParser {
     const gradientDef = this.extractPropertyDefinition(obj, property, this.gradientDefs);
     if (gradientDef) {
       const opacityAttr = el.getAttribute(property + '-opacity');
-      const gradient = Gradient.fromElement(gradientDef, obj, _objectSpread2(_objectSpread2({}, this.options), {}, {
+      const gradient = Gradient.fromElement(gradientDef, obj, {
+        ...this.options,
         opacity: opacityAttr
-      }));
+      });
       obj.set(property, gradient);
     }
   }
@@ -87,8 +87,8 @@ class ElementsParser {
       // but i don't have an svg to test it
       // at the first SVG that has a transform on both places and is misplaced
       // try to invert this multiplication order
-      const finalTransform = parseTransformAttribute("".concat(clipPathOwner.getAttribute('transform') || '', " ").concat(clipPathTag.getAttribute('originalTransform') || ''));
-      clipPathTag.setAttribute('transform', "matrix(".concat(finalTransform.join(','), ")"));
+      const finalTransform = parseTransformAttribute(`${clipPathOwner.getAttribute('transform') || ''} ${clipPathTag.getAttribute('originalTransform') || ''}`);
+      clipPathTag.setAttribute('transform', `matrix(${finalTransform.join(',')})`);
       const container = await Promise.all(clipPathElements.map(clipPathElement => {
         return findTag(clipPathElement).fromElement(clipPathElement, this.options, this.cssRules).then(enlivedClippath => {
           removeTransformMatrixForSvgParsing(enlivedClippath);

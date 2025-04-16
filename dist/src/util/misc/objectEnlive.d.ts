@@ -41,5 +41,5 @@ export declare const enlivenObjects: <T extends BaseFabricObject | FabricObject 
  * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
  * @returns {Promise<Record<string, FabricObject | TFiller | null>>} the input object with enlived values
  */
-export declare const enlivenObjectEnlivables: <R = Record<string, FabricObject<Partial<import("../../..").FabricObjectProps>, import("../../..").SerializedObjectProps, import("../../EventTypeDefs").ObjectEvents> | TFiller | null>>(serializedObject: any, { signal }?: Abortable) => Promise<R>;
+export declare const enlivenObjectEnlivables: <R = Record<string, FabricObject | TFiller | null>>(serializedObject: any, { signal }?: Abortable) => Promise<R>;
 //# sourceMappingURL=objectEnlive.d.ts.map

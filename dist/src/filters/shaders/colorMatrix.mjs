@@ -1,4 +1,15 @@
-const fragmentSource = "\n  precision highp float;\n  uniform sampler2D uTexture;\n  varying vec2 vTexCoord;\n  uniform mat4 uColorMatrix;\n  uniform vec4 uConstants;\n  void main() {\n    vec4 color = texture2D(uTexture, vTexCoord);\n    color *= uColorMatrix;\n    color += uConstants;\n    gl_FragColor = color;\n  }";
+const fragmentSource = `
+  precision highp float;
+  uniform sampler2D uTexture;
+  varying vec2 vTexCoord;
+  uniform mat4 uColorMatrix;
+  uniform vec4 uConstants;
+  void main() {
+    vec4 color = texture2D(uTexture, vTexCoord);
+    color *= uColorMatrix;
+    color += uConstants;
+    gl_FragColor = color;
+  }`;
 
 export { fragmentSource };
 //# sourceMappingURL=colorMatrix.mjs.map

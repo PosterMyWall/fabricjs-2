@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { config } from '../config.mjs';
 import { ifNaN } from '../util/internals/ifNaN.mjs';
 import { uid } from '../util/internals/uid.mjs';
@@ -7,8 +7,6 @@ import { pick } from '../util/misc/pick.mjs';
 import { toFixed } from '../util/misc/toFixed.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { log } from '../util/internals/console.mjs';
-
-const _excluded = ["type", "source", "patternTransform"];
 
 /**
  * @see {@link http://fabricjs.com/patterns demo}
@@ -128,7 +126,8 @@ class Pattern {
       repeat,
       crossOrigin
     } = this;
-    return _objectSpread2(_objectSpread2({}, pick(this, propertiesToInclude)), {}, {
+    return {
+      ...pick(this, propertiesToInclude),
       type: 'pattern',
       source: this.sourceToString(),
       repeat,
@@ -136,7 +135,7 @@ class Pattern {
       offsetX: toFixed(this.offsetX, config.NUM_FRACTION_DIGITS),
       offsetY: toFixed(this.offsetY, config.NUM_FRACTION_DIGITS),
       patternTransform: this.patternTransform ? [...this.patternTransform] : null
-    });
+    };
   }
 
   /* _TO_SVG_START_ */
@@ -157,24 +156,26 @@ class Pattern {
       patternOffsetY = ifNaN(this.offsetY / height, 0),
       patternWidth = repeat === 'repeat-y' || repeat === 'no-repeat' ? 1 + Math.abs(patternOffsetX || 0) : ifNaN(patternSource.width / width, 0),
       patternHeight = repeat === 'repeat-x' || repeat === 'no-repeat' ? 1 + Math.abs(patternOffsetY || 0) : ifNaN(patternSource.height / height, 0);
-    return ["<pattern id=\"SVGID_".concat(id, "\" x=\"").concat(patternOffsetX, "\" y=\"").concat(patternOffsetY, "\" width=\"").concat(patternWidth, "\" height=\"").concat(patternHeight, "\">"), "<image x=\"0\" y=\"0\" width=\"".concat(patternSource.width, "\" height=\"").concat(patternSource.height, "\" xlink:href=\"").concat(this.sourceToString(), "\"></image>"), "</pattern>", ''].join('\n');
+    return [`<pattern id="SVGID_${id}" x="${patternOffsetX}" y="${patternOffsetY}" width="${patternWidth}" height="${patternHeight}">`, `<image x="0" y="0" width="${patternSource.width}" height="${patternSource.height}" xlink:href="${this.sourceToString()}"></image>`, `</pattern>`, ''].join('\n');
   }
   /* _TO_SVG_END_ */
 
   static async fromObject(_ref2, options) {
     let {
-        type,
-        source,
-        patternTransform
-      } = _ref2,
-      otherOptions = _objectWithoutProperties(_ref2, _excluded);
-    const img = await loadImage(source, _objectSpread2(_objectSpread2({}, options), {}, {
+      type,
+      source,
+      patternTransform,
+      ...otherOptions
+    } = _ref2;
+    const img = await loadImage(source, {
+      ...options,
       crossOrigin: otherOptions.crossOrigin
-    }));
-    return new this(_objectSpread2(_objectSpread2({}, otherOptions), {}, {
+    });
+    return new this({
+      ...otherOptions,
       patternTransform: patternTransform && patternTransform.slice(0),
       source: img
-    }));
+    });
   }
 }
 _defineProperty(Pattern, "type", 'Pattern');

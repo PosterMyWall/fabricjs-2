@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { BaseFilter } from './BaseFilter.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { fragmentSource } from './shaders/colorMatrix.mjs';
@@ -71,9 +71,10 @@ class ColorMatrix extends BaseFilter {
     gl.uniform4fv(uniformLocations.uConstants, constants);
   }
   toObject() {
-    return _objectSpread2(_objectSpread2({}, super.toObject()), {}, {
+    return {
+      ...super.toObject(),
       matrix: [...this.matrix]
-    });
+    };
   }
 }
 /**

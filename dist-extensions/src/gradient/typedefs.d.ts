@@ -5,7 +5,6 @@ export type GradientCoordValue = number | Percent | string;
 export type ColorStop = {
     color: string;
     offset: number;
-    opacity?: number;
 };
 export type LinearGradientCoords<T extends GradientCoordValue> = {
     /**
@@ -90,4 +89,5 @@ export type SVGOptions = {
     height: number;
     opacity: string | null;
 };
+export type SerializedGradientProps<T extends GradientType> = Omit<GradientOptions<T>, 'id'>;
 //# sourceMappingURL=typedefs.d.ts.map

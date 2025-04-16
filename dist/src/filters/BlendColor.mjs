@@ -28,10 +28,22 @@ const blendColorDefaultValues = {
  */
 class BlendColor extends BaseFilter {
   getCacheKey() {
-    return "".concat(this.type, "_").concat(this.mode);
+    return `${this.type}_${this.mode}`;
   }
   getFragmentSource() {
-    return "\n      precision highp float;\n      uniform sampler2D uTexture;\n      uniform vec4 uColor;\n      varying vec2 vTexCoord;\n      void main() {\n        vec4 color = texture2D(uTexture, vTexCoord);\n        gl_FragColor = color;\n        if (color.a > 0.0) {\n          ".concat(blendColorFragmentSource[this.mode], "\n        }\n      }\n      ");
+    return `
+      precision highp float;
+      uniform sampler2D uTexture;
+      uniform vec4 uColor;
+      varying vec2 vTexCoord;
+      void main() {
+        vec4 color = texture2D(uTexture, vTexCoord);
+        gl_FragColor = color;
+        if (color.a > 0.0) {
+          ${blendColorFragmentSource[this.mode]}
+        }
+      }
+      `;
   }
 
   /**

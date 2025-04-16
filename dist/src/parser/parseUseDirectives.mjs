@@ -34,7 +34,7 @@ function parseUseDirectives(doc) {
       y = 0,
       transform = ''
     } = useAttrMap;
-    const currentTrans = "".concat(transform, " ").concat(originalAttrMap.transform || '', " translate(").concat(x, ", ").concat(y, ")");
+    const currentTrans = `${transform} ${originalAttrMap.transform || ''} translate(${x}, ${y})`;
     applyViewboxTransform(clonedOriginal);
     if (/^svg$/i.test(clonedOriginal.nodeName)) {
       // if is an SVG, create a group and apply all the attributes on top of it

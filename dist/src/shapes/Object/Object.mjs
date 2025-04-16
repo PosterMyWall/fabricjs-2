@@ -1,7 +1,7 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
-import { ALIASING_LIMIT, SCALE_X, SCALE_Y, STROKE, iMatrix, CENTER, VERSION, FILL, LEFT, TOP } from '../../constants.mjs';
+import { FILL, STROKE, ALIASING_LIMIT, SCALE_X, SCALE_Y, iMatrix, CENTER, VERSION, LEFT, TOP } from '../../constants.mjs';
 import { Point } from '../../Point.mjs';
 import { Shadow } from '../../Shadow.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
@@ -23,8 +23,6 @@ import { animateColor, animate } from '../../util/animation/animate.mjs';
 import { ObjectGeometry } from './ObjectGeometry.mjs';
 import { degreesToRadians } from '../../util/misc/radiansDegreesConversion.mjs';
 
-const _excluded = ["type"],
-  _excluded2 = ["extraParam"];
 /**
  * Root object class from which all 2d shape classes inherit from
  * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
@@ -525,7 +523,6 @@ class FabricObject extends ObjectGeometry {
       ctx.globalCompositeOperation = 'destination-in';
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    //ctx.scale(1 / 2, 1 / 2);
     ctx.drawImage(canvasWithClipPath, 0, 0);
     ctx.restore();
   }
@@ -1240,7 +1237,8 @@ class FabricObject extends ObjectGeometry {
       onChange,
       onComplete
     } = options;
-    const animationOptions = _objectSpread2(_objectSpread2({}, options), {}, {
+    const animationOptions = {
+      ...options,
       target: this,
       // path.reduce... is the current value in case start value isn't provided
       startValue: startValue !== null && startValue !== void 0 ? startValue : path.reduce((deep, key) => deep[key], this),
@@ -1263,7 +1261,7 @@ class FabricObject extends ObjectGeometry {
         // @ts-expect-error generic callback arg0 is wrong
         onComplete(value, valueProgress, durationProgress);
       }
-    });
+    };
     return propIsColor ? animateColor(animationOptions) : animate(animationOptions);
   }
 
@@ -1454,7 +1452,8 @@ class FabricObject extends ObjectGeometry {
       clipPathData = clipPath.toObject(propertiesToSerialize.concat('inverted', 'absolutePositioned'));
     }
     const toFixedBound = val => toFixed(val, NUM_FRACTION_DIGITS);
-    const object = _objectSpread2(_objectSpread2({}, pick(this, propertiesToSerialize)), {}, {
+    const object = {
+      ...pick(this, propertiesToSerialize),
       type: this.constructor.type,
       version: VERSION,
       originX,
@@ -1485,10 +1484,11 @@ class FabricObject extends ObjectGeometry {
       paintFirst,
       globalCompositeOperation,
       skewX: toFixedBound(skewX),
-      skewY: toFixedBound(skewY)
-    }, clipPathData ? {
-      clipPath: clipPathData
-    } : null);
+      skewY: toFixedBound(skewY),
+      ...(clipPathData ? {
+        clipPath: clipPathData
+      } : null)
+    };
     return !this.includeDefaultValues ? this._removeDefaultValues(object) : object;
   }
 
@@ -1528,7 +1528,7 @@ class FabricObject extends ObjectGeometry {
    * @return {String}
    */
   toString() {
-    return "#<".concat(this.constructor.type, ">");
+    return `#<${this.constructor.type}>`;
   }
 
   /**
@@ -1541,12 +1541,14 @@ class FabricObject extends ObjectGeometry {
    * @returns {Promise<FabricObject>}
    */
   static _fromObject(_ref3) {
-    let serializedObjectOptions = _objectWithoutProperties(_ref3, _excluded);
-    let _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      {
-        extraParam
-      } = _ref4,
-      options = _objectWithoutProperties(_ref4, _excluded2);
+    let {
+      type,
+      ...serializedObjectOptions
+    } = _ref3;
+    let {
+      extraParam,
+      ...options
+    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     return enlivenObjectEnlivables(serializedObjectOptions, options).then(enlivedObjectOptions => {
       // from the resulting enlived options, extract options.extraParam to arg0
       // to avoid accidental overrides later

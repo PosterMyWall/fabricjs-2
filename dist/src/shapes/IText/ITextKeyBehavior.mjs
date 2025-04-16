@@ -59,7 +59,7 @@ class ITextKeyBehavior extends ITextBehavior {
     } = this._calcTextareaPosition();
     // line-height: 1px; was removed from the style to fix this:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=870966
-    textarea.style.cssText = "position: absolute; top: ".concat(top, "; left: ").concat(left, "; z-index: -999; opacity: 0; width: 1px; height: 1px; font-size: 1px; padding-top: ").concat(fontSize, ";");
+    textarea.style.cssText = `position: absolute; top: ${top}; left: ${left}; z-index: -999; opacity: 0; width: 1px; height: 1px; font-size: 1px; padding-top: ${fontSize};`;
     (this.hiddenTextareaContainer || doc.body).appendChild(textarea);
     Object.entries({
       blur: 'blur',
@@ -142,6 +142,11 @@ class ITextKeyBehavior extends ITextBehavior {
    */
   onInput(e) {
     const fromPaste = this.fromPaste;
+    const {
+      value,
+      selectionStart,
+      selectionEnd
+    } = this.hiddenTextarea;
     this.fromPaste = false;
     e && e.stopPropagation();
     if (!this.isEditing) {
@@ -163,27 +168,27 @@ class ITextKeyBehavior extends ITextBehavior {
       return;
     }
     // decisions about style changes.
-    const nextText = this._splitTextIntoLines(this.hiddenTextarea.value).graphemeText,
+    const nextText = this._splitTextIntoLines(value).graphemeText,
       charCount = this._text.length,
       nextCharCount = nextText.length,
-      selectionStart = this.selectionStart,
-      selectionEnd = this.selectionEnd,
-      selection = selectionStart !== selectionEnd;
+      _selectionStart = this.selectionStart,
+      _selectionEnd = this.selectionEnd,
+      selection = _selectionStart !== _selectionEnd;
     let copiedStyle,
       removedText,
       charDiff = nextCharCount - charCount,
       removeFrom,
       removeTo;
-    const textareaSelection = this.fromStringToGraphemeSelection(this.hiddenTextarea.selectionStart, this.hiddenTextarea.selectionEnd, this.hiddenTextarea.value);
-    const backDelete = selectionStart > textareaSelection.selectionStart;
+    const textareaSelection = this.fromStringToGraphemeSelection(selectionStart, selectionEnd, value);
+    const backDelete = _selectionStart > textareaSelection.selectionStart;
     if (selection) {
-      removedText = this._text.slice(selectionStart, selectionEnd);
-      charDiff += selectionEnd - selectionStart;
+      removedText = this._text.slice(_selectionStart, _selectionEnd);
+      charDiff += _selectionEnd - _selectionStart;
     } else if (nextCharCount < charCount) {
       if (backDelete) {
-        removedText = this._text.slice(selectionEnd + charDiff, selectionEnd);
+        removedText = this._text.slice(_selectionEnd + charDiff, _selectionEnd);
       } else {
-        removedText = this._text.slice(selectionStart, selectionStart - charDiff);
+        removedText = this._text.slice(_selectionStart, _selectionStart - charDiff);
       }
     }
     const insertedText = nextText.slice(textareaSelection.selectionEnd - charDiff, textareaSelection.selectionEnd);
@@ -192,7 +197,7 @@ class ITextKeyBehavior extends ITextBehavior {
         // let's copy some style before deleting.
         // we want to copy the style before the cursor OR the style at the cursor if selection
         // is bigger than 0.
-        copiedStyle = this.getSelectionStyles(selectionStart, selectionStart + 1, false);
+        copiedStyle = this.getSelectionStyles(_selectionStart, _selectionStart + 1, false);
         // now duplicate the style one for each inserted text.
         copiedStyle = insertedText.map(() =>
         // this return an array of references, but that is fine since we are
@@ -200,15 +205,15 @@ class ITextKeyBehavior extends ITextBehavior {
         copiedStyle[0]);
       }
       if (selection) {
-        removeFrom = selectionStart;
-        removeTo = selectionEnd;
+        removeFrom = _selectionStart;
+        removeTo = _selectionEnd;
       } else if (backDelete) {
         // detect differences between forwardDelete and backDelete
-        removeFrom = selectionEnd - removedText.length;
-        removeTo = selectionEnd;
+        removeFrom = _selectionEnd - removedText.length;
+        removeTo = _selectionEnd;
       } else {
-        removeFrom = selectionEnd;
-        removeTo = selectionEnd + removedText.length;
+        removeFrom = _selectionEnd;
+        removeTo = _selectionEnd + removedText.length;
       }
       this.removeStyleFromTo(removeFrom, removeTo);
     }
@@ -219,7 +224,7 @@ class ITextKeyBehavior extends ITextBehavior {
       if (fromPaste && insertedText.join('') === copyPasteData.copiedText && !config.disableStyleCopyPaste) {
         copiedStyle = copyPasteData.copiedTextStyle;
       }
-      this.insertNewStyleBlock(insertedText, selectionStart, copiedStyle);
+      this.insertNewStyleBlock(insertedText, _selectionStart, copiedStyle);
     }
     updateAndFire();
   }
@@ -413,7 +418,7 @@ class ITextKeyBehavior extends ITextBehavior {
    * @param {KeyboardEvent} e Event object
    */
   _moveCursorUpOrDown(direction, e) {
-    const offset = this["get".concat(direction, "CursorOffset")](e, this._selectionDirection === RIGHT);
+    const offset = this[`get${direction}CursorOffset`](e, this._selectionDirection === RIGHT);
     if (e.shiftKey) {
       this.moveCursorWithShift(offset);
     } else {
@@ -477,9 +482,9 @@ class ITextKeyBehavior extends ITextBehavior {
   _move(e, prop, direction) {
     let newValue;
     if (e.altKey) {
-      newValue = this["findWordBoundary".concat(direction)](this[prop]);
+      newValue = this[`findWordBoundary${direction}`](this[prop]);
     } else if (e.metaKey || e.keyCode === 35 || e.keyCode === 36) {
-      newValue = this["findLineBoundary".concat(direction)](this[prop]);
+      newValue = this[`findLineBoundary${direction}`](this[prop]);
     } else {
       this[prop] += direction === 'Left' ? -1 : 1;
       return true;
@@ -552,7 +557,7 @@ class ITextKeyBehavior extends ITextBehavior {
    * @param {KeyboardEvent} e Event object
    */
   _moveCursorLeftOrRight(direction, e) {
-    const actionName = "moveCursor".concat(direction).concat(e.shiftKey ? 'WithShift' : 'WithoutShift');
+    const actionName = `moveCursor${direction}${e.shiftKey ? 'WithShift' : 'WithoutShift'}`;
     this._currentCursorOpacity = 1;
     if (this[actionName](e)) {
       // TODO fix: abort and init should be an alternative depending

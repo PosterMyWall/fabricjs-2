@@ -67,7 +67,7 @@ class Color {
    */
   toRgb() {
     const [r, g, b] = this.getSource();
-    return "rgb(".concat(r, ",").concat(g, ",").concat(b, ")");
+    return `rgb(${r},${g},${b})`;
   }
 
   /**
@@ -75,7 +75,7 @@ class Color {
    * @return {String} ex: rgba(0-255,0-255,0-255,0-1)
    */
   toRgba() {
-    return "rgba(".concat(this.getSource().join(','), ")");
+    return `rgba(${this.getSource().join(',')})`;
   }
 
   /**
@@ -84,7 +84,7 @@ class Color {
    */
   toHsl() {
     const [h, s, l] = rgb2Hsl(...this.getSource());
-    return "hsl(".concat(h, ",").concat(s, "%,").concat(l, "%)");
+    return `hsl(${h},${s}%,${l}%)`;
   }
 
   /**
@@ -93,7 +93,7 @@ class Color {
    */
   toHsla() {
     const [h, s, l, a] = rgb2Hsl(...this.getSource());
-    return "hsla(".concat(h, ",").concat(s, "%,").concat(l, "%,").concat(a, ")");
+    return `hsla(${h},${s}%,${l}%,${a})`;
   }
 
   /**
@@ -111,7 +111,7 @@ class Color {
    */
   toHexa() {
     const [r, g, b, a] = this.getSource();
-    return "".concat(hexify(r)).concat(hexify(g)).concat(hexify(b)).concat(hexify(Math.round(a * 255)));
+    return `${hexify(r)}${hexify(g)}${hexify(b)}${hexify(Math.round(a * 255))}`;
   }
 
   /**

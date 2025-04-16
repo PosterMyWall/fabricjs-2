@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { BaseFilter } from './BaseFilter.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { fragmentSource } from './shaders/convolute.mjs';
@@ -50,7 +50,7 @@ const convoluteDefaultValues = {
  */
 class Convolute extends BaseFilter {
   getCacheKey() {
-    return "".concat(this.type, "_").concat(Math.sqrt(this.matrix.length), "_").concat(this.opaque ? 1 : 0);
+    return `${this.type}_${Math.sqrt(this.matrix.length)}_${this.opaque ? 1 : 0}`;
   }
   getFragmentSource() {
     return fragmentSource[this.getCacheKey()];
@@ -132,10 +132,11 @@ class Convolute extends BaseFilter {
    * @return {Object} Object representation of an instance
    */
   toObject() {
-    return _objectSpread2(_objectSpread2({}, super.toObject()), {}, {
+    return {
+      ...super.toObject(),
       opaque: this.opaque,
       matrix: [...this.matrix]
-    });
+    };
   }
 }
 /*

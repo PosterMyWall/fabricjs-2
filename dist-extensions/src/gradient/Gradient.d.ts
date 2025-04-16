@@ -1,6 +1,6 @@
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { TMat2D } from '../typedefs';
-import type { ColorStop, GradientCoords, GradientOptions, GradientType, GradientUnits, SVGOptions } from './typedefs';
+import type { ColorStop, GradientCoords, GradientOptions, GradientType, GradientUnits, SVGOptions, SerializedGradientProps } from './typedefs';
 /**
  * Gradient class
  * @class Gradient
@@ -78,19 +78,7 @@ export declare class Gradient<S, T extends GradientType = S extends GradientType
      * @param {string[]} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {object}
      */
-    toObject(propertiesToInclude?: (keyof this | string)[]): Partial<this> & {
-        type: T;
-        coords: GradientCoords<T>;
-        colorStops: {
-            color: string;
-            offset: number;
-            opacity?: number;
-        }[];
-        offsetX: number;
-        offsetY: number;
-        gradientUnits: GradientUnits;
-        gradientTransform: number[] | undefined;
-    };
+    toObject(propertiesToInclude?: (keyof this | string)[]): SerializedGradientProps<T>;
     /**
      * Returns SVG representation of an gradient
      * @param {FabricObject} object Object to create a gradient for
@@ -105,7 +93,7 @@ export declare class Gradient<S, T extends GradientType = S extends GradientType
      * @return {CanvasGradient}
      */
     toLive(ctx: CanvasRenderingContext2D): CanvasGradient;
-    static fromObject(options: GradientOptions<'linear'>): Promise<Gradient<'radial'>>;
+    static fromObject(options: GradientOptions<'linear'>): Promise<Gradient<'linear'>>;
     static fromObject(options: GradientOptions<'radial'>): Promise<Gradient<'radial'>>;
     /**
      * Returns {@link Gradient} instance from an SVG element

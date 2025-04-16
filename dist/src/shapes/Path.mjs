@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectWithoutProperties as _objectWithoutProperties, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { config } from '../config.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
@@ -11,8 +11,6 @@ import { FabricObject } from './Object/FabricObject.mjs';
 import { LEFT, TOP, CENTER } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
-const _excluded = ["path", "left", "top"],
-  _excluded2 = ["d"];
 class Path extends FabricObject {
   /**
    * Constructor
@@ -21,13 +19,12 @@ class Path extends FabricObject {
    * @return {Path} thisArg
    */
   constructor(path) {
-    let _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      {
-        path: _,
-        left,
-        top
-      } = _ref,
-      options = _objectWithoutProperties(_ref, _excluded);
+    let {
+      path: _,
+      left,
+      top,
+      ...options
+    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     super();
     Object.assign(this, Path.ownDefaults);
     this.setOptions(options);
@@ -106,7 +103,7 @@ class Path extends FabricObject {
    * @return {string} string representation of an instance
    */
   toString() {
-    return "#<Path (".concat(this.complexity(), "): { \"top\": ").concat(this.top, ", \"left\": ").concat(this.left, " }>");
+    return `#<Path (${this.complexity()}): { "top": ${this.top}, "left": ${this.left} }>`;
   }
 
   /**
@@ -116,9 +113,10 @@ class Path extends FabricObject {
    */
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return _objectSpread2(_objectSpread2({}, super.toObject(propertiesToInclude)), {}, {
+    return {
+      ...super.toObject(propertiesToInclude),
       path: this.path.map(pathCmd => pathCmd.slice())
-    });
+    };
   }
 
   /**
@@ -143,7 +141,7 @@ class Path extends FabricObject {
    */
   _toSVG() {
     const path = joinPath(this.path, config.NUM_FRACTION_DIGITS);
-    return ['<path ', 'COMMON_PARTS', "d=\"".concat(path, "\" stroke-linecap=\"round\" />\n")];
+    return ['<path ', 'COMMON_PARTS', `d="${path}" stroke-linecap="round" />\n`];
   }
 
   /**
@@ -152,7 +150,7 @@ class Path extends FabricObject {
    */
   _getOffsetTransform() {
     const digits = config.NUM_FRACTION_DIGITS;
-    return " translate(".concat(toFixed(-this.pathOffset.x, digits), ", ").concat(toFixed(-this.pathOffset.y, digits), ")");
+    return ` translate(${toFixed(-this.pathOffset.x, digits)}, ${toFixed(-this.pathOffset.y, digits)})`;
   }
 
   /**
@@ -263,9 +261,10 @@ class Path extends FabricObject {
    */
   _calcDimensions() {
     const bbox = this._calcBoundsFromPath();
-    return _objectSpread2(_objectSpread2({}, bbox), {}, {
+    return {
+      ...bbox,
       pathOffset: new Point(bbox.left + bbox.width / 2, bbox.top + bbox.height / 2)
-    });
+    };
   }
 
   /**
@@ -296,16 +295,17 @@ class Path extends FabricObject {
    * @param {Partial<PathProps>} [options] Options object
    */
   static async fromElement(element, options, cssRules) {
-    const _parseAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      {
-        d
-      } = _parseAttributes,
-      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded2);
-    return new this(d, _objectSpread2(_objectSpread2(_objectSpread2({}, parsedAttributes), options), {}, {
+    const {
+      d,
+      ...parsedAttributes
+    } = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
+    return new this(d, {
+      ...parsedAttributes,
+      ...options,
       // we pass undefined to instruct the constructor to position the object using the bbox
       left: undefined,
       top: undefined
-    }));
+    });
   }
 }
 /**

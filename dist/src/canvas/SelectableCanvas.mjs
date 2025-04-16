@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { dragHandler } from '../controls/drag.mjs';
 import { getActionFromCorner } from '../controls/util.mjs';
 import { Point } from '../Point.mjs';
@@ -14,6 +14,7 @@ import { sendPointToPlane } from '../util/misc/planeChange.mjs';
 import { cos } from '../util/misc/cos.mjs';
 import { sin } from '../util/misc/sin.mjs';
 import '../util/misc/vectors.mjs';
+import { isActiveSelection } from '../util/typeAssertions.mjs';
 import '../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
 import { SCALE, SCALE_X, SCALE_Y, RESIZING, ROTATE, RIGHT, LEFT, BOTTOM, TOP, CENTER, MODIFIED, SKEW_X, SKEW_Y } from '../constants.mjs';
 import { createCanvasElement } from '../util/misc/dom.mjs';
@@ -25,7 +26,6 @@ import '../util/animation/AnimationRegistry.mjs';
 import { CanvasDOMManager } from './DOMManagers/CanvasDOMManager.mjs';
 import { canvasDefaults } from './CanvasOptions.mjs';
 import { Intersection } from '../Intersection.mjs';
-import { isActiveSelection } from '../util/typeAssertions.mjs';
 
 /**
  * Canvas class
@@ -179,7 +179,10 @@ class SelectableCanvas extends StaticCanvas {
     _defineProperty(this, "contextTopDirty", false);
   }
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), SelectableCanvas.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...SelectableCanvas.ownDefaults
+    };
   }
   get upperCanvasEl() {
     var _this$elements$upper;
@@ -481,10 +484,11 @@ class SelectableCanvas extends StaticCanvas {
         height: target.height,
         shiftKey: e.shiftKey,
         altKey,
-        original: _objectSpread2(_objectSpread2({}, saveObjectTransform(target)), {}, {
+        original: {
+          ...saveObjectTransform(target),
           originX: origin.x,
           originY: origin.y
-        })
+        }
       };
     this._currentTransform = transform;
     this.fire('before:transform', {
@@ -709,10 +713,10 @@ class SelectableCanvas extends StaticCanvas {
    *
    */
   getViewportPoint(e) {
-    if (this._pointer) {
-      return this._pointer;
+    if (this._viewportPoint) {
+      return this._viewportPoint;
     }
-    return this.getPointer(e, true);
+    return this._getPointerImpl(e, true);
   }
 
   /**
@@ -728,23 +732,22 @@ class SelectableCanvas extends StaticCanvas {
    *
    */
   getScenePoint(e) {
-    if (this._absolutePointer) {
-      return this._absolutePointer;
+    if (this._scenePoint) {
+      return this._scenePoint;
     }
-    return this.getPointer(e);
+    return this._getPointerImpl(e);
   }
 
   /**
    * Returns pointer relative to canvas.
    *
-   * @deprecated This method is deprecated since v6 to protect you from misuse.
    * Use {@link getViewportPoint} or {@link getScenePoint} instead.
    *
    * @param {Event} e
    * @param {Boolean} [fromViewport] whether to return the point from the viewport or in the scene
    * @return {Point}
    */
-  getPointer(e) {
+  _getPointerImpl(e) {
     let fromViewport = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     const upperCanvasEl = this.upperCanvasEl,
       bounds = upperCanvasEl.getBoundingClientRect();

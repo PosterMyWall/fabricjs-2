@@ -106,8 +106,8 @@ export declare class Line<Props extends TOptions<FabricObjectProps> = Partial<Fa
      * @param {Object} [options] Options object
      * @param {Function} [callback] callback function invoked after parsing
      */
-    static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<Line<{
-        [x: string]: any;
+    static fromElement(element: HTMLElement, options?: Abortable, cssRules?: CSSRules): Promise<Line<{
+        [x: string]: /*elided*/ any;
     }, SerializedLineProps, ObjectEvents>>;
     /**
      * Returns Line instance from an object representation

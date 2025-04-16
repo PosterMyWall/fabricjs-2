@@ -1,4 +1,4 @@
-import type { TBBox, TMat2D, SVGElementName } from '../../typedefs';
+import type { TBBox, SVGElementName } from '../../typedefs';
 /**
  * Returns array of attributes for given svg that fabric parses
  * @param {SVGElementName} type Type of svg element (eg. 'circle')
@@ -27,12 +27,6 @@ export type TPreserveArParsed = {
  * @return {Object} an object containing align and meetOrSlice attribute
  */
 export declare const parsePreserveAspectRatioAttribute: (attribute: string) => TPreserveArParsed;
-/**
- * given an array of 6 number returns something like `"matrix(...numbers)"`
- * @param {TMat2D} transform an array with 6 numbers
- * @return {String} transform matrix for svg
- */
-export declare const matrixToSVG: (transform: TMat2D) => string;
 /**
  * Adobe Illustrator (at least CS5) is unable to render rgba()-based fill values
  * we work around it by "moving" alpha channel into opacity attribute and setting fill's alpha to 1

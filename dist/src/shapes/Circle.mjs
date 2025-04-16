@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
 import { cos } from '../util/misc/cos.mjs';
@@ -9,7 +9,6 @@ import { FabricObject } from './Object/FabricObject.mjs';
 import { SCALE_X, SCALE_Y } from '../constants.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
-const _excluded = ["left", "top", "radius"];
 const CIRCLE_PROPS = ['radius', 'startAngle', 'endAngle', 'counterClockwise'];
 const circleDefaultValues = {
   radius: 0,
@@ -19,7 +18,10 @@ const circleDefaultValues = {
 };
 class Circle extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Circle.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Circle.ownDefaults
+    };
   }
 
   /**
@@ -102,7 +104,7 @@ class Circle extends FabricObject {
   _toSVG() {
     const angle = (this.endAngle - this.startAngle) % 360;
     if (angle === 0) {
-      return ['<circle ', 'COMMON_PARTS', 'cx="0" cy="0" ', 'r="', "".concat(this.radius), '" />\n'];
+      return ['<circle ', 'COMMON_PARTS', 'cx="0" cy="0" ', 'r="', `${this.radius}`, '" />\n'];
     } else {
       const {
         radius
@@ -115,7 +117,7 @@ class Circle extends FabricObject {
         endY = sin(end) * radius,
         largeFlag = angle > 180 ? 1 : 0,
         sweepFlag = this.counterClockwise ? 0 : 1;
-      return ["<path d=\"M ".concat(startX, " ").concat(startY, " A ").concat(radius, " ").concat(radius, " 0 ").concat(largeFlag, " ").concat(sweepFlag, " ").concat(endX, " ").concat(endY, "\" "), 'COMMON_PARTS', ' />\n'];
+      return [`<path d="M ${startX} ${startY} A ${radius} ${radius} 0 ${largeFlag} ${sweepFlag} ${endX} ${endY}" `, 'COMMON_PARTS', ' />\n'];
     }
   }
   /* _TO_SVG_END_ */
@@ -137,21 +139,21 @@ class Circle extends FabricObject {
    * @throws {Error} If value of `r` attribute is missing or invalid
    */
   static async fromElement(element, options, cssRules) {
-    const _ref = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      {
-        left = 0,
-        top = 0,
-        radius = 0
-      } = _ref,
-      otherParsedAttributes = _objectWithoutProperties(_ref, _excluded);
+    const {
+      left = 0,
+      top = 0,
+      radius = 0,
+      ...otherParsedAttributes
+    } = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
 
     // this probably requires to be fixed for default origins not being top/left.
 
-    return new this(_objectSpread2(_objectSpread2({}, otherParsedAttributes), {}, {
+    return new this({
+      ...otherParsedAttributes,
       radius,
       left: left - radius,
       top: top - radius
-    }));
+    });
   }
 
   /* _FROM_SVG_END_ */

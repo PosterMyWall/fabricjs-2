@@ -18,13 +18,6 @@ export declare class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     private _setSVGTextLineText;
     private _setSVGTextLineBg;
     /**
-     * @deprecated unused
-     */
-    _getSVGLineTopOffset(this: TextSVGExportMixin & FabricText, lineIndex: number): {
-        lineTop: number;
-        offset: number;
-    };
-    /**
      * Returns styles-string for svg-export
      * @param {Boolean} skipShadow a boolean to skip shadow filter output
      * @return {String}

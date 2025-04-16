@@ -6,16 +6,20 @@ import { toFixed } from '../../util/misc/toFixed.mjs';
 import { FabricObjectSVGExportMixin } from '../Object/FabricObjectSVGExportMixin.mjs';
 import { JUSTIFY } from './constants.mjs';
 import { STROKE, FILL } from '../../constants.mjs';
+import { createRotateMatrix } from '../../util/misc/matrix.mjs';
+import { radiansToDegrees } from '../../util/misc/radiansDegreesConversion.mjs';
+import { Point } from '../../Point.mjs';
+import { matrixToSVG } from '../../util/misc/svgExport.mjs';
 
 const multipleSpacesRegex = /  +/g;
 const dblQuoteRegex = /"/g;
 function createSVGInlineRect(color, left, top, width, height) {
-  return "\t\t".concat(createSVGRect(color, {
+  return `\t\t${createSVGRect(color, {
     left,
     top,
     width,
     height
-  }), "\n");
+  })}\n`;
 }
 class TextSVGExportMixin extends FabricObjectSVGExportMixin {
   _toSVG() {
@@ -24,11 +28,20 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     return this._wrapSVGTextAndBg(textAndBg);
   }
   toSVG(reviver) {
-    return this._createBaseSVGMarkup(this._toSVG(), {
-      reviver,
-      noStyle: true,
-      withShadow: true
-    });
+    const textSvg = this._createBaseSVGMarkup(this._toSVG(), {
+        reviver,
+        noStyle: true,
+        withShadow: true
+      }),
+      path = this.path;
+    if (path) {
+      return textSvg + path._createBaseSVGMarkup(path._toSVG(), {
+        reviver,
+        withShadow: true,
+        additionalTransform: matrixToSVG(this.calcOwnMatrix())
+      });
+    }
+    return textSvg;
   }
   _getSVGLeftTopOffsets() {
     return {
@@ -44,7 +57,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     } = _ref;
     const noShadow = true,
       textDecoration = this.getSvgTextDecoration(this);
-    return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', this.fontFamily ? "font-family=\"".concat(this.fontFamily.replace(dblQuoteRegex, "'"), "\" ") : '', this.fontSize ? "font-size=\"".concat(this.fontSize, "\" ") : '', this.fontStyle ? "font-style=\"".concat(this.fontStyle, "\" ") : '', this.fontWeight ? "font-weight=\"".concat(this.fontWeight, "\" ") : '', textDecoration ? "text-decoration=\"".concat(textDecoration, "\" ") : '', this.direction === 'rtl' ? "direction=\"".concat(this.direction, "\" ") : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
+    return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', this.fontFamily ? `font-family="${this.fontFamily.replace(dblQuoteRegex, "'")}" ` : '', this.fontSize ? `font-size="${this.fontSize}" ` : '', this.fontStyle ? `font-style="${this.fontStyle}" ` : '', this.fontWeight ? `font-weight="${this.fontWeight}" ` : '', textDecoration ? `text-decoration="${textDecoration}" ` : '', this.direction === 'rtl' ? `direction="${this.direction}" ` : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
   }
 
   /**
@@ -79,12 +92,32 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       textBgRects
     };
   }
-  _createTextCharSpan(char, styleDecl, left, top) {
+  _createTextCharSpan(char, styleDecl, left, top, charBox) {
+    const numFractionDigit = config.NUM_FRACTION_DIGITS;
     const styleProps = this.getSvgSpanStyles(styleDecl, char !== char.trim() || !!char.match(multipleSpacesRegex)),
-      fillStyles = styleProps ? "style=\"".concat(styleProps, "\"") : '',
+      fillStyles = styleProps ? `style="${styleProps}"` : '',
       dy = styleDecl.deltaY,
-      dySpan = dy ? " dy=\"".concat(toFixed(dy, config.NUM_FRACTION_DIGITS), "\" ") : '';
-    return "<tspan x=\"".concat(toFixed(left, config.NUM_FRACTION_DIGITS), "\" y=\"").concat(toFixed(top, config.NUM_FRACTION_DIGITS), "\" ").concat(dySpan).concat(fillStyles, ">").concat(escapeXml(char), "</tspan>");
+      dySpan = dy ? ` dy="${toFixed(dy, numFractionDigit)}" ` : '',
+      {
+        angle,
+        renderLeft,
+        renderTop,
+        width
+      } = charBox;
+    let angleAttr = '';
+    if (renderLeft !== undefined) {
+      const wBy2 = width / 2;
+      angle && (angleAttr = ` rotate="${toFixed(radiansToDegrees(angle), numFractionDigit)}"`);
+      const m = createRotateMatrix({
+        angle: radiansToDegrees(angle)
+      });
+      m[4] = renderLeft;
+      m[5] = renderTop;
+      const renderPoint = new Point(-wBy2, 0).transform(m);
+      left = renderPoint.x;
+      top = renderPoint.y;
+    }
+    return `<tspan x="${toFixed(left, numFractionDigit)}" y="${toFixed(top, numFractionDigit)}" ${dySpan}${angleAttr}${fillStyles}>${escapeXml(char)}</tspan>`;
   }
   _setSVGTextLineText(textSpans, lineIndex, textLeftOffset, textTopOffset) {
     const lineHeight = this.getHeightOfLine(lineIndex),
@@ -99,7 +132,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       timeToRender;
     textTopOffset += lineHeight * (1 - this._fontSizeFraction) / this.lineHeight;
     for (let i = 0, len = line.length - 1; i <= len; i++) {
-      timeToRender = i === len || this.charSpacing;
+      timeToRender = i === len || this.charSpacing || this.path;
       charsToRender += line[i];
       charBox = this.__charBounds[lineIndex][i];
       if (boxWidth === 0) {
@@ -114,14 +147,14 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
         }
       }
       if (!timeToRender) {
-        // if we have charSpacing, we render char by char
+        // if we have charSpacing or a path, we render char by char
         actualStyle = actualStyle || this.getCompleteStyleDeclaration(lineIndex, i);
         nextStyle = this.getCompleteStyleDeclaration(lineIndex, i + 1);
         timeToRender = hasStyleChanged(actualStyle, nextStyle, true);
       }
       if (timeToRender) {
         style = this._getStyleDeclaration(lineIndex, i);
-        textSpans.push(this._createTextCharSpan(charsToRender, style, textLeftOffset, textTopOffset));
+        textSpans.push(this._createTextCharSpan(charsToRender, style, textLeftOffset, textTopOffset, charBox));
         charsToRender = '';
         actualStyle = nextStyle;
         if (this.direction === 'rtl') {
@@ -160,28 +193,12 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
   }
 
   /**
-   * @deprecated unused
-   */
-  _getSVGLineTopOffset(lineIndex) {
-    let lineTopOffset = 0,
-      j;
-    for (j = 0; j < lineIndex; j++) {
-      lineTopOffset += this.getHeightOfLine(j);
-    }
-    const lastHeight = this.getHeightOfLine(j);
-    return {
-      lineTop: lineTopOffset,
-      offset: (this._fontSizeMult - this._fontSizeFraction) * lastHeight / (this.lineHeight * this._fontSizeMult)
-    };
-  }
-
-  /**
    * Returns styles-string for svg-export
    * @param {Boolean} skipShadow a boolean to skip shadow filter output
    * @return {String}
    */
   getSvgStyles(skipShadow) {
-    return "".concat(super.getSvgStyles(skipShadow), " white-space: pre;");
+    return `${super.getSvgStyles(skipShadow)} white-space: pre;`;
   }
 
   /**
@@ -202,7 +219,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       deltaY
     } = style;
     const textDecoration = this.getSvgTextDecoration(style);
-    return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? "stroke-width: ".concat(strokeWidth, "; ") : '', fontFamily ? "font-family: ".concat(!fontFamily.includes("'") && !fontFamily.includes('"') ? "'".concat(fontFamily, "'") : fontFamily, "; ") : '', fontSize ? "font-size: ".concat(fontSize, "px; ") : '', fontStyle ? "font-style: ".concat(fontStyle, "; ") : '', fontWeight ? "font-weight: ".concat(fontWeight, "; ") : '', textDecoration ? "text-decoration: ".concat(textDecoration, "; ") : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? "baseline-shift: ".concat(-deltaY, "; ") : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
+    return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? `stroke-width: ${strokeWidth}; ` : '', fontFamily ? `font-family: ${!fontFamily.includes("'") && !fontFamily.includes('"') ? `'${fontFamily}'` : fontFamily}; ` : '', fontSize ? `font-size: ${fontSize}px; ` : '', fontStyle ? `font-style: ${fontStyle}; ` : '', fontWeight ? `font-weight: ${fontWeight}; ` : '', textDecoration ? `text-decoration: ${textDecoration}; ` : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? `baseline-shift: ${-deltaY}; ` : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
   }
 
   /**

@@ -5,7 +5,7 @@ import { FabricObject } from './Object/FabricObject';
 import type { FabricObjectProps, SerializedObjectProps } from './Object/types';
 import type { ObjectEvents } from '../EventTypeDefs';
 import type { CSSRules } from '../parser/typedefs';
-import type { Resize } from '../filters/Resize';
+import type { Resize, ResizeSerializedProps } from '../filters/Resize';
 import type { TCachedFabricObject } from './Object/Object';
 export type ImageSource = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
 interface UniqueImageProps {
@@ -22,7 +22,7 @@ export interface SerializedImageProps extends SerializedObjectProps {
     src: string;
     crossOrigin: TCrossOrigin;
     filters: any[];
-    resizeFilter?: any;
+    resizeFilter?: ResizeSerializedProps;
     cropX: number;
     cropY: number;
 }
@@ -273,15 +273,6 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
         cropY: number;
     };
     /**
-     * Default CSS class name for canvas
-     * Will be removed from fabric 7
-     * @static
-     * @deprecated
-     * @type String
-     * @default
-     */
-    static CSS_CANVAS: string;
-    /**
      * List of attribute names to account for when parsing SVG element (used by {@link FabricImage.fromElement})
      * @static
      * @see {@link http://www.w3.org/TR/SVG/struct.html#ImageElement}
@@ -298,7 +289,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
     static fromObject<T extends TOptions<SerializedImageProps>>({ filters: f, resizeFilter: rf, src, crossOrigin, type, ...object }: T, options?: Abortable): Promise<FabricImage<Omit<T, "type" | "crossOrigin" | "filters" | "resizeFilter" | "src"> & {
         src: string | undefined;
         filters: BaseFilter<string, object, object>[];
-        resizeFilter: any;
+        resizeFilter: Resize;
     }, SerializedImageProps, ObjectEvents>>;
     /**
      * Creates an instance of Image from an URL string

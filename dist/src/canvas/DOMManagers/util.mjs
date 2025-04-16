@@ -20,8 +20,8 @@ const setCSSDimensions = (el, _ref2) => {
     width,
     height
   } = _ref2;
-  width && (el.style.width = typeof width === 'number' ? "".concat(width, "px") : width);
-  height && (el.style.height = typeof height === 'number' ? "".concat(height, "px") : height);
+  width && (el.style.width = typeof width === 'number' ? `${width}px` : width);
+  height && (el.style.height = typeof height === 'number' ? `${height}px` : height);
 };
 
 /**

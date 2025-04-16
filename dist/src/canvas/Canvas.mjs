@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { NONE } from '../constants.mjs';
 import { Point } from '../Point.mjs';
@@ -10,7 +10,6 @@ import { SelectableCanvas } from './SelectableCanvas.mjs';
 import { TextEditingManager } from './TextEditingManager.mjs';
 import { config } from '../config.mjs';
 
-const _excluded = ["target", "oldTarget", "fireCanvas", "e"];
 const addEventOptions = {
   passive: false
 };
@@ -19,9 +18,7 @@ const getEventPoints = (canvas, e) => {
   const scenePoint = canvas.getScenePoint(e);
   return {
     viewportPoint,
-    scenePoint,
-    pointer: viewportPoint,
-    absolutePointer: scenePoint
+    scenePoint
   };
 };
 
@@ -76,6 +73,12 @@ class Canvas extends SelectableCanvas {
      * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
      */
     _defineProperty(this, "allowedTouchDriftDeviance", 5);
+    /**
+     * a boolean that keeps track of the click state during a cycle of mouse down/up.
+     * If a mouse move occurs it becomes false.
+     * Is true by default, turns false on mouse move.
+     * Used to determine if a mouseUp is a click
+     */
     _defineProperty(this, "_isClick", void 0);
     _defineProperty(this, "textEditingManager", new TextEditingManager(this));
     ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp',
@@ -86,7 +89,7 @@ class Canvas extends SelectableCanvas {
     // '_onShake',
     // '_onLongPress',
     // '_onOrientationChange',
-    '_onMouseWheel', '_onMouseOut', '_onMouseEnter', '_onContextMenu', '_onDoubleClick', '_onDragStart', '_onDragEnd', '_onDragProgress', '_onDragOver', '_onDragEnter', '_onDragLeave', '_onDrop'].forEach(eventHandler => {
+    '_onMouseWheel', '_onMouseOut', '_onMouseEnter', '_onContextMenu', '_onClick', '_onDragStart', '_onDragEnd', '_onDragProgress', '_onDragOver', '_onDragEnter', '_onDragLeave', '_onDrop'].forEach(eventHandler => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       this[eventHandler] = this[eventHandler].bind(this);
     });
@@ -106,12 +109,14 @@ class Canvas extends SelectableCanvas {
       eventTypePrefix = this._getEventPrefix();
     functor(getWindowFromElement(canvasElement), 'resize', this._onResize);
     functor(canvasElement, eventTypePrefix + 'down', this._onMouseDown);
-    functor(canvasElement, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
-    functor(canvasElement, "".concat(eventTypePrefix, "out"), this._onMouseOut);
-    functor(canvasElement, "".concat(eventTypePrefix, "enter"), this._onMouseEnter);
+    functor(canvasElement, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
+    functor(canvasElement, `${eventTypePrefix}out`, this._onMouseOut);
+    functor(canvasElement, `${eventTypePrefix}enter`, this._onMouseEnter);
     functor(canvasElement, 'wheel', this._onMouseWheel);
     functor(canvasElement, 'contextmenu', this._onContextMenu);
-    functor(canvasElement, 'dblclick', this._onDoubleClick);
+    functor(canvasElement, 'click', this._onClick);
+    // decide if to remove in fabric 7.0
+    functor(canvasElement, 'dblclick', this._onClick);
     functor(canvasElement, 'dragstart', this._onDragStart);
     functor(canvasElement, 'dragend', this._onDragEnd);
     functor(canvasElement, 'dragover', this._onDragOver);
@@ -142,9 +147,9 @@ class Canvas extends SelectableCanvas {
     // if you dispose on a mouseDown, before mouse up, you need to clean document to...
     const eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(this.upperCanvasEl);
-    removeListener(doc, "".concat(eventTypePrefix, "up"), this._onMouseUp);
+    removeListener(doc, `${eventTypePrefix}up`, this._onMouseUp);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    removeListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
+    removeListener(doc, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
     // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     clearTimeout(this._willAddMouseDown);
@@ -164,19 +169,26 @@ class Canvas extends SelectableCanvas {
    */
   _onMouseOut(e) {
     const target = this._hoveredTarget;
-    const shared = _objectSpread2({
-      e
-    }, getEventPoints(this, e));
-    this.fire('mouse:out', _objectSpread2(_objectSpread2({}, shared), {}, {
+    const shared = {
+      e,
+      ...getEventPoints(this, e)
+    };
+    this.fire('mouse:out', {
+      ...shared,
       target
-    }));
+    });
     this._hoveredTarget = undefined;
-    target && target.fire('mouseout', _objectSpread2({}, shared));
+    target && target.fire('mouseout', {
+      ...shared
+    });
     this._hoveredTargets.forEach(nestedTarget => {
-      this.fire('mouse:out', _objectSpread2(_objectSpread2({}, shared), {}, {
+      this.fire('mouse:out', {
+        ...shared,
         target: nestedTarget
-      }));
-      nestedTarget && nestedTarget.fire('mouseout', _objectSpread2({}, shared));
+      });
+      nestedTarget && nestedTarget.fire('mouseout', {
+        ...shared
+      });
     });
     this._hoveredTargets = [];
   }
@@ -193,9 +205,10 @@ class Canvas extends SelectableCanvas {
     // as a long term fix we need to separate the action of finding a target with the
     // side effects we added to it.
     if (!this._currentTransform && !this.findTarget(e)) {
-      this.fire('mouse:over', _objectSpread2({
-        e
-      }, getEventPoints(this, e)));
+      this.fire('mouse:over', {
+        e,
+        ...getEventPoints(this, e)
+      });
       this._hoveredTarget = undefined;
       this._hoveredTargets = [];
     }
@@ -421,12 +434,13 @@ class Canvas extends SelectableCanvas {
       target,
       targets
     } = this.findDragTargets(e);
-    const options = this._basicEventHandler('drop:before', _objectSpread2({
+    const options = this._basicEventHandler('drop:before', {
       e,
       target,
       subTargets: targets,
-      dragSource: this._dragSource
-    }, getEventPoints(this, e)));
+      dragSource: this._dragSource,
+      ...getEventPoints(this, e)
+    });
     //  will be set by the drop target
     options.didDrop = false;
     //  will be set by the drop target, used in case options.target refuses the drop
@@ -461,9 +475,12 @@ class Canvas extends SelectableCanvas {
    * @private
    * @param {Event} e Event object fired on mousedown
    */
-  _onDoubleClick(e) {
+  _onClick(e) {
+    const clicks = e.detail;
+    if (clicks > 3 || clicks < 2) return;
     this._cacheTransformEventData(e);
-    this._handleEvent(e, 'dblclick');
+    clicks == 2 && e.type === 'dblclick' && this._handleEvent(e, 'dblclick');
+    clicks == 3 && this._handleEvent(e, 'tripleclick');
     this._resetTransformEventData();
   }
 
@@ -524,7 +541,7 @@ class Canvas extends SelectableCanvas {
     // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
     addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     // Unbind mousedown to prevent double triggers from touch devices
-    removeListener(canvasElement, "".concat(eventTypePrefix, "down"), this._onMouseDown);
+    removeListener(canvasElement, `${eventTypePrefix}down`, this._onMouseDown);
     //*PMW* added line
     this.onTouchStartAfter(e);
   }
@@ -555,10 +572,10 @@ class Canvas extends SelectableCanvas {
     this._resetTransformEventData();
     const canvasElement = this.upperCanvasEl,
       eventTypePrefix = this._getEventPrefix();
-    removeListener(canvasElement, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
+    removeListener(canvasElement, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
     const doc = getDocumentFromElement(canvasElement);
-    addListener(doc, "".concat(eventTypePrefix, "up"), this._onMouseUp);
-    addListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
+    addListener(doc, `${eventTypePrefix}up`, this._onMouseUp);
+    addListener(doc, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
   }
 
   /**
@@ -584,7 +601,7 @@ class Canvas extends SelectableCanvas {
     this._willAddMouseDown = setTimeout(() => {
       // Wait 400ms before rebinding mousedown to prevent double triggers
       // from touch devices
-      addListener(this.upperCanvasEl, "".concat(eventTypePrefix, "down"), this._onMouseDown);
+      addListener(this.upperCanvasEl, `${eventTypePrefix}down`, this._onMouseDown);
       this._willAddMouseDown = 0;
     }, 400);
   }
@@ -600,9 +617,9 @@ class Canvas extends SelectableCanvas {
       eventTypePrefix = this._getEventPrefix();
     if (this._isMainEvent(e)) {
       const doc = getDocumentFromElement(this.upperCanvasEl);
-      removeListener(doc, "".concat(eventTypePrefix, "up"), this._onMouseUp);
-      removeListener(doc, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
-      addListener(canvasElement, "".concat(eventTypePrefix, "move"), this._onMouseMove, addEventOptions);
+      removeListener(doc, `${eventTypePrefix}up`, this._onMouseUp);
+      removeListener(doc, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
+      addListener(canvasElement, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
     }
   }
 
@@ -765,26 +782,28 @@ class Canvas extends SelectableCanvas {
    * @param {TPointerEvent} e event from mouse
    * @param {TPointerEventNames} eventType
    */
-  _handleEvent(e, eventType) {
+  _handleEvent(e, eventType, extraData) {
     const target = this._target,
       targets = this.targets || [],
-      options = _objectSpread2(_objectSpread2({
+      options = {
         e,
         target,
-        subTargets: targets
-      }, getEventPoints(this, e)), {}, {
-        transform: this._currentTransform
-      }, eventType === 'up:before' || eventType === 'up' ? {
-        isClick: this._isClick,
-        currentTarget: this.findTarget(e),
-        // set by the preceding `findTarget` call
-        currentSubTargets: this.targets
-      } : {});
-    this.fire("mouse:".concat(eventType), options);
+        subTargets: targets,
+        ...getEventPoints(this, e),
+        transform: this._currentTransform,
+        ...(eventType === 'up:before' || eventType === 'up' ? {
+          isClick: this._isClick,
+          currentTarget: this.findTarget(e),
+          // set by the preceding `findTarget` call
+          currentSubTargets: this.targets
+        } : {}),
+        ...(eventType === 'down:before' || eventType === 'down' ? extraData : {})
+      };
+    this.fire(`mouse:${eventType}`, options);
     // this may be a little be more complicated of what we want to handle
-    target && target.fire("mouse".concat(eventType), options);
+    target && target.fire(`mouse${eventType}`, options);
     for (let i = 0; i < targets.length; i++) {
-      targets[i] !== target && targets[i].fire("mouse".concat(eventType), options);
+      targets[i] !== target && targets[i].fire(`mouse${eventType}`, options);
     }
   }
 
@@ -804,7 +823,9 @@ class Canvas extends SelectableCanvas {
       e,
       pointer
     });
-    this._handleEvent(e, 'down');
+    this._handleEvent(e, 'down', {
+      alreadySelected: false
+    });
   }
 
   /**
@@ -859,13 +880,15 @@ class Canvas extends SelectableCanvas {
     this._cacheTransformEventData(e);
     this._handleEvent(e, 'down:before');
     let target = this._target;
-
+    let alreadySelected = !!target && target === this._activeObject;
     // if right/middle click just fire events
     const {
       button
     } = e;
     if (button) {
-      (this.fireMiddleClick && button === 1 || this.fireRightClick && button === 2) && this._handleEvent(e, 'down');
+      (this.fireMiddleClick && button === 1 || this.fireRightClick && button === 2) && this._handleEvent(e, 'down', {
+        alreadySelected
+      });
       this._resetTransformEventData();
       return;
     }
@@ -906,8 +929,10 @@ class Canvas extends SelectableCanvas {
         deltaX: 0
       };
     }
+
+    // check again because things could have changed
+    alreadySelected = !!target && target === this._activeObject;
     if (target) {
-      const alreadySelected = target === this._activeObject;
       if (target.selectable && target.activeOn === 'down') {
         this.setActiveObject(target, e);
       }
@@ -924,7 +949,9 @@ class Canvas extends SelectableCanvas {
     //  we clear `_objectsToRender` in case of a change in order to repopulate it at rendering
     //  run before firing the `down` event to give the dev a chance to populate it themselves
     shouldRender && (this._objectsToRender = undefined);
-    this._handleEvent(e, 'down');
+    this._handleEvent(e, 'down', {
+      alreadySelected: alreadySelected
+    });
     // we must renderAll so that we update the visuals
     shouldRender && this.requestRenderAll();
   }
@@ -934,7 +961,7 @@ class Canvas extends SelectableCanvas {
    * @private
    */
   _resetTransformEventData() {
-    this._target = this._pointer = this._absolutePointer = undefined;
+    this._target = this._viewportPoint = this._scenePoint = undefined;
   }
 
   /**
@@ -945,8 +972,8 @@ class Canvas extends SelectableCanvas {
   _cacheTransformEventData(e) {
     // reset in order to avoid stale caching
     this._resetTransformEventData();
-    this._pointer = this.getViewportPoint(e);
-    this._absolutePointer = sendPointToPlane(this._pointer, undefined, this.viewportTransform);
+    this._viewportPoint = this.getViewportPoint(e);
+    this._scenePoint = sendPointToPlane(this._viewportPoint, undefined, this.viewportTransform);
     this._target = this._currentTransform ? this._currentTransform.target : this.findTarget(e);
   }
 
@@ -1032,16 +1059,18 @@ class Canvas extends SelectableCanvas {
       _hoveredTargets = this._hoveredTargets,
       targets = this.targets,
       length = Math.max(_hoveredTargets.length, targets.length);
-    this.fireSyntheticInOutEvents('drag', _objectSpread2(_objectSpread2({}, data), {}, {
+    this.fireSyntheticInOutEvents('drag', {
+      ...data,
       target,
       oldTarget: draggedoverTarget,
       fireCanvas: true
-    }));
+    });
     for (let i = 0; i < length; i++) {
-      this.fireSyntheticInOutEvents('drag', _objectSpread2(_objectSpread2({}, data), {}, {
+      this.fireSyntheticInOutEvents('drag', {
+        ...data,
         target: targets[i],
         oldTarget: _hoveredTargets[i]
-      }));
+      });
     }
     this._draggedoverTarget = target;
   }
@@ -1060,12 +1089,12 @@ class Canvas extends SelectableCanvas {
    */
   fireSyntheticInOutEvents(type, _ref) {
     let {
-        target,
-        oldTarget,
-        fireCanvas,
-        e
-      } = _ref,
-      data = _objectWithoutProperties(_ref, _excluded);
+      target,
+      oldTarget,
+      fireCanvas,
+      e,
+      ...data
+    } = _ref;
     const {
       targetIn,
       targetOut,
@@ -1074,20 +1103,24 @@ class Canvas extends SelectableCanvas {
     } = syntheticEventConfig[type];
     const targetChanged = oldTarget !== target;
     if (oldTarget && targetChanged) {
-      const outOpt = _objectSpread2(_objectSpread2({}, data), {}, {
+      const outOpt = {
+        ...data,
         e,
         target: oldTarget,
-        nextTarget: target
-      }, getEventPoints(this, e));
+        nextTarget: target,
+        ...getEventPoints(this, e)
+      };
       fireCanvas && this.fire(canvasOut, outOpt);
       oldTarget.fire(targetOut, outOpt);
     }
     if (target && targetChanged) {
-      const inOpt = _objectSpread2(_objectSpread2({}, data), {}, {
+      const inOpt = {
+        ...data,
         e,
         target,
-        previousTarget: oldTarget
-      }, getEventPoints(this, e));
+        previousTarget: oldTarget,
+        ...getEventPoints(this, e)
+      };
       fireCanvas && this.fire(canvasIn, inOpt);
       target.fire(targetIn, inOpt);
     }

@@ -82,7 +82,7 @@ export declare class Ellipse<Props extends TOptions<EllipseProps> = Partial<Elli
      * @param {HTMLElement} element Element to parse
      * @return {Ellipse}
      */
-    static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<Ellipse<Record<string, any>, SerializedEllipseProps, ObjectEvents>>;
+    static fromElement(element: HTMLElement, options?: Abortable, cssRules?: CSSRules): Promise<Ellipse<Record<string, any>, SerializedEllipseProps, ObjectEvents>>;
 }
 export {};
 //# sourceMappingURL=Ellipse.d.ts.map

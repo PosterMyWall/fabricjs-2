@@ -1,6 +1,6 @@
 import { type XY } from '../../../Point';
 import type { TProjection, TProjectStrokeOnPointsOptions } from './types';
-export * from './types';
+export type * from './types';
 /**
  *
  * Used to calculate object's bounding box

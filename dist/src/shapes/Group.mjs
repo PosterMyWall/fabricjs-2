@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { createCollectionMixin } from '../Collection.mjs';
 import { multiplyTransformMatrices, invertTransform } from '../util/misc/matrix.mjs';
 import { enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
@@ -10,7 +10,6 @@ import { log } from '../util/internals/console.mjs';
 import { LayoutManager } from '../LayoutManager/LayoutManager.mjs';
 import { LAYOUT_TYPE_INITIALIZATION, LAYOUT_TYPE_ADDED, LAYOUT_TYPE_REMOVED, LAYOUT_TYPE_IMPERATIVE } from '../LayoutManager/constants.mjs';
 
-const _excluded = ["type", "objects", "layoutManager"];
 /**
  * This class handles the specific case of creating a group using {@link Group#fromObject} and is not meant to be used in any other case.
  * We could have used a boolean in the constructor, as we did previously, but we think the boolean
@@ -37,7 +36,10 @@ const groupDefaultValues = {
  */
 class Group extends createCollectionMixin(FabricObject) {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Group.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Group.ownDefaults
+    };
   }
 
   /**
@@ -514,10 +516,11 @@ class Group extends createCollectionMixin(FabricObject) {
   }
   triggerLayout() {
     let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    this.layoutManager.performLayout(_objectSpread2({
+    this.layoutManager.performLayout({
       target: this,
-      type: LAYOUT_TYPE_IMPERATIVE
-    }, options));
+      type: LAYOUT_TYPE_IMPERATIVE,
+      ...options
+    });
   }
 
   /**
@@ -562,14 +565,16 @@ class Group extends createCollectionMixin(FabricObject) {
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     const layoutManager = this.layoutManager.toObject();
-    return _objectSpread2(_objectSpread2(_objectSpread2({}, super.toObject(['subTargetCheck', 'interactive', ...propertiesToInclude])), layoutManager.strategy !== 'fit-content' || this.includeDefaultValues ? {
-      layoutManager
-    } : {}), {}, {
+    return {
+      ...super.toObject(['subTargetCheck', 'interactive', ...propertiesToInclude]),
+      ...(layoutManager.strategy !== 'fit-content' || this.includeDefaultValues ? {
+        layoutManager
+      } : {}),
       objects: this.__serializeObjects('toObject', propertiesToInclude)
-    });
+    };
   }
   toString() {
-    return "#<Group: (".concat(this.complexity(), ")>");
+    return `#<Group: (${this.complexity()})>`;
   }
   dispose() {
     this.layoutManager.unsubscribeTargets({
@@ -619,7 +624,7 @@ class Group extends createCollectionMixin(FabricObject) {
    * @return {String}
    */
   getSvgStyles() {
-    const opacity = typeof this.opacity !== 'undefined' && this.opacity !== 1 ? "opacity: ".concat(this.opacity, ";") : '',
+    const opacity = typeof this.opacity !== 'undefined' && this.opacity !== 1 ? `opacity: ${this.opacity};` : '',
       visibility = this.visible ? '' : ' visibility: hidden;';
     return [opacity, this.getSvgFilter(), visibility].join('');
   }
@@ -750,16 +755,18 @@ class Group extends createCollectionMixin(FabricObject) {
    */
   static fromObject(_ref2, abortable) {
     let {
-        type,
-        objects = [],
-        layoutManager
-      } = _ref2,
-      options = _objectWithoutProperties(_ref2, _excluded);
+      type,
+      objects = [],
+      layoutManager,
+      ...options
+    } = _ref2;
     return Promise.all([enlivenObjects(objects, abortable), enlivenObjectEnlivables(options, abortable)]).then(_ref3 => {
       let [objects, hydratedOptions] = _ref3;
-      const group = new this(objects, _objectSpread2(_objectSpread2(_objectSpread2({}, options), hydratedOptions), {}, {
+      const group = new this(objects, {
+        ...options,
+        ...hydratedOptions,
         layoutManager: new NoopLayoutManager()
-      }));
+      });
       if (layoutManager) {
         const layoutClass = classRegistry.getClass(layoutManager.type);
         const strategyClass = classRegistry.getClass(layoutManager.strategy);

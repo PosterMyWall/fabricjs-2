@@ -1,16 +1,10 @@
-import type { TPointerEvent, TPointerEventInfo } from '../../EventTypeDefs';
-import type { XY } from '../../Point';
+import type { ObjectPointerEvents, TPointerEvent, TPointerEventInfo } from '../../EventTypeDefs';
 import { DraggableTextDelegate } from './DraggableTextDelegate';
 import type { ITextEvents } from './ITextBehavior';
 import { ITextKeyBehavior } from './ITextKeyBehavior';
 import type { TOptions } from '../../typedefs';
 import type { TextProps, SerializedTextProps } from '../Text/Text';
 export declare abstract class ITextClickBehavior<Props extends TOptions<TextProps> = Partial<TextProps>, SProps extends SerializedTextProps = SerializedTextProps, EventSpec extends ITextEvents = ITextEvents> extends ITextKeyBehavior<Props, SProps, EventSpec> {
-    private __lastSelected;
-    private __lastClickTime;
-    private __lastLastClickTime;
-    private __lastPointer;
-    private __newClickTime;
     protected draggableTextDelegate: DraggableTextDelegate;
     initBehavior(): void;
     /**
@@ -33,12 +27,6 @@ export declare abstract class ITextClickBehavior<Props extends TOptions<TextProp
      */
     canDrop(e: DragEvent): boolean;
     /**
-     * Default event handler to simulate triple click
-     * @private
-     */
-    onMouseDown(options: TPointerEventInfo): void;
-    isTripleClick(newPointer: XY): boolean;
-    /**
      * Default handler for double click, select a word
      */
     doubleClickHandler(options: TPointerEventInfo): void;
@@ -54,18 +42,12 @@ export declare abstract class ITextClickBehavior<Props extends TOptions<TextProp
      * initializing a mousedDown on a text area will cancel fabricjs knowledge of
      * current compositionMode. It will be set to false.
      */
-    _mouseDownHandler({ e }: TPointerEventInfo): void;
-    /**
-     * Default event handler for the basic functionalities needed on mousedown:before
-     * can be overridden to do something different.
-     * Scope of this implementation is: verify the object is already selected when mousing down
-     */
-    _mouseDownHandlerBefore({ e }: TPointerEventInfo): void;
+    _mouseDownHandler({ e, alreadySelected }: ObjectPointerEvents['mousedown']): void;
     /**
      * standard handler for mouse up, overridable
      * @private
      */
-    mouseUpHandler({ e, transform }: TPointerEventInfo): void;
+    mouseUpHandler({ e, transform }: ObjectPointerEvents['mouseup']): void;
     /**
      * Changes cursor location in a text depending on passed pointer (x/y) object
      * @param {TPointerEvent} e Event object

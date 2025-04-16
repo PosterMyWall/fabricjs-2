@@ -1,6 +1,6 @@
 import { reNum } from '../../parser/constants.mjs';
 
-const commaWsp = "\\s*,?\\s*";
+const commaWsp = `\\s*,?\\s*`;
 
 /**
  * p for param
@@ -8,7 +8,7 @@ const commaWsp = "\\s*,?\\s*";
  * p is a number that is preceded by an arbitary number of spaces, maybe 0,
  * a comma or not, and then possibly more spaces or not.
  */
-const p = "".concat(commaWsp, "(").concat(reNum, ")");
+const p = `${commaWsp}(${reNum})`;
 
 // const reMoveToCommand = `(M) ?(?:${p}${p} ?)+`;
 
@@ -28,7 +28,7 @@ const p = "".concat(commaWsp, "(").concat(reNum, ")");
 
 // const reQuadraticCurveShortcutCommand = `(T) ?(?:${p}${p} ?)+`;
 
-const reArcCommandPoints = "".concat(p).concat(p).concat(p).concat(commaWsp, "([01])").concat(commaWsp, "([01])").concat(p).concat(p);
+const reArcCommandPoints = `${p}${p}${p}${commaWsp}([01])${commaWsp}([01])${p}${p}`;
 // const reArcCommand = `(A) ?(?:${reArcCommandPoints} ?)+`;
 
 // export const rePathCommandGroups =

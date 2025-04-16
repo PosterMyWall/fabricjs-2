@@ -41,7 +41,7 @@ const loadImage = function (url) {
     img.onload = done;
     img.onerror = function () {
       abort && (signal === null || signal === void 0 ? void 0 : signal.removeEventListener('abort', abort));
-      reject(new FabricError("Error loading ".concat(img.src)));
+      reject(new FabricError(`Error loading ${img.src}`));
     };
     crossOrigin && (img.crossOrigin = crossOrigin);
     img.src = url;

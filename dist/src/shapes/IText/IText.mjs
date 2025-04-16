@@ -1,10 +1,12 @@
-import { objectSpread2 as _objectSpread2, defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Canvas } from '../../canvas/Canvas.mjs';
 import { ITextClickBehavior } from './ITextClickBehavior.mjs';
-import { keysMap, keysMapRtl, ctrlKeysMapDown, ctrlKeysMapUp } from './constants.mjs';
+import { ctrlKeysMapUp, ctrlKeysMapDown, keysMapRtl, keysMap } from './constants.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { JUSTIFY, JUSTIFY_RIGHT, JUSTIFY_LEFT, JUSTIFY_CENTER } from '../Text/constants.mjs';
 import { RIGHT, LEFT, CENTER, FILL } from '../../constants.mjs';
+import { createCanvasElementFor } from '../../util/misc/dom.mjs';
+import { applyCanvasTransform } from '../../util/internals/applyCanvasTransform.mjs';
 
 // Declare IText protected properties to workaround TS
 const protectedDefaultValues = {
@@ -12,7 +14,7 @@ const protectedDefaultValues = {
   _reSpace: /\s|\r?\n/,
   inCompositionMode: false
 };
-const iTextDefaultValues = _objectSpread2({
+const iTextDefaultValues = {
   selectionStart: 0,
   selectionEnd: 0,
   selectionColor: 'rgba(17,119,255,0.3)',
@@ -30,8 +32,9 @@ const iTextDefaultValues = _objectSpread2({
   keysMap,
   keysMapRtl,
   ctrlKeysMapDown,
-  ctrlKeysMapUp
-}, protectedDefaultValues);
+  ctrlKeysMapUp,
+  ...protectedDefaultValues
+};
 
 // @TODO this is not complete
 
@@ -80,7 +83,10 @@ const iTextDefaultValues = _objectSpread2({
  */
 class IText extends ITextClickBehavior {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), IText.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...IText.ownDefaults
+    };
   }
   get type() {
     const type = super.type;
@@ -94,7 +100,10 @@ class IText extends ITextClickBehavior {
    * @param {Object} [options] Options object
    */
   constructor(text, options) {
-    super(text, _objectSpread2(_objectSpread2({}, IText.ownDefaults), options));
+    super(text, {
+      ...IText.ownDefaults,
+      ...options
+    });
     this.initBehavior();
   }
 
@@ -286,7 +295,7 @@ class IText extends ITextClickBehavior {
    * it does on the contextTop. If contextTop is not available, do nothing.
    */
   renderCursorOrSelection() {
-    if (!this.isEditing) {
+    if (!this.isEditing || !this.canvas) {
       return;
     }
     const ctx = this.clearContextTop(true);
@@ -294,13 +303,69 @@ class IText extends ITextClickBehavior {
       return;
     }
     const boundaries = this._getCursorBoundaries();
+    const ancestors = this.findAncestorsWithClipPath();
+    const hasAncestorsWithClipping = ancestors.length > 0;
+    let drawingCtx = ctx;
+    let drawingCanvas = undefined;
+    if (hasAncestorsWithClipping) {
+      // we have some clipPath, we need to draw the selection on an intermediate layer.
+      drawingCanvas = createCanvasElementFor(ctx.canvas);
+      drawingCtx = drawingCanvas.getContext('2d');
+      applyCanvasTransform(drawingCtx, this.canvas);
+      const m = this.calcTransformMatrix();
+      drawingCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+    }
     if (this.selectionStart === this.selectionEnd && !this.inCompositionMode) {
-      this.renderCursor(ctx, boundaries);
+      this.renderCursor(drawingCtx, boundaries);
     } else {
-      this.renderSelection(ctx, boundaries);
+      this.renderSelection(drawingCtx, boundaries);
+    }
+    if (hasAncestorsWithClipping) {
+      // we need a neutral context.
+      // this won't work for nested clippaths in which a clippath
+      // has its own clippath
+      for (const ancestor of ancestors) {
+        const clipPath = ancestor.clipPath;
+        const clippingCanvas = createCanvasElementFor(ctx.canvas);
+        const clippingCtx = clippingCanvas.getContext('2d');
+        applyCanvasTransform(clippingCtx, this.canvas);
+        // position the ctx in the center of the outer ancestor
+        if (!clipPath.absolutePositioned) {
+          const m = ancestor.calcTransformMatrix();
+          clippingCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+        }
+        clipPath.transform(clippingCtx);
+        // we assign an empty drawing context, we don't plan to have this working for nested clippaths for now
+        clipPath.drawObject(clippingCtx, true, {});
+        this.drawClipPathOnCache(drawingCtx, clipPath, clippingCanvas);
+      }
+    }
+    if (hasAncestorsWithClipping) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(drawingCanvas, 0, 0);
     }
     this.canvas.contextTopDirty = true;
     ctx.restore();
+  }
+
+  /**
+   * Finds and returns an array of clip paths that are applied to the parent
+   * group(s) of the current FabricObject instance. The object's hierarchy is
+   * traversed upwards (from the current object towards the root of the canvas),
+   * checking each parent object for the presence of a `clipPath` that is not
+   * absolutely positioned.
+   */
+  findAncestorsWithClipPath() {
+    const clipPathAncestors = [];
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let obj = this;
+    while (obj) {
+      if (obj.clipPath) {
+        clipPathAncestors.push(obj);
+      }
+      obj = obj.parent;
+    }
+    return clipPathAncestors;
   }
 
   /**
@@ -425,7 +490,7 @@ class IText extends ITextClickBehavior {
 
   /**
    * Render the cursor at the given selectionStart.
-   *
+   * @param {CanvasRenderingContext2D} ctx transformed context to draw on
    */
   _renderCursor(ctx, boundaries, selectionStart) {
     const {

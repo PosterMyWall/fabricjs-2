@@ -9,12 +9,12 @@ const log = function (severity) {
 };
 class FabricError extends Error {
   constructor(message, options) {
-    super("fabric: ".concat(message), options);
+    super(`fabric: ${message}`, options);
   }
 }
 class SignalAbortedError extends FabricError {
   constructor(context) {
-    super("".concat(context, " 'options.signal' is in 'aborted' state"));
+    super(`${context} 'options.signal' is in 'aborted' state`);
   }
 }
 

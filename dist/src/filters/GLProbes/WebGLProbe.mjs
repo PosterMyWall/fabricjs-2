@@ -12,7 +12,7 @@ class WebGLProbe extends GLProbe {
    * @returns {Boolean} Whether the user's browser WebGL supports given precision.
    */
   testPrecision(gl, precision) {
-    const fragmentSource = "precision ".concat(precision, " float;\nvoid main(){}");
+    const fragmentSource = `precision ${precision} float;\nvoid main(){}`;
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!fragmentShader) {
       return false;
@@ -31,7 +31,7 @@ class WebGLProbe extends GLProbe {
       this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
       this.GLPrecision = ['highp', 'mediump', 'lowp'].find(precision => this.testPrecision(gl, precision));
       gl.getExtension('WEBGL_lose_context').loseContext();
-      log('log', "WebGL: max texture size ".concat(this.maxTextureSize));
+      log('log', `WebGL: max texture size ${this.maxTextureSize}`);
     }
   }
   isSupported(textureSize) {

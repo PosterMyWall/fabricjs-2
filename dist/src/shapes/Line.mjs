@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
@@ -16,8 +16,6 @@ import '../parser/constants.mjs';
 import '../util/animation/AnimationRegistry.mjs';
 import { cacheProperties } from './Object/defaultValues.mjs';
 
-const _excluded = ["x1", "y1", "x2", "y2"],
-  _excluded2 = ["x1", "y1", "x2", "y2"];
 // @TODO this code is terrible and Line should be a special case of polyline.
 
 const coordProps = ['x1', 'x2', 'y1', 'y2'];
@@ -138,7 +136,10 @@ class Line extends FabricObject {
    */
   toObject() {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    return _objectSpread2(_objectSpread2({}, super.toObject(propertiesToInclude)), this.calcLinePoints());
+    return {
+      ...super.toObject(propertiesToInclude),
+      ...this.calcLinePoints()
+    };
   }
 
   /*
@@ -202,7 +203,7 @@ class Line extends FabricObject {
       y1,
       y2
     } = this.calcLinePoints();
-    return ['<line ', 'COMMON_PARTS', "x1=\"".concat(x1, "\" y1=\"").concat(y1, "\" x2=\"").concat(x2, "\" y2=\"").concat(y2, "\" />\n")];
+    return ['<line ', 'COMMON_PARTS', `x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />\n`];
   }
 
   /**
@@ -221,14 +222,13 @@ class Line extends FabricObject {
    * @param {Function} [callback] callback function invoked after parsing
    */
   static async fromElement(element, options, cssRules) {
-    const _parseAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      {
-        x1 = 0,
-        y1 = 0,
-        x2 = 0,
-        y2 = 0
-      } = _parseAttributes,
-      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded);
+    const {
+      x1 = 0,
+      y1 = 0,
+      x2 = 0,
+      y2 = 0,
+      ...parsedAttributes
+    } = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules);
     return new this([x1, y1, x2, y2], parsedAttributes);
   }
 
@@ -243,15 +243,16 @@ class Line extends FabricObject {
    */
   static fromObject(_ref) {
     let {
-        x1,
-        y1,
-        x2,
-        y2
-      } = _ref,
-      object = _objectWithoutProperties(_ref, _excluded2);
-    return this._fromObject(_objectSpread2(_objectSpread2({}, object), {}, {
+      x1,
+      y1,
+      x2,
+      y2,
+      ...object
+    } = _ref;
+    return this._fromObject({
+      ...object,
       points: [x1, y1, x2, y2]
-    }), {
+    }, {
       extraParam: 'points'
     });
   }

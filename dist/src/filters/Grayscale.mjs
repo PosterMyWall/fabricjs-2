@@ -46,7 +46,7 @@ class Grayscale extends BaseFilter {
     }
   }
   getCacheKey() {
-    return "".concat(this.type, "_").concat(this.mode);
+    return `${this.type}_${this.mode}`;
   }
   getFragmentSource() {
     return fragmentSource[this.mode];

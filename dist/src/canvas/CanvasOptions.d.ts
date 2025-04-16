@@ -220,7 +220,7 @@ export interface CanvasOptions extends StaticCanvasOptions, CanvasTransformOptio
      * Indicates whether objects should remain in current stack position when selected.
      * When false objects are brought to top and rendered as part of the selection group
      * @type Boolean
-     * @default
+     * @default true
      */
     preserveObjectStacking: boolean;
 }

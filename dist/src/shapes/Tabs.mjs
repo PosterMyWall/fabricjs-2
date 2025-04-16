@@ -1,13 +1,14 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Group } from './Group.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { FabricObject } from './Object/Object.mjs';
 
 class Tabs extends Group {
   static async fromObject(object) {
-    return FabricObject._fromObject(_objectSpread2({
-      type: 'tabs'
-    }, object));
+    return FabricObject._fromObject({
+      type: 'tabs',
+      ...object
+    });
   }
 }
 /**

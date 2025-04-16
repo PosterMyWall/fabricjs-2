@@ -1,4 +1,4 @@
-import type { ObjectEvents, TPointerEvent, TPointerEventInfo } from '../../EventTypeDefs';
+import type { ObjectEvents, TPointerEvent } from '../../EventTypeDefs';
 import type { FabricObject } from '../Object/FabricObject';
 import { FabricText } from '../Text/Text';
 import type { TOnAnimationChangeCallback } from '../../util/animation/types';
@@ -12,7 +12,6 @@ export type ITextEvents = ObjectEvents & {
         index: number;
         action: string;
     };
-    tripleclick: TPointerEventInfo;
     'editing:entered': never | {
         e: TPointerEvent;
     };
@@ -42,6 +41,10 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
     protected _currentCursorOpacity: number;
     private _textBeforeEdit;
     protected __selectionStartOnMouseDown: number;
+    /**
+     * Keeps track if the IText object was selected before the actual click.
+     * This because we want to delay enter editing by a click.
+     */
     protected selected: boolean;
     protected cursorOffsetCache: {
         left?: number;
@@ -111,6 +114,10 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
      */
     selectAll(): this;
     /**
+     * Selects entire text and updates the visual state
+     */
+    cmdAll(): void;
+    /**
      * Returns selected text
      * @return {String}
      */
@@ -147,17 +154,15 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
      */
     searchWordBoundary(selectionStart: number, direction: 1 | -1): number;
     /**
-     * TODO fix: selectionStart set as 0 will be ignored?
-     * Selects a word based on the index
+     * Selects the word that contains the char at index selectionStart
      * @param {Number} selectionStart Index of a character
      */
     selectWord(selectionStart?: number): void;
     /**
-     * TODO fix: selectionStart set as 0 will be ignored?
-     * Selects a line based on the index
+     * Selects the line that contains selectionStart
      * @param {Number} selectionStart Index of a character
      */
-    selectLine(selectionStart?: number): this;
+    selectLine(selectionStart?: number): void;
     /**
      * Enters editing state
      */
@@ -223,13 +228,6 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
      * @private
      */
     _restoreEditingProps(): void;
-    /**
-     * runs the actual logic that exits from editing state, see {@link exitEditing}
-     * Please use exitEditingImpl, this function was kept to avoid breaking changes.
-     * Will be removed in fabric 7.0
-     * @deprecated use "exitEditingImpl"
-     */
-    protected _exitEditing(): void;
     /**
      * runs the actual logic that exits from editing state, see {@link exitEditing}
      * But it does not fire events

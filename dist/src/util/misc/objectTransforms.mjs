@@ -1,10 +1,7 @@
-import { objectWithoutProperties as _objectWithoutProperties } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../../Point.mjs';
 import { CENTER } from '../../constants.mjs';
 import { makeBoundingBoxFromPoints } from './boundingBoxFromPoints.mjs';
-import { invertTransform, multiplyTransformMatrices, qrDecompose } from './matrix.mjs';
-
-const _excluded = ["translateX", "translateY", "scaleX", "scaleY"];
+import { qrDecompose, multiplyTransformMatrices, invertTransform } from './matrix.mjs';
 
 /**
  * given an object and a transform, apply the inverse transform to the object,
@@ -39,14 +36,13 @@ const addTransformToObject = (object, transform) => applyTransformToObject(objec
  * @param {Array} transform the destination transform
  */
 const applyTransformToObject = (object, transform) => {
-  const _qrDecompose = qrDecompose(transform),
-    {
+  const {
       translateX,
       translateY,
       scaleX,
-      scaleY
-    } = _qrDecompose,
-    otherOptions = _objectWithoutProperties(_qrDecompose, _excluded),
+      scaleY,
+      ...otherOptions
+    } = qrDecompose(transform),
     center = new Point(translateX, translateY);
   object.flipX = false;
   object.flipY = false;

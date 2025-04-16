@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { SCALE_X, SCALE_Y, twoMathPi } from '../constants.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
@@ -13,7 +13,10 @@ const ellipseDefaultValues = {
 const ELLIPSE_PROPS = ['rx', 'ry'];
 class Ellipse extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Ellipse.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Ellipse.ownDefaults
+    };
   }
 
   /**
@@ -79,7 +82,7 @@ class Ellipse extends FabricObject {
    * of the instance
    */
   _toSVG() {
-    return ['<ellipse ', 'COMMON_PARTS', "cx=\"0\" cy=\"0\" rx=\"".concat(this.rx, "\" ry=\"").concat(this.ry, "\" />\n")];
+    return ['<ellipse ', 'COMMON_PARTS', `cx="0" cy="0" rx="${this.rx}" ry="${this.ry}" />\n`];
   }
 
   /**

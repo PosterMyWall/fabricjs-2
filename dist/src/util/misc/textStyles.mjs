@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { reNewline } from '../../constants.mjs';
 import { cloneStyles } from '../internals/cloneStyles.mjs';
 import { graphemeSplit } from '../lang_string.mjs';
@@ -91,7 +90,9 @@ const stylesFromArray = (styles, text) => {
         //create object for line index if it doesn't exist
         stylesObject[i] = stylesObject[i] || {};
         //assign a style at this character's index
-        stylesObject[i][c] = _objectSpread2({}, styles[styleIndex].style);
+        stylesObject[i][c] = {
+          ...styles[styleIndex].style
+        };
         //if character is at the end of the current style collection, move to the next
         if (charIndex === styles[styleIndex].end - 1) {
           styleIndex++;

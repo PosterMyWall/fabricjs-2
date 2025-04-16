@@ -119,18 +119,6 @@ export interface TPointerEventInfo<E extends TPointerEvent = TPointerEvent> exte
     target?: FabricObject;
     subTargets?: FabricObject[];
     transform?: Transform | null;
-    /**
-     * @deprecated
-     * use viewportPoint instead.
-     * Kept for compatibility
-     */
-    pointer: Point;
-    /**
-     * @deprecated
-     * use scenePoint instead.
-     * Kept for compatibility
-     */
-    absolutePointer: Point;
     scenePoint: Point;
     viewportPoint: Point;
 }
@@ -153,18 +141,6 @@ export interface DragEventData extends TEvent<DragEvent> {
     dropTarget?: FabricObject;
 }
 export interface DropEventData extends DragEventData {
-    /**
-     * @deprecated
-     * use viewportPoint instead.
-     * Kept for compatibility
-     */
-    pointer: Point;
-    /**
-     * @deprecated
-     * use scenePoint instead.
-     * Kept for compatibility
-     */
-    absolutePointer: Point;
     scenePoint: Point;
     viewportPoint: Point;
 }
@@ -213,12 +189,26 @@ export interface CollectionEvents {
 }
 type BeforeSuffix<T extends string> = `${T}:before`;
 type WithBeforeSuffix<T extends string> = T | BeforeSuffix<T>;
-type TPointerEvents<Prefix extends string> = Record<`${Prefix}${WithBeforeSuffix<'down'> | WithBeforeSuffix<'move'> | 'dblclick'}`, TPointerEventInfo> & Record<`${Prefix}${WithBeforeSuffix<'up'>}`, TPointerEventInfo & {
+type TPointerEvents<Prefix extends string> = Record<`${Prefix}${WithBeforeSuffix<'down'> | WithBeforeSuffix<'move'> | 'dblclick' | 'tripleclick'}`, TPointerEventInfo> & Record<`${Prefix}down`, TPointerEventInfo & {
+    /**
+     * Indicates if the target or current target where already selected
+     * before the cycle of mouse down -> mouse up started
+     */
+    alreadySelected: boolean;
+}> & Record<`${Prefix}${WithBeforeSuffix<'up'>}`, TPointerEventInfo & {
     isClick: boolean;
+    /**
+     * The targets at the moment of mouseup that could be different from the
+     * target at the moment of mouse down in case of a drag action for example
+     */
     currentTarget?: FabricObject;
+    /**
+     * The subtargets at the moment of mouseup that could be different from the
+     * target at the moment of mouse down in case of a drag action for example
+     */
     currentSubTargets: FabricObject[];
 }> & Record<`${Prefix}wheel`, TPointerEventInfo<WheelEvent>> & Record<`${Prefix}over`, TPointerEventInfo & InEvent> & Record<`${Prefix}out`, TPointerEventInfo & OutEvent>;
-export type TPointerEventNames = WithBeforeSuffix<'down'> | WithBeforeSuffix<'move'> | WithBeforeSuffix<'up'> | 'dblclick' | 'wheel';
+export type TPointerEventNames = WithBeforeSuffix<'down'> | WithBeforeSuffix<'move'> | WithBeforeSuffix<'up'> | 'dblclick' | 'tripleclick' | 'wheel';
 export type ObjectPointerEvents = TPointerEvents<'mouse'>;
 export type CanvasPointerEvents = TPointerEvents<'mouse:'>;
 export interface MiscEvents {
@@ -287,5 +277,8 @@ export interface CanvasEvents extends StaticCanvasEvents, CanvasPointerEvents, C
         target: IText;
     };
 }
+export type TEventsExtraData = Record<PropertyKey, Record<PropertyKey, never>> & Record<'down', {
+    alreadySelected: boolean;
+}>;
 export {};
 //# sourceMappingURL=EventTypeDefs.d.ts.map

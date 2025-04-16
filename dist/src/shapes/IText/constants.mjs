@@ -45,7 +45,7 @@ const ctrlKeysMapUp = {
  * For functionalities on keyDown + ctrl || cmd
  */
 const ctrlKeysMapDown = {
-  65: 'selectAll'
+  65: 'cmdAll'
 };
 
 export { ctrlKeysMapDown, ctrlKeysMapUp, keysMap, keysMapRtl };

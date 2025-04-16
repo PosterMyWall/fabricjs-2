@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { elementMatchesRule } from './elementMatchesRule.mjs';
 
 /**
@@ -10,7 +9,10 @@ function getGlobalStylesForElement(element) {
   let styles = {};
   for (const rule in cssRules) {
     if (elementMatchesRule(element, rule.split(' '))) {
-      styles = _objectSpread2(_objectSpread2({}, styles), cssRules[rule]);
+      styles = {
+        ...styles,
+        ...cssRules[rule]
+      };
     }
   }
   return styles;

@@ -1,6 +1,5 @@
 import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../../Point.mjs';
-import { stopEvent } from '../../util/dom_event.mjs';
 import { invertTransform } from '../../util/misc/matrix.mjs';
 import { DraggableTextDelegate } from './DraggableTextDelegate.mjs';
 import { ITextKeyBehavior } from './ITextKeyBehavior.mjs';
@@ -17,17 +16,9 @@ class ITextClickBehavior extends ITextKeyBehavior {
   initBehavior() {
     // Initializes event handlers related to cursor or selection
     this.on('mousedown', this._mouseDownHandler);
-    this.on('mousedown:before', this._mouseDownHandlerBefore);
     this.on('mouseup', this.mouseUpHandler);
     this.on('mousedblclick', this.doubleClickHandler);
-    this.on('tripleclick', this.tripleClickHandler);
-
-    // Initializes "dbclick" event handler
-    this.__lastClickTime = +new Date();
-    // for triple click
-    this.__lastLastClickTime = +new Date();
-    this.__lastPointer = {};
-    this.on('mousedown', this.onMouseDown);
+    this.on('mousetripleclick', this.tripleClickHandler);
     this.draggableTextDelegate = new DraggableTextDelegate(this);
     super.initBehavior();
   }
@@ -61,29 +52,6 @@ class ITextClickBehavior extends ITextKeyBehavior {
   }
 
   /**
-   * Default event handler to simulate triple click
-   * @private
-   */
-  onMouseDown(options) {
-    if (!this.canvas) {
-      return;
-    }
-    this.__newClickTime = +new Date();
-    const newPointer = options.pointer;
-    if (this.isTripleClick(newPointer)) {
-      this.fire('tripleclick', options);
-      stopEvent(options.e);
-    }
-    this.__lastLastClickTime = this.__lastClickTime;
-    this.__lastClickTime = this.__newClickTime;
-    this.__lastPointer = newPointer;
-    this.__lastSelected = this.selected && !this.getActiveControl();
-  }
-  isTripleClick(newPointer) {
-    return this.__newClickTime - this.__lastClickTime < 500 && this.__lastClickTime - this.__lastLastClickTime < 500 && this.__lastPointer.x === newPointer.x && this.__lastPointer.y === newPointer.y;
-  }
-
-  /**
    * Default handler for double click, select a word
    */
   doubleClickHandler(options) {
@@ -91,6 +59,7 @@ class ITextClickBehavior extends ITextKeyBehavior {
       return;
     }
     this.selectWord(this.getSelectionStartFromPointer(options.e));
+    this.renderCursorOrSelection();
   }
 
   /**
@@ -101,6 +70,7 @@ class ITextClickBehavior extends ITextKeyBehavior {
       return;
     }
     this.selectLine(this.getSelectionStartFromPointer(options.e));
+    this.renderCursorOrSelection();
   }
 
   /**
@@ -113,7 +83,8 @@ class ITextClickBehavior extends ITextKeyBehavior {
    */
   _mouseDownHandler(_ref) {
     let {
-      e
+      e,
+      alreadySelected
     } = _ref;
     if (!this.canvas || !this.editable || notALeftClick(e) || this.getActiveControl()) {
       return;
@@ -122,7 +93,7 @@ class ITextClickBehavior extends ITextKeyBehavior {
       return;
     }
     this.canvas.textEditingManager.register(this);
-    if (this.selected) {
+    if (alreadySelected) {
       this.inCompositionMode = false;
       this.setCursorByClick(e);
     }
@@ -133,34 +104,18 @@ class ITextClickBehavior extends ITextKeyBehavior {
       }
       this.renderCursorOrSelection();
     }
-  }
-
-  /**
-   * Default event handler for the basic functionalities needed on mousedown:before
-   * can be overridden to do something different.
-   * Scope of this implementation is: verify the object is already selected when mousing down
-   */
-  _mouseDownHandlerBefore(_ref2) {
-    let {
-      e
-    } = _ref2;
-    if (!this.canvas || !this.editable || notALeftClick(e)) {
-      return;
-    }
-    // we want to avoid that an object that was selected and then becomes unselectable,
-    // may trigger editing mode in some way.
-    this.selected = this === this.canvas._activeObject;
+    this.selected || (this.selected = alreadySelected || this.isEditing);
   }
 
   /**
    * standard handler for mouse up, overridable
    * @private
    */
-  mouseUpHandler(_ref3) {
+  mouseUpHandler(_ref2) {
     let {
       e,
       transform
-    } = _ref3;
+    } = _ref2;
     const didDrag = this.draggableTextDelegate.end(e);
     if (this.canvas) {
       this.canvas.textEditingManager.unregister(this);
@@ -175,17 +130,13 @@ class ITextClickBehavior extends ITextKeyBehavior {
     if (!this.editable || this.group && !this.group.interactive || transform && transform.actionPerformed || notALeftClick(e) || didDrag) {
       return;
     }
-    if (this.__lastSelected && !this.getActiveControl()) {
-      this.selected = false;
-      this.__lastSelected = false;
+    if (this.selected && !this.getActiveControl()) {
       this.enterEditing(e);
       if (this.selectionStart === this.selectionEnd) {
         this.initDelayedCursor(true);
       } else {
         this.renderCursorOrSelection();
       }
-    } else {
-      this.selected = true;
     }
   }
 

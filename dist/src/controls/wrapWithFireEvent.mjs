@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { fireEvent } from './fireEvent.mjs';
 import { commonEventInfo } from './util.mjs';
 
@@ -13,7 +12,10 @@ const wrapWithFireEvent = (eventName, actionHandler, extraEventInfo) => {
   return (eventData, transform, x, y) => {
     const actionPerformed = actionHandler(eventData, transform, x, y);
     if (actionPerformed) {
-      fireEvent(eventName, _objectSpread2(_objectSpread2({}, commonEventInfo(eventData, transform, x, y)), extraEventInfo));
+      fireEvent(eventName, {
+        ...commonEventInfo(eventData, transform, x, y),
+        ...extraEventInfo
+      });
     }
     return actionPerformed;
   };

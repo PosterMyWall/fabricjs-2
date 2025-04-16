@@ -74,7 +74,7 @@ class Blur extends BaseFilter {
     // load first canvas
     ctx1.putImageData(imageData, 0, 0);
     ctx2.clearRect(0, 0, width, height);
-    for (i = -nSamples; i <= nSamples; i++) {
+    for (i = -15; i <= nSamples; i++) {
       random = (Math.random() - 0.5) / 4;
       percent = i / nSamples;
       j = blur * percent * width + random;
@@ -84,7 +84,7 @@ class Blur extends BaseFilter {
       ctx2.globalAlpha = 1;
       ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
     }
-    for (i = -nSamples; i <= nSamples; i++) {
+    for (i = -15; i <= nSamples; i++) {
       random = (Math.random() - 0.5) / 4;
       percent = i / nSamples;
       j = blur * percent * height + random;

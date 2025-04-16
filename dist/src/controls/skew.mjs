@@ -1,13 +1,11 @@
-import { objectSpread2 as _objectSpread2, objectWithoutProperties as _objectWithoutProperties } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { resolveOrigin } from '../util/misc/resolveOrigin.mjs';
 import { Point } from '../Point.mjs';
 import { radiansToDegrees, degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { isLocked, NOT_ALLOWED_CURSOR, findCornerQuadrant, getLocalPoint } from './util.mjs';
 import { wrapWithFireEvent } from './wrapWithFireEvent.mjs';
 import { wrapWithFixedAnchor } from './wrapWithFixedAnchor.mjs';
-import { CENTER, SKEWING, SCALE_X, SKEW_X, SCALE_Y, SKEW_Y } from '../constants.mjs';
+import { SKEW_Y, SCALE_Y, SKEW_X, SCALE_X, SKEWING, CENTER } from '../constants.mjs';
 
-const _excluded = ["target", "ex", "ey", "skewingSide"];
 const AXIS_KEYS = {
   x: {
     counterAxis: 'y',
@@ -43,7 +41,7 @@ const skewCursorStyleHandler = (eventData, control, fabricObject) => {
     return NOT_ALLOWED_CURSOR;
   }
   const n = findCornerQuadrant(fabricObject, control) % 4;
-  return "".concat(skewMap[n], "-resize");
+  return `${skewMap[n]}-resize`;
 };
 
 /**
@@ -52,12 +50,12 @@ const skewCursorStyleHandler = (eventData, control, fabricObject) => {
  */
 function skewObject(axis, _ref, pointer) {
   let {
-      target,
-      ex,
-      ey,
-      skewingSide
-    } = _ref,
-    transform = _objectWithoutProperties(_ref, _excluded);
+    target,
+    ex,
+    ey,
+    skewingSide,
+    ...transform
+  } = _ref;
   const {
       skew: skewKey
     } = AXIS_KEYS[axis],
@@ -146,10 +144,11 @@ function skewHandler(axis, eventData, transform, x, y) {
     // normalize value from [-1, 1] to origin value [0, 1]
     origin = -skewingDirection * 0.5 + 0.5;
   const finalHandler = wrapWithFireEvent(SKEWING, wrapWithFixedAnchor((eventData, transform, x, y) => skewObject(axis, transform, new Point(x, y))));
-  return finalHandler(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
+  return finalHandler(eventData, {
+    ...transform,
     [originKey]: origin,
     skewingSide
-  }), x, y);
+  }, x, y);
 }
 
 /**

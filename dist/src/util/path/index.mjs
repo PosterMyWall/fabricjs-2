@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
 import { halfPI, PiBy180 } from '../../constants.mjs';
@@ -83,7 +82,7 @@ const arcToSegments = (toX, toY, rx, ry, large, sweep, rotateX) => {
     _rx *= s;
     _ry *= s;
   } else {
-    root = (large === sweep ? -1.0 : 1.0) * Math.sqrt(pl / (rx2 * py2 + ry2 * px2));
+    root = (large === sweep ? -1 : 1.0) * Math.sqrt(pl / (rx2 * py2 + ry2 * px2));
   }
   const cx = root * _rx * py / _ry,
     cy = -root * _ry * px / _rx,
@@ -496,7 +495,9 @@ const findPercentageForDistance = (segInfo, distance) => {
       x: segInfo.x,
       y: segInfo.y
     },
-    p = _objectSpread2({}, tempP),
+    p = {
+      ...tempP
+    },
     nextLen,
     nextStep = 0.01,
     lastPerc = 0;
@@ -519,9 +520,10 @@ const findPercentageForDistance = (segInfo, distance) => {
       tmpLen += nextLen;
     }
   }
-  return _objectSpread2(_objectSpread2({}, p), {}, {
+  return {
+    ...p,
     angle: angleFinder(lastPerc)
-  });
+  };
 };
 
 /**
@@ -623,13 +625,15 @@ const getPointOnPath = function (path, distance) {
         angle: 0
       };
     case 'Z':
-      return _objectSpread2(_objectSpread2({}, new Point(segInfo.x, segInfo.y).lerp(new Point(segInfo.destX, segInfo.destY), segPercent)), {}, {
+      return {
+        ...new Point(segInfo.x, segInfo.y).lerp(new Point(segInfo.destX, segInfo.destY), segPercent),
         angle: Math.atan2(segInfo.destY - segInfo.y, segInfo.destX - segInfo.x)
-      });
+      };
     case 'L':
-      return _objectSpread2(_objectSpread2({}, new Point(segInfo.x, segInfo.y).lerp(new Point(segment[1], segment[2]), segPercent)), {}, {
+      return {
+        ...new Point(segInfo.x, segInfo.y).lerp(new Point(segment[1], segment[2]), segPercent),
         angle: Math.atan2(segment[2] - segInfo.y, segment[1] - segInfo.x)
-      });
+      };
     case 'C':
       return findPercentageForDistance(segInfo, distance);
     case 'Q':

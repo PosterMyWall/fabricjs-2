@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { FabricObject } from '../Object/FabricObject.mjs';
 import { styleProperties } from './constants.mjs';
 import '../../util/misc/vectors.mjs';
@@ -158,7 +158,12 @@ class StyledText extends FabricObject {
     if (!this._getLineStyle(lineIndex)) {
       this._setLineStyle(lineIndex);
     }
-    const newStyle = pickBy(_objectSpread2(_objectSpread2({}, this._getStyleDeclaration(lineIndex, charIndex)), style), value => value !== undefined);
+    const newStyle = pickBy({
+      // first create a new object that is a merge of existing and new
+      ...this._getStyleDeclaration(lineIndex, charIndex),
+      ...style
+      // use the predicate to discard undefined values
+    }, value => value !== undefined);
 
     // finally assign to the old position the new style
     this._setStyleDeclaration(lineIndex, charIndex, newStyle);
@@ -233,7 +238,10 @@ class StyledText extends FabricObject {
    * @return {Object} style object
    */
   getCompleteStyleDeclaration(lineIndex, charIndex) {
-    return _objectSpread2(_objectSpread2({}, pick(this, this.constructor._styleProperties)), this._getStyleDeclaration(lineIndex, charIndex));
+    return {
+      ...pick(this, this.constructor._styleProperties),
+      ...this._getStyleDeclaration(lineIndex, charIndex)
+    };
   }
 
   /**

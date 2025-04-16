@@ -1,5 +1,5 @@
 export type TKeyMapIText = Record<KeyboardEvent['keyCode'], CursorHandlingMethods>;
-export type CursorHandlingMethods = 'moveCursorUp' | 'moveCursorDown' | 'moveCursorLeft' | 'moveCursorRight' | 'exitEditing' | 'copy' | 'cut' | 'selectAll';
+export type CursorHandlingMethods = 'moveCursorUp' | 'moveCursorDown' | 'moveCursorLeft' | 'moveCursorRight' | 'exitEditing' | 'copy' | 'cut' | 'cmdAll';
 export declare const keysMap: TKeyMapIText;
 export declare const keysMapRtl: TKeyMapIText;
 /**

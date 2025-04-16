@@ -1,2 +1,2 @@
-const o="moveCursorUp",e="moveCursorDown",r="moveCursorLeft",t="moveCursorRight",s="exitEditing",u={9:s,27:s,33:o,34:e,35:t,36:r,37:r,38:o,39:t,40:e},c={9:s,27:s,33:o,34:e,35:r,36:t,37:t,38:o,39:r,40:e},i={67:"copy",88:"cut"},m={65:"selectAll"};export{m as ctrlKeysMapDown,i as ctrlKeysMapUp,u as keysMap,c as keysMapRtl};
+const o="moveCursorUp",r="moveCursorDown",e="moveCursorLeft",t="moveCursorRight",m="exitEditing",s={9:m,27:m,33:o,34:r,35:t,36:e,37:e,38:o,39:t,40:r},u={9:m,27:m,33:o,34:r,35:e,36:t,37:t,38:o,39:e,40:r},c={67:"copy",88:"cut"},i={65:"cmdAll"};export{i as ctrlKeysMapDown,c as ctrlKeysMapUp,s as keysMap,u as keysMapRtl};
 //# sourceMappingURL=constants.min.mjs.map

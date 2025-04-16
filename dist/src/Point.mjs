@@ -18,7 +18,7 @@ class Point {
   }
 
   /**
-   * Adds another point to this one and returns another one
+   * Adds another point to this one and returns a new one with the sum
    * @param {XY} that
    * @return {Point} new Point instance with added values
    */
@@ -267,7 +267,7 @@ class Point {
    * @return {String}
    */
   toString() {
-    return "".concat(this.x, ",").concat(this.y);
+    return `${this.x},${this.y}`;
   }
 
   /**

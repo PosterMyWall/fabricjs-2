@@ -1,6 +1,6 @@
 import { SKEW_X, SCALE_Y, SKEW_Y, SCALE_X } from '../constants.mjs';
-import { scaleCursorStyleHandler, scalingX, scalingY } from './scale.mjs';
-import { skewCursorStyleHandler, skewHandlerY, skewHandlerX } from './skew.mjs';
+import { scalingY, scaleCursorStyleHandler, scalingX } from './scale.mjs';
+import { skewHandlerX, skewCursorStyleHandler, skewHandlerY } from './skew.mjs';
 
 function isAltAction(eventData, target) {
   return eventData[target.canvas.altActionKey];

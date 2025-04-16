@@ -42,8 +42,8 @@ class StaticCanvasDOMManager {
     el.classList.remove('lower-canvas');
     el.removeAttribute('data-fabric');
     // restore canvas size to original size in case retina scaling was applied
-    el.setAttribute('width', "".concat(width));
-    el.setAttribute('height', "".concat(height));
+    el.setAttribute('width', `${width}`);
+    el.setAttribute('height', `${height}`);
     el.style.cssText = this._originalCanvasStyle || '';
     this._originalCanvasStyle = undefined;
   }

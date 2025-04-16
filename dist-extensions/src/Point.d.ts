@@ -13,7 +13,7 @@ export declare class Point implements XY {
     constructor(x: number, y: number);
     constructor(point?: XY);
     /**
-     * Adds another point to this one and returns another one
+     * Adds another point to this one and returns a new one with the sum
      * @param {XY} that
      * @return {Point} new Point instance with added values
      */

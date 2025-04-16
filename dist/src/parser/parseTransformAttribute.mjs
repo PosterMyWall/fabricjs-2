@@ -1,22 +1,19 @@
-import { taggedTemplateLiteral as _taggedTemplateLiteral } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { iMatrix, ROTATE, SKEW_Y, SKEW_X, SCALE } from '../constants.mjs';
 import { reNum } from './constants.mjs';
 import { cleanupSvgAttribute } from '../util/internals/cleanupSvgAttribute.mjs';
 import { createRotateMatrix, multiplyTransformMatrixArray, createSkewYMatrix, createSkewXMatrix, createScaleMatrix, createTranslateMatrix } from '../util/misc/matrix.mjs';
 
-var _templateObject, _templateObject2, _templateObject3, _templateObject4, _templateObject5, _templateObject6, _templateObject7;
-
 // == begin transform regexp
-const p = "(".concat(reNum, ")");
-const skewX = String.raw(_templateObject || (_templateObject = _taggedTemplateLiteral(["(skewX)(", ")"], ["(skewX)\\(", "\\)"])), p);
-const skewY = String.raw(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["(skewY)(", ")"], ["(skewY)\\(", "\\)"])), p);
-const rotate = String.raw(_templateObject3 || (_templateObject3 = _taggedTemplateLiteral(["(rotate)(", "(?: ", " ", ")?)"], ["(rotate)\\(", "(?: ", " ", ")?\\)"])), p, p, p);
-const scale = String.raw(_templateObject4 || (_templateObject4 = _taggedTemplateLiteral(["(scale)(", "(?: ", ")?)"], ["(scale)\\(", "(?: ", ")?\\)"])), p, p);
-const translate = String.raw(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["(translate)(", "(?: ", ")?)"], ["(translate)\\(", "(?: ", ")?\\)"])), p, p);
-const matrix = String.raw(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["(matrix)(", " ", " ", " ", " ", " ", ")"], ["(matrix)\\(", " ", " ", " ", " ", " ", "\\)"])), p, p, p, p, p, p);
-const transform = "(?:".concat(matrix, "|").concat(translate, "|").concat(rotate, "|").concat(scale, "|").concat(skewX, "|").concat(skewY, ")");
-const transforms = "(?:".concat(transform, "*)");
-const transformList = String.raw(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["^s*(?:", "?)s*$"], ["^\\s*(?:", "?)\\s*$"])), transforms);
+const p = `(${reNum})`;
+const skewX = String.raw`(skewX)\(${p}\)`;
+const skewY = String.raw`(skewY)\(${p}\)`;
+const rotate = String.raw`(rotate)\(${p}(?: ${p} ${p})?\)`;
+const scale = String.raw`(scale)\(${p}(?: ${p})?\)`;
+const translate = String.raw`(translate)\(${p}(?: ${p})?\)`;
+const matrix = String.raw`(matrix)\(${p} ${p} ${p} ${p} ${p} ${p}\)`;
+const transform = `(?:${matrix}|${translate}|${rotate}|${scale}|${skewX}|${skewY})`;
+const transforms = `(?:${transform}*)`;
+const transformList = String.raw`^\s*(?:${transforms}?)\s*$`;
 // http://www.w3.org/TR/SVG/coords.html#TransformAttribute
 const reTransformList = new RegExp(transformList);
 const reTransform = new RegExp(transform);

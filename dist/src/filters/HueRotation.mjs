@@ -1,12 +1,13 @@
-import { objectSpread2 as _objectSpread2, defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cos } from '../util/misc/cos.mjs';
 import { sin } from '../util/misc/sin.mjs';
 import { colorMatrixDefaultValues, ColorMatrix } from './ColorMatrix.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 
-const hueRotationDefaultValues = _objectSpread2(_objectSpread2({}, colorMatrixDefaultValues), {}, {
+const hueRotationDefaultValues = {
+  ...colorMatrixDefaultValues,
   rotation: 0
-});
+};
 
 /**
  * HueRotation filter class

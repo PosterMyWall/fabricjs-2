@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../../Point.mjs';
 import { FabricText } from '../Text/Text.mjs';
 import { animate } from '../../util/animation/animate.mjs';
@@ -28,6 +28,10 @@ class ITextBehavior extends FabricText {
      */
     _defineProperty(this, "_currentCursorOpacity", 1);
   }
+  /**
+   * Keeps track if the IText object was selected before the actual click.
+   * This because we want to delay enter editing by a click.
+   */
   /**
    * Initializes all the interactive behavior of IText
    */
@@ -142,6 +146,14 @@ class ITextBehavior extends FabricText {
   }
 
   /**
+   * Selects entire text and updates the visual state
+   */
+  cmdAll() {
+    this.selectAll();
+    this.renderCursorOrSelection();
+  }
+
+  /**
    * Returns selected text
    * @return {String}
    */
@@ -248,12 +260,12 @@ class ITextBehavior extends FabricText {
   }
 
   /**
-   * TODO fix: selectionStart set as 0 will be ignored?
-   * Selects a word based on the index
+   * Selects the word that contains the char at index selectionStart
    * @param {Number} selectionStart Index of a character
    */
   selectWord(selectionStart) {
-    selectionStart = selectionStart || this.selectionStart;
+    var _selectionStart;
+    selectionStart = (_selectionStart = selectionStart) !== null && _selectionStart !== void 0 ? _selectionStart : this.selectionStart;
     // search backwards
     const newSelectionStart = this.searchWordBoundary(selectionStart, -1),
       // search forward
@@ -262,23 +274,23 @@ class ITextBehavior extends FabricText {
     this.selectionEnd = newSelectionEnd;
     this._fireSelectionChanged();
     this._updateTextarea();
+    // remove next major, for now it renders twice :(
     this.renderCursorOrSelection();
   }
 
   /**
-   * TODO fix: selectionStart set as 0 will be ignored?
-   * Selects a line based on the index
+   * Selects the line that contains selectionStart
    * @param {Number} selectionStart Index of a character
    */
   selectLine(selectionStart) {
-    selectionStart = selectionStart || this.selectionStart;
+    var _selectionStart2;
+    selectionStart = (_selectionStart2 = selectionStart) !== null && _selectionStart2 !== void 0 ? _selectionStart2 : this.selectionStart;
     const newSelectionStart = this.findLineBoundaryLeft(selectionStart),
       newSelectionEnd = this.findLineBoundaryRight(selectionStart);
     this.selectionStart = newSelectionStart;
     this.selectionEnd = newSelectionEnd;
     this._fireSelectionChanged();
     this._updateTextarea();
-    return this;
   }
 
   /**
@@ -494,9 +506,9 @@ class ITextBehavior extends FabricText {
     p.x += this.canvas._offset.left;
     p.y += this.canvas._offset.top;
     return {
-      left: "".concat(p.x, "px"),
-      top: "".concat(p.y, "px"),
-      fontSize: "".concat(charHeight, "px"),
+      left: `${p.x}px`,
+      top: `${p.y}px`,
+      fontSize: `${charHeight}px`,
       charHeight: charHeight
     };
   }
@@ -539,11 +551,9 @@ class ITextBehavior extends FabricText {
 
   /**
    * runs the actual logic that exits from editing state, see {@link exitEditing}
-   * Please use exitEditingImpl, this function was kept to avoid breaking changes.
-   * Will be removed in fabric 7.0
-   * @deprecated use "exitEditingImpl"
+   * But it does not fire events
    */
-  _exitEditing() {
+  exitEditingImpl() {
     const hiddenTextarea = this.hiddenTextarea;
     this.selected = false;
     this.isEditing = false;
@@ -554,14 +564,6 @@ class ITextBehavior extends FabricText {
     this.hiddenTextarea = null;
     this.abortCursorAnimation();
     this.selectionStart !== this.selectionEnd && this.clearContextTop();
-  }
-
-  /**
-   * runs the actual logic that exits from editing state, see {@link exitEditing}
-   * But it does not fire events
-   */
-  exitEditingImpl() {
-    this._exitEditing();
     this.selectionEnd = this.selectionStart;
     this._restoreEditingProps();
     if (this._forceClearCache) {
@@ -725,11 +727,15 @@ class ITextBehavior extends FabricText {
     while (qty > 0) {
       if (copiedStyle && copiedStyle[qty - 1]) {
         this.styles[lineIndex + qty] = {
-          0: _objectSpread2({}, copiedStyle[qty - 1])
+          0: {
+            ...copiedStyle[qty - 1]
+          }
         };
       } else if (currentCharStyle) {
         this.styles[lineIndex + qty] = {
-          0: _objectSpread2({}, currentCharStyle)
+          0: {
+            ...currentCharStyle
+          }
         };
       } else {
         delete this.styles[lineIndex + qty];
@@ -751,7 +757,9 @@ class ITextBehavior extends FabricText {
       this.styles = {};
     }
     const currentLineStyles = this.styles[lineIndex],
-      currentLineStylesCloned = currentLineStyles ? _objectSpread2({}, currentLineStyles) : {};
+      currentLineStylesCloned = currentLineStyles ? {
+        ...currentLineStyles
+      } : {};
     quantity || (quantity = 1);
     // shift all char styles by quantity forward
     // 0,1,2,3 -> (charIndex=2) -> 0,1,3,4 -> (insert 2) -> 0,1,2,3,4
@@ -774,7 +782,9 @@ class ITextBehavior extends FabricText {
         if (!this.styles[lineIndex]) {
           this.styles[lineIndex] = {};
         }
-        this.styles[lineIndex][charIndex + quantity] = _objectSpread2({}, copiedStyle[quantity]);
+        this.styles[lineIndex][charIndex + quantity] = {
+          ...copiedStyle[quantity]
+        };
       }
       return;
     }
@@ -783,7 +793,9 @@ class ITextBehavior extends FabricText {
     }
     const newStyle = currentLineStyles[charIndex ? charIndex - 1 : 1];
     while (newStyle && quantity--) {
-      this.styles[lineIndex][charIndex + quantity] = _objectSpread2({}, newStyle);
+      this.styles[lineIndex][charIndex + quantity] = {
+        ...newStyle
+      };
     }
   }
 

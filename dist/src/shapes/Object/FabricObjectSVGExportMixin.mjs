@@ -1,7 +1,8 @@
 import { uid } from '../../util/internals/uid.mjs';
-import { colorPropToSVG, matrixToSVG } from '../../util/misc/svgParsing.mjs';
+import { colorPropToSVG } from '../../util/misc/svgParsing.mjs';
 import { NONE, FILL, STROKE } from '../../constants.mjs';
 import { isFiller } from '../../util/typeAssertions.mjs';
+import { matrixToSVG } from '../../util/misc/svgExport.mjs';
 
 class FabricObjectSVGExportMixin {
   /**
@@ -36,7 +37,7 @@ class FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgFilter() {
-    return this.shadow ? "filter: url(#SVGID_".concat(this.shadow.id, ");") : '';
+    return this.shadow ? `filter: url(#SVGID_${this.shadow.id});` : '';
   }
 
   /**
@@ -44,7 +45,7 @@ class FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgCommons() {
-    return [this.id ? "id=\"".concat(this.id, "\" ") : '', this.clipPath ? "clip-path=\"url(#".concat(this.clipPath.clipPathId, ")\" ") : ''].join('');
+    return [this.id ? `id="${this.id}" ` : '', this.clipPath ? `clip-path="url(#${this.clipPath.clipPathId})" ` : ''].join('');
   }
 
   /**
@@ -55,8 +56,8 @@ class FabricObjectSVGExportMixin {
   getSvgTransform(full) {
     let additionalTransform = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     const transform = full ? this.calcTransformMatrix() : this.calcOwnMatrix(),
-      svgTransform = "transform=\"".concat(matrixToSVG(transform));
-    return "".concat(svgTransform).concat(additionalTransform, "\" ");
+      svgTransform = `transform="${matrixToSVG(transform)}`;
+    return `${svgTransform}${additionalTransform}" `;
   }
 
   /**
@@ -117,8 +118,8 @@ class FabricObjectSVGExportMixin {
       withShadow,
       additionalTransform
     } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    const styleInfo = noStyle ? '' : "style=\"".concat(this.getSvgStyles(), "\" "),
-      shadowInfo = withShadow ? "style=\"".concat(this.getSvgFilter(), "\" ") : '',
+    const styleInfo = noStyle ? '' : `style="${this.getSvgStyles()}" `,
+      shadowInfo = withShadow ? `style="${this.getSvgFilter()}" ` : '',
       clipPath = this.clipPath,
       vectorEffect = this.strokeUniform ? 'vector-effect="non-scaling-stroke" ' : '',
       absoluteClipPath = clipPath && clipPath.absolutePositioned,
@@ -130,14 +131,14 @@ class FabricObjectSVGExportMixin {
       index = objectMarkup.indexOf('COMMON_PARTS');
     let clipPathMarkup;
     if (clipPath) {
-      clipPath.clipPathId = "CLIPPATH_".concat(uid());
-      clipPathMarkup = "<clipPath id=\"".concat(clipPath.clipPathId, "\" >\n").concat(clipPath.toClipPathSVG(reviver), "</clipPath>\n");
+      clipPath.clipPathId = `CLIPPATH_${uid()}`;
+      clipPathMarkup = `<clipPath id="${clipPath.clipPathId}" >\n${clipPath.toClipPathSVG(reviver)}</clipPath>\n`;
     }
     if (absoluteClipPath) {
       markup.push('<g ', shadowInfo, this.getSvgCommons(), ' >\n');
     }
     markup.push('<g ', this.getSvgTransform(false), !absoluteClipPath ? shadowInfo + this.getSvgCommons() : '', ' >\n');
-    const commonPieces = [styleInfo, vectorEffect, noStyle ? '' : this.addPaintOrder(), ' ', additionalTransform ? "transform=\"".concat(additionalTransform, "\" ") : ''].join('');
+    const commonPieces = [styleInfo, vectorEffect, noStyle ? '' : this.addPaintOrder(), ' ', additionalTransform ? `transform="${additionalTransform}" ` : ''].join('');
     objectMarkup[index] = commonPieces;
     if (isFiller(fill)) {
       markup.push(fill.toSVG(this));
@@ -157,7 +158,7 @@ class FabricObjectSVGExportMixin {
     return reviver ? reviver(markup.join('')) : markup.join('');
   }
   addPaintOrder() {
-    return this.paintFirst !== FILL ? " paint-order=\"".concat(this.paintFirst, "\" ") : '';
+    return this.paintFirst !== FILL ? ` paint-order="${this.paintFirst}" ` : '';
   }
 }
 

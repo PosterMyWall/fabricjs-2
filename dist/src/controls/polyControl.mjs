@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point } from '../Point.mjs';
 import { Control } from './Control.mjs';
 import { multiplyTransformMatrices } from '../util/misc/matrix.mjs';
@@ -48,9 +47,10 @@ const factoryPolyActionHandler = (pointIndex, fn) => {
     const poly = transform.target,
       anchorPoint = new Point(poly.points[(pointIndex > 0 ? pointIndex : poly.points.length) - 1]),
       anchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix()),
-      actionPerformed = fn(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
+      actionPerformed = fn(eventData, {
+        ...transform,
         pointIndex
-      }), x, y);
+      }, x, y);
     const newAnchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix());
     const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
     poly.left -= diff.x;
@@ -63,11 +63,12 @@ function createPolyControls(arg0) {
   let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   const controls = {};
   for (let idx = 0; idx < (typeof arg0 === 'number' ? arg0 : arg0.points.length); idx++) {
-    controls["p".concat(idx)] = new Control(_objectSpread2({
+    controls[`p${idx}`] = new Control({
       actionName: ACTION_NAME,
       positionHandler: createPolyPositionHandler(idx),
-      actionHandler: createPolyActionHandler(idx)
-    }, options));
+      actionHandler: createPolyActionHandler(idx),
+      ...options
+    });
   }
   return controls;
 }

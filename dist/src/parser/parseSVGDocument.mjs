@@ -1,4 +1,3 @@
-import { objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { applyViewboxTransform } from './applyViewboxTransform.mjs';
 import { svgValidTagNamesRegEx } from './constants.mjs';
 import { hasInvalidAncestor } from './hasInvalidAncestor.mjs';
@@ -45,19 +44,21 @@ async function parseSVGDocument(doc, reviver) {
   const documentElement = doc.documentElement;
   parseUseDirectives(doc);
   const descendants = Array.from(documentElement.getElementsByTagName('*')),
-    options = _objectSpread2(_objectSpread2({}, applyViewboxTransform(documentElement)), {}, {
+    options = {
+      ...applyViewboxTransform(documentElement),
       crossOrigin,
       signal
-    });
+    };
   const elements = descendants.filter(el => {
     applyViewboxTransform(el);
     return isValidSvgTag(el) && !hasInvalidAncestor(el); // http://www.w3.org/TR/SVG/struct.html#DefsElement
   });
   if (!elements || elements && !elements.length) {
-    return _objectSpread2(_objectSpread2({}, createEmptyResponse()), {}, {
+    return {
+      ...createEmptyResponse(),
       options,
       allElements: descendants
-    });
+    };
   }
   const localClipPaths = {};
   descendants.filter(el => getTagName(el) === 'clipPath').forEach(el => {

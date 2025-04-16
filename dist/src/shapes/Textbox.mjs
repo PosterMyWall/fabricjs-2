@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { IText } from './IText/IText.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
 import { createTextboxDefaultControls } from '../controls/commonControls.mjs';
@@ -26,7 +26,10 @@ const textboxDefaultValues = {
  */
 class Textbox extends IText {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), Textbox.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...Textbox.ownDefaults
+    };
   }
 
   /**
@@ -35,7 +38,10 @@ class Textbox extends IText {
    * @param {Object} [options] Options object
    */
   constructor(text, options) {
-    super(text, _objectSpread2(_objectSpread2({}, Textbox.ownDefaults), options));
+    super(text, {
+      ...Textbox.ownDefaults,
+      ...options
+    });
   }
 
   /**
@@ -448,7 +454,7 @@ class Textbox extends IText {
       const propNumber = parseInt(prop, 10);
       if (this._textLines[propNumber]) {
         const lineIndex = this._styleMap[prop].line;
-        linesToKeep.set("".concat(lineIndex), true);
+        linesToKeep.set(`${lineIndex}`, true);
       }
     }
     for (const prop in this.styles) {

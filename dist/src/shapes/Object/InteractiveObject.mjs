@@ -1,4 +1,4 @@
-import { defineProperty as _defineProperty, objectSpread2 as _objectSpread2 } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
+import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Point, ZERO } from '../../Point.mjs';
 import { FabricObject } from './Object.mjs';
 import { degreesToRadians } from '../../util/misc/radiansDegreesConversion.mjs';
@@ -11,7 +11,10 @@ import { config } from '../../config.mjs';
 
 class InteractiveFabricObject extends FabricObject {
   static getDefaults() {
-    return _objectSpread2(_objectSpread2({}, super.getDefaults()), InteractiveFabricObject.ownDefaults);
+    return {
+      ...super.getDefaults(),
+      ...InteractiveFabricObject.ownDefaults
+    };
   }
 
   /**
@@ -227,11 +230,12 @@ class InteractiveFabricObject extends FabricObject {
    */
   _drawBorders(ctx, size) {
     let styleOverride = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    const options = _objectSpread2({
+    const options = {
       hasControls: this.hasControls,
       borderColor: this.borderColor,
-      borderDashArray: this.borderDashArray
-    }, styleOverride);
+      borderDashArray: this.borderDashArray,
+      ...styleOverride
+    };
     ctx.save();
     ctx.strokeStyle = options.borderColor;
     this._setLineDash(ctx, options.borderDashArray);
@@ -256,10 +260,11 @@ class InteractiveFabricObject extends FabricObject {
       hasBorders,
       hasControls
     } = this;
-    const styleOptions = _objectSpread2({
+    const styleOptions = {
       hasBorders,
-      hasControls
-    }, styleOverride);
+      hasControls,
+      ...styleOverride
+    };
     const vpt = this.getViewportTransform(),
       shouldDrawBorders = styleOptions.hasBorders,
       shouldDrawControls = styleOptions.hasControls;
@@ -350,11 +355,12 @@ class InteractiveFabricObject extends FabricObject {
       cornerDashArray,
       cornerColor
     } = this;
-    const options = _objectSpread2({
+    const options = {
       cornerStrokeColor,
       cornerDashArray,
-      cornerColor
-    }, styleOverride);
+      cornerColor,
+      ...styleOverride
+    };
     ctx.setTransform(retinaScaling, 0, 0, retinaScaling, 0, 0);
     ctx.strokeStyle = ctx.fillStyle = options.cornerColor;
     if (!this.transparentCorners) {

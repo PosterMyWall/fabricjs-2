@@ -192,20 +192,20 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
     contextTopDirty: boolean;
     /**
      * During a mouse event we may need the pointer multiple times in multiple functions.
-     * _absolutePointer holds a reference to the pointer in fabricCanvas/design coordinates that is valid for the event
+     * _scenePoint holds a reference to the pointer in fabricCanvas/design coordinates that is valid for the event
      * lifespan. Every fabricJS mouse event create and delete the cache every time
      * We do this because there are some HTML DOM inspection functions to get the actual pointer coordinates
      * @type {Point}
      */
-    protected _absolutePointer?: Point;
+    protected _scenePoint?: Point;
     /**
      * During a mouse event we may need the pointer multiple times in multiple functions.
-     * _pointer holds a reference to the pointer in html coordinates that is valid for the event
+     * _viewportPoint holds a reference to the pointer in html coordinates that is valid for the event
      * lifespan. Every fabricJS mouse event create and delete the cache every time
      * We do this because there are some HTML DOM inspection functions to get the actual pointer coordinates
      * @type {Point}
      */
-    protected _pointer?: Point;
+    protected _viewportPoint?: Point;
     /**
      * During a mouse event we may need the target multiple times in multiple functions.
      * _target holds a reference to the target that is valid for the event
@@ -400,14 +400,13 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
     /**
      * Returns pointer relative to canvas.
      *
-     * @deprecated This method is deprecated since v6 to protect you from misuse.
      * Use {@link getViewportPoint} or {@link getScenePoint} instead.
      *
      * @param {Event} e
      * @param {Boolean} [fromViewport] whether to return the point from the viewport or in the scene
      * @return {Point}
      */
-    getPointer(e: TPointerEvent, fromViewport?: boolean): Point;
+    protected _getPointerImpl(e: TPointerEvent, fromViewport?: boolean): Point;
     /**
      * Internal use only
      * @protected
