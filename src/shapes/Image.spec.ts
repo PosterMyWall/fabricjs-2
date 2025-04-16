@@ -1,10 +1,13 @@
 import { FabricImage } from './Image';
 import { Shadow } from '../Shadow';
 import { Brightness } from '../filters/Brightness';
+import { loadSVGFromString } from '../parser/loadSVGFromString';
 
-const mockApplyFilter = jest.fn();
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('../filters/FilterBackend', () => ({
+const mockApplyFilter = vi.fn();
+
+vi.mock('../filters/FilterBackend', () => ({
   getFilterBackend: () => ({
     applyFilters: mockApplyFilter,
   }),
@@ -33,7 +36,7 @@ describe('FabricImage', () => {
       expect(img.toSVG()).toMatchSnapshot();
     });
   });
-  describe('ApplyFilter use cacheKey', () => {
+  test('ApplyFilter use cacheKey', () => {
     const imgElement = new Image(200, 200);
     const img = new FabricImage(imgElement);
     img.filters = [new Brightness({ brightness: 0.2 })];
@@ -44,7 +47,35 @@ describe('FabricImage', () => {
       200,
       200,
       img.getElement(),
-      'texture0',
+      'texture3',
     );
+  });
+  describe('SVG import', () => {
+    test('can import images when xlink:href attribute is set', async () => {
+      const { objects } =
+        await loadSVGFromString(`<svg viewBox="0 0 745 1040" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  xml:space="preserve">
+  <image zaparoo-no-print="true" xlink:href="https://design.zaparoo.org/ZapTradingCard.png" width="745" height="1040">
+  </image>
+</svg>`);
+      const image = objects[0] as FabricImage;
+      expect(image instanceof FabricImage).toBe(true);
+      expect((image._originalElement as HTMLImageElement).src).toBe(
+        'https://design.zaparoo.org/ZapTradingCard.png',
+      );
+    });
+    test('can import images when href attribute has no xlink', async () => {
+      const { objects } =
+        await loadSVGFromString(`<svg viewBox="0 0 745 1040" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  xml:space="preserve">
+  <image zaparoo-no-print="true" href="https://design.zaparoo.org/ZapTradingCard.png" width="745" height="1040">
+  </image>
+</svg>`);
+      const image = objects[0] as FabricImage;
+      expect(image instanceof FabricImage).toBe(true);
+      expect((image._originalElement as HTMLImageElement).src).toBe(
+        'https://design.zaparoo.org/ZapTradingCard.png',
+      );
+    });
   });
 });

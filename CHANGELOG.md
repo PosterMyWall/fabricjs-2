@@ -2,6 +2,49 @@
 
 ## [next]
 
+- refactor(tests): move object geometry tests from qunit to vitest [#10539](https://github.com/fabricjs/fabric.js/pull/10539)
+- refactor(tests): move object origin tests from qunit to vitest [#10538](https://github.com/fabricjs/fabric.js/pull/10538)
+- refactor(tests): move canvas dispose tests from qunit to vitest [#10536](https://github.com/fabricjs/fabric.js/pull/10536)
+- chore(): BREAKING: Remove minore deprecations [#10524](https://github.com/fabricjs/fabric.js/pull/10524)
+- refactor(tests): move polyline tests from qunit to vitest [#10533](https://github.com/fabricjs/fabric.js/pull/10533)
+- refactor(tests): move pattern tests from qunit to vitest [#10532](https://github.com/fabricjs/fabric.js/pull/10532)
+- refactor(tests): move line tests from qunit to vitest [#10531](https://github.com/fabricjs/fabric.js/pull/10531)
+- refactor(tests): move ellipse tests from qunit to vitest [#10530](https://github.com/fabricjs/fabric.js/pull/10530)
+- refactor(tests): move cache tests from qunit to vitest [#10529](https://github.com/fabricjs/fabric.js/pull/10529)
+- refactor(tests): move brushes tests from qunit to vitest [#10528](https://github.com/fabricjs/fabric.js/pull/10528)
+- refactor(tests): move StaticCanvas tests from qunit to vitest [#10521](https://github.com/fabricjs/fabric.js/pull/10521)
+- ci() fix the action for build stats [#10525](https://github.com/fabricjs/fabric.js/pull/10525)
+- chore(tests): Convert shadow tests from qunit to vitest [#10522](https://github.com/fabricjs/fabric.js/pull/10522)
+- feat(Gradient): BREAKING: remove opacity from colorstops in live Gradient class [#9622](https://github.com/fabricjs/fabric.js/pull/9622)
+- refactor(tests): move util tests from qunit to vitest [#10519](https://github.com/fabricjs/fabric.js/pull/10519)
+- refactor(tests): move canvas tests from qunit to vitest [#10499](https://github.com/fabricjs/fabric.js/pull/10499)
+- refactor(tests): move group tests from qunit to vitest [#10495](https://github.com/fabricjs/fabric.js/pull/10495)
+- ci(): New safe worflow for build stats [#10518](https://github.com/fabricjs/fabric.js/pull/10518)
+- ci(): Write a workflow that can comment coverage on the PR. [#10516](https://github.com/fabricjs/fabric.js/pull/10516)
+- chore(): update typescript to 5.8 [#10514](https://github.com/fabricjs/fabric.js/pull/10514)
+- ci(): Avoid failure status when the intent is to comment [#10508](https://github.com/fabricjs/fabric.js/pull/10508)
+- refactor(tests): move observable tests from qunit to vitest [#10501](https://github.com/fabricjs/fabric.js/pull/10501)
+- chore(): remove axios in favor of native fetch [#10500](https://github.com/fabricjs/fabric.js/pull/10500)
+- ci(): Refine changelog warn action [#10505](https://github.com/fabricjs/fabric.js/pull/10505)
+- ci(): Try to write an alternative action for CHANGELOG.MD [#10504](https://github.com/fabricjs/fabric.js/pull/10504)
+- refactor(tests): move point tests from qunit to vitest [#10492](https://github.com/fabricjs/fabric.js/pull/10492)
+- ci(): Remove system deps installation for node22, use prebuilt. [#10498](https://github.com/fabricjs/fabric.js/pull/10498)
+- chore(): dependencies maintenance [#10497](https://github.com/fabricjs/fabric.js/pull/10497)
+- refactor(tests): move circle tests from qunit to vitest [#10491](https://github.com/fabricjs/fabric.js/pull/10491)
+- refactor(tests): migrate remaining active selection tests from qunit to vitest [#10490](https://github.com/fabricjs/fabric.js/pull/10490)
+- ci(): update playwright to latest [#10496](https://github.com/fabricjs/fabric.js/pull/10496)
+- chore(): BREAKING: Update browser versions and some dependencies [#10488](https://github.com/fabricjs/fabric.js/pull/10488)
+- ci(): Switch from Jest to Vitest [#10420](https://github.com/fabricjs/fabric.js/pull/10420)
+- chore(): BREAKING: drop node 16 support. Update canvas and jsdom [#10417](https://github.com/fabricjs/fabric.js/pull/10417)
+
+## [6.6.2]
+
+- feat(IText): Allow text or container clipPath to clip the text selection or cursor [#104634](https://github.com/fabricjs/fabric.js/pull/10434)
+- refactor(): Remove custom triple click logic [#10478](https://github.com/fabricjs/fabric.js/pull/10478)
+- chore(): Update qunit and nyc to latest [#10468](https://github.com/fabricjs/fabric.js/pull/10468)
+- fix(Fabtictext) Svg export for text on a path [#10284](https://github.com/fabricjs/fabric.js/pull/10284)
+- fix(FabricImage): add href parsing fixes for #10421 [#10465](https://github.com/fabricjs/fabric.js/pull/10465)
+
 ## [6.6.1]
 
 - fix(): FabricImage was missing cachekey when filtering [#10441](https://github.com/fabricjs/fabric.js/pull/10441)

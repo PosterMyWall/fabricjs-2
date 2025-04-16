@@ -16,7 +16,6 @@ export {
   degreesToRadians,
   radiansToDegrees,
 } from './misc/radiansDegreesConversion';
-export { rotatePoint } from './misc/rotatePoint';
 export * from './misc/projectStroke';
 export type {
   TComposeMatrixArgs,
@@ -55,11 +54,11 @@ export {
 } from './misc/dom';
 export { toFixed } from './misc/toFixed';
 export {
-  matrixToSVG,
   parsePreserveAspectRatioAttribute,
   parseUnit,
   getSvgAttributes,
 } from './misc/svgParsing';
+export { matrixToSVG } from './misc/svgExport';
 export { groupSVGElements } from './misc/groupSVGElements';
 export { findScaleToFit, findScaleToCover } from './misc/findScaleTo';
 export { capValue } from './misc/capValue';
@@ -89,7 +88,7 @@ export {
   enlivenObjectEnlivables,
 } from './misc/objectEnlive';
 export { pick } from './misc/pick';
-export * from './path/typedefs';
+export type * from './path/typedefs';
 export {
   joinPath,
   parsePath,
@@ -101,7 +100,6 @@ export {
   transformPath,
   getRegularPolygonPath,
 } from './path';
-export { setStyle } from './dom_style';
 export { isTouchEvent, getPointer } from './dom_event';
 export { isTransparent } from './misc/isTransparent';
 export { mergeClipPaths } from './misc/mergeClipPaths';

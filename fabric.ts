@@ -181,7 +181,7 @@ export { loadSVGFromURL } from './src/parser/loadSVGFromURL';
 export { parseSVGDocument } from './src/parser/parseSVGDocument';
 export type {SVGParsingOutput} from './src/parser/typedefs';
 
-// todo convert tests to jest and stop exporting those.
+// todo convert tests to vitest and stop exporting those.
 export { parseAttributes } from './src/parser/parseAttributes';
 export { parseStyleAttribute } from './src/parser/parseStyleAttribute';
 export { parsePointsAttribute } from './src/parser/parsePointsAttribute';
