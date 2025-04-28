@@ -289,8 +289,8 @@ export class Control {
    */
   setVisibility(
     visibility: boolean,
-    name: string,
-    fabricObject: InteractiveFabricObject,
+    name?: string,
+    fabricObject?: InteractiveFabricObject,
   ) {
     this.visible = visibility;
   }
