@@ -135,7 +135,7 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
      * @param {HTMLElement} element to parse
      * @param {Partial<PathProps>} [options] Options object
      */
-    static fromElement(element: HTMLElement, options: Partial<PathProps>, cssRules?: CSSRules): Promise<Path<{
+    static fromElement(element: HTMLElement | SVGElement, options?: Partial<PathProps>, cssRules?: CSSRules): Promise<Path<{
         left: undefined;
         top: undefined;
         noScaleCache: boolean;

@@ -1,5 +1,5 @@
 /**
  * @private
  */
-export declare function elementMatchesRule(element: HTMLElement, selectors: string[]): boolean;
+export declare function elementMatchesRule(element: HTMLElement | SVGElement, selectors: string[]): boolean;
 //# sourceMappingURL=elementMatchesRule.d.ts.map

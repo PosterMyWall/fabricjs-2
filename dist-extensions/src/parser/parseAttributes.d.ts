@@ -6,5 +6,5 @@ import type { CSSRules } from './typedefs';
  * @param {Array} attributes Array of attributes to parse
  * @return {Object} object containing parsed attributes' names/values
  */
-export declare function parseAttributes(element: HTMLElement | null, attributes: string[], cssRules?: CSSRules): Record<string, any>;
+export declare function parseAttributes(element: HTMLElement | SVGElement | null, attributes: string[], cssRules?: CSSRules): Record<string, any>;
 //# sourceMappingURL=parseAttributes.d.ts.map

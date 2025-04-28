@@ -44,7 +44,7 @@ export declare class Composed extends BaseFilter<'Composed', ComposedOwnProps, C
      * @param {AbortSignal} [options.signal] handle aborting `BlendImage` filter loading, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
      * @returns {Promise<Composed>}
      */
-    static fromObject(object: Record<string, any>, options: {
+    static fromObject(object: Record<string, any>, options?: {
         signal: AbortSignal;
     }): Promise<Composed>;
 }

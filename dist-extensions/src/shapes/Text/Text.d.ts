@@ -726,7 +726,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Options object
      */
-    static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<FabricText<{
+    static fromElement(element: HTMLElement | SVGElement, options?: Abortable, cssRules?: CSSRules): Promise<FabricText<{
         signal?: AbortSignal;
         left: number;
         top: number;

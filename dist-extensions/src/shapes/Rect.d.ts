@@ -72,7 +72,7 @@ export declare class Rect<Props extends TOptions<RectProps> = Partial<RectProps>
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Options object
      */
-    static fromElement(element: HTMLElement, options: Abortable, cssRules?: CSSRules): Promise<Rect<{
+    static fromElement(element: HTMLElement | SVGElement, options?: Abortable, cssRules?: CSSRules): Promise<Rect<{
         left: any;
         top: any;
         width: any;

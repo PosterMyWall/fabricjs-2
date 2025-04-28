@@ -383,7 +383,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.6.2-pmw-42";
+  var version = "6.6.2-pmw-43";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -7077,7 +7077,7 @@
      * @returns Boolean
      */
     hasStroke() {
-      return this.stroke && this.stroke !== 'transparent' && this.strokeWidth !== 0;
+      return !!this.stroke && this.stroke !== 'transparent' && this.strokeWidth !== 0;
     }
 
     /**
@@ -7091,7 +7091,7 @@
      * @returns Boolean
      */
     hasFill() {
-      return this.fill && this.fill !== 'transparent';
+      return !!this.fill && this.fill !== 'transparent';
     }
 
     /**

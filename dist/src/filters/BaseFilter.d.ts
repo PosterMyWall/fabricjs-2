@@ -150,6 +150,6 @@ export declare class BaseFilter<Name extends string, OwnProps extends Record<str
     toJSON(): {
         type: Name;
     } & SerializedProps;
-    static fromObject({ type, ...filterOptions }: Record<string, any>, _options: Abortable): Promise<BaseFilter<string, object>>;
+    static fromObject({ type, ...filterOptions }: Record<string, any>, _options?: Abortable): Promise<BaseFilter<string, object>>;
 }
 //# sourceMappingURL=BaseFilter.d.ts.map

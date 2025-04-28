@@ -385,7 +385,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @since 3.0.0
      * @returns Boolean
      */
-    hasStroke(): boolean | "" | null;
+    hasStroke(): boolean;
     /**
      * return true if the object will draw a fill
      * Does not consider text styles. This is just a shortcut used at rendering time
@@ -396,7 +396,7 @@ export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<
      * @since 3.0.0
      * @returns Boolean
      */
-    hasFill(): boolean | "" | null;
+    hasFill(): boolean;
     /**
      * When returns `true`, force the object to have its own cache, even if it is inside a group
      * it may be needed when your object behave in a particular way on the cache and always needs

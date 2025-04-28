@@ -1,2 +1,2 @@
-export declare function doesSomeParentMatch(element: HTMLElement, selectors: string[]): boolean;
+export declare function doesSomeParentMatch(element: HTMLElement | SVGElement, selectors: string[]): boolean;
 //# sourceMappingURL=doesSomeParentMatch.d.ts.map

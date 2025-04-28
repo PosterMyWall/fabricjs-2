@@ -448,7 +448,7 @@ class FabricObject extends ObjectGeometry {
    * @returns Boolean
    */
   hasStroke() {
-    return this.stroke && this.stroke !== 'transparent' && this.strokeWidth !== 0;
+    return !!this.stroke && this.stroke !== 'transparent' && this.strokeWidth !== 0;
   }
 
   /**
@@ -462,7 +462,7 @@ class FabricObject extends ObjectGeometry {
    * @returns Boolean
    */
   hasFill() {
-    return this.fill && this.fill !== 'transparent';
+    return !!this.fill && this.fill !== 'transparent';
   }
 
   /**

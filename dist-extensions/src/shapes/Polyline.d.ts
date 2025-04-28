@@ -141,7 +141,7 @@ export declare class Polyline<Props extends TOptions<FabricObjectProps> = Partia
      * @param {HTMLElement} element Element to parser
      * @param {Object} [options] Options object
      */
-    static fromElement(element: HTMLElement, options?: Abortable, cssRules?: CSSRules): Promise<Polyline<{
+    static fromElement(element: HTMLElement | SVGElement, options?: Abortable, cssRules?: CSSRules): Promise<Polyline<{
         signal?: AbortSignal;
     }, SerializedPolylineProps, ObjectEvents>>;
     /**

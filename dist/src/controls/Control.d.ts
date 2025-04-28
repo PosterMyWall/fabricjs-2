@@ -201,7 +201,7 @@ export declare class Control {
      * @param {Boolean} visibility for the object
      * @return {Void}
      */
-    setVisibility(visibility: boolean, name: string, fabricObject: InteractiveFabricObject): void;
+    setVisibility(visibility: boolean, name?: string, fabricObject?: InteractiveFabricObject): void;
     positionHandler(dim: Point, finalMatrix: TMat2D, fabricObject: InteractiveFabricObject, currentControl: Control): Point;
     /**
      * Returns the coords for this control based on object values.
