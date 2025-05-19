@@ -27,7 +27,15 @@ import { rotateVector } from './util/misc/vectors';
 
 (?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
    */
-// eslint-disable-next-line max-len
+
+export enum ShadowOrGlowType {
+  LIGHT_SHADOW = 'light_shadow',
+  STRONG_SHADOW = 'strong_shadow',
+  CUSTOM_SHADOW = 'custom_shadow',
+  LIGHT_GLOW = 'light_glow',
+  STRONG_GLOW = 'strong_glow',
+  NONE = 'none'
+}
 
 const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
 
@@ -48,6 +56,7 @@ export const shadowDefaultValues: Partial<TClassProperties<Shadow>> = {
   affectStroke: false,
   includeDefaultValues: true,
   nonScaling: false,
+  shadowOrGlowType : ShadowOrGlowType.NONE
 };
 
 export type SerializedShadowOptions = {
@@ -58,6 +67,7 @@ export type SerializedShadowOptions = {
   affectStroke: boolean;
   nonScaling: boolean;
   type: string;
+  shadowOrGlowType: ShadowOrGlowType;
 };
 
 export class Shadow {
@@ -113,6 +123,8 @@ export class Shadow {
 
   declare id: number;
 
+  declare shadowOrGlowType: ShadowOrGlowType;
+
   static ownDefaults = shadowDefaultValues;
 
   static type = 'shadow';
@@ -147,6 +159,18 @@ export class Shadow {
       offsetY,
       blur,
     };
+  }
+
+  isShadow(): boolean {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+
+  isCustomShadow(): boolean {
+    return this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+
+  isGlow(): boolean {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
   }
 
   /**
@@ -227,6 +251,7 @@ export class Shadow {
       affectStroke: this.affectStroke,
       nonScaling: this.nonScaling,
       type: (this.constructor as typeof Shadow).type,
+      shadowOrGlowType: this.shadowOrGlowType
     };
     const defaults = Shadow.ownDefaults as SerializedShadowOptions;
     return !this.includeDefaultValues

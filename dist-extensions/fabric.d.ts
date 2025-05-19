@@ -23,7 +23,7 @@ export { Color } from './src/color/Color';
 export type * from './src/color/typedefs';
 export * from './src/gradient';
 export * from './src/Pattern';
-export { Shadow } from './src/Shadow';
+export { Shadow, ShadowOrGlowType } from './src/Shadow';
 export type { SerializedShadowOptions } from './src/Shadow';
 export { BaseBrush } from './src/brushes/BaseBrush';
 export type * from './src/brushes/typedefs';

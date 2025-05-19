@@ -14,7 +14,7 @@ export { Intersection } from './src/Intersection.mjs';
 export { Color } from './src/color/Color.mjs';
 export { Gradient } from './src/gradient/Gradient.mjs';
 export { Pattern } from './src/Pattern/Pattern.mjs';
-export { Shadow } from './src/Shadow.mjs';
+export { Shadow, ShadowOrGlowType } from './src/Shadow.mjs';
 export { BaseBrush } from './src/brushes/BaseBrush.mjs';
 export { PencilBrush } from './src/brushes/PencilBrush.mjs';
 export { CircleBrush } from './src/brushes/CircleBrush.mjs';

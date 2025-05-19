@@ -377,7 +377,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.6.2-pmw-44";
+var version = "6.6.2-pmw-45";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -4925,8 +4925,16 @@ const isBetweenVectors = (t, a, b) => {
 
 (?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
    */
-// eslint-disable-next-line max-len
 
+let ShadowOrGlowType = /*#__PURE__*/function (ShadowOrGlowType) {
+  ShadowOrGlowType["LIGHT_SHADOW"] = "light_shadow";
+  ShadowOrGlowType["STRONG_SHADOW"] = "strong_shadow";
+  ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
+  ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
+  ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
+  ShadowOrGlowType["NONE"] = "none";
+  return ShadowOrGlowType;
+}({});
 const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
 const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
 const shadowDefaultValues = {
@@ -4936,7 +4944,8 @@ const shadowDefaultValues = {
   offsetY: 0,
   affectStroke: false,
   includeDefaultValues: true,
-  nonScaling: false
+  nonScaling: false,
+  shadowOrGlowType: ShadowOrGlowType.NONE
 };
 class Shadow {
   /**
@@ -4965,6 +4974,15 @@ class Shadow {
       offsetY,
       blur
     };
+  }
+  isShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+  isCustomShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+  isGlow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
   }
 
   /**
@@ -5014,7 +5032,8 @@ class Shadow {
       offsetY: this.offsetY,
       affectStroke: this.affectStroke,
       nonScaling: this.nonScaling,
-      type: this.constructor.type
+      type: this.constructor.type,
+      shadowOrGlowType: this.shadowOrGlowType
     };
     const defaults = Shadow.ownDefaults;
     return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
@@ -29547,5 +29566,5 @@ var filters = /*#__PURE__*/Object.freeze({
   Vintage: Vintage
 });
 
-export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
+export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, ShadowOrGlowType, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getCSSRules, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseAttributes, parseFontDeclaration, parsePointsAttribute, parseSVGDocument, parseStyleAttribute, parseTransformAttribute, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
 //# sourceMappingURL=index.mjs.map

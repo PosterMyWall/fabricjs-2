@@ -383,7 +383,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.6.2-pmw-44";
+  var version = "6.6.2-pmw-45";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -4931,8 +4931,16 @@
 
   (?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
      */
-  // eslint-disable-next-line max-len
 
+  let ShadowOrGlowType = /*#__PURE__*/function (ShadowOrGlowType) {
+    ShadowOrGlowType["LIGHT_SHADOW"] = "light_shadow";
+    ShadowOrGlowType["STRONG_SHADOW"] = "strong_shadow";
+    ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
+    ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
+    ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
+    ShadowOrGlowType["NONE"] = "none";
+    return ShadowOrGlowType;
+  }({});
   const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
   const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
   const shadowDefaultValues = {
@@ -4942,7 +4950,8 @@
     offsetY: 0,
     affectStroke: false,
     includeDefaultValues: true,
-    nonScaling: false
+    nonScaling: false,
+    shadowOrGlowType: ShadowOrGlowType.NONE
   };
   class Shadow {
     /**
@@ -4971,6 +4980,15 @@
         offsetY,
         blur
       };
+    }
+    isShadow() {
+      return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+    }
+    isCustomShadow() {
+      return this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+    }
+    isGlow() {
+      return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
     }
 
     /**
@@ -5020,7 +5038,8 @@
         offsetY: this.offsetY,
         affectStroke: this.affectStroke,
         nonScaling: this.nonScaling,
-        type: this.constructor.type
+        type: this.constructor.type,
+        shadowOrGlowType: this.shadowOrGlowType
       };
       const defaults = Shadow.ownDefaults;
       return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
@@ -29591,6 +29610,7 @@ void main() {
   exports.Polyline = Polyline;
   exports.Rect = Rect;
   exports.Shadow = Shadow;
+  exports.ShadowOrGlowType = ShadowOrGlowType;
   exports.SprayBrush = SprayBrush;
   exports.StaticCanvas = StaticCanvas;
   exports.StaticCanvasDOMManager = StaticCanvasDOMManager;
