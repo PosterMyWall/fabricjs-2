@@ -377,7 +377,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.6.2-pmw-45";
+var version = "6.6.2-pmw-46";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -4932,7 +4932,6 @@ let ShadowOrGlowType = /*#__PURE__*/function (ShadowOrGlowType) {
   ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
   ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
   ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
-  ShadowOrGlowType["NONE"] = "none";
   return ShadowOrGlowType;
 }({});
 const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
@@ -4944,8 +4943,7 @@ const shadowDefaultValues = {
   offsetY: 0,
   affectStroke: false,
   includeDefaultValues: true,
-  nonScaling: false,
-  shadowOrGlowType: ShadowOrGlowType.NONE
+  nonScaling: false
 };
 class Shadow {
   /**

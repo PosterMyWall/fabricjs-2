@@ -21,8 +21,7 @@ export declare enum ShadowOrGlowType {
     STRONG_SHADOW = "strong_shadow",
     CUSTOM_SHADOW = "custom_shadow",
     LIGHT_GLOW = "light_glow",
-    STRONG_GLOW = "strong_glow",
-    NONE = "none"
+    STRONG_GLOW = "strong_glow"
 }
 export declare const shadowDefaultValues: Partial<TClassProperties<Shadow>>;
 export type SerializedShadowOptions = {

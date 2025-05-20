@@ -34,7 +34,6 @@ export enum ShadowOrGlowType {
   CUSTOM_SHADOW = 'custom_shadow',
   LIGHT_GLOW = 'light_glow',
   STRONG_GLOW = 'strong_glow',
-  NONE = 'none'
 }
 
 const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
@@ -56,7 +55,6 @@ export const shadowDefaultValues: Partial<TClassProperties<Shadow>> = {
   affectStroke: false,
   includeDefaultValues: true,
   nonScaling: false,
-  shadowOrGlowType : ShadowOrGlowType.NONE
 };
 
 export type SerializedShadowOptions = {
