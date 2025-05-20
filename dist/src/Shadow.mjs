@@ -83,6 +83,12 @@ class Shadow {
   isGlow() {
     return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
   }
+  isLightShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW;
+  }
+  isStrongShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW;
+  }
 
   /**
    * Returns a string representation of an instance

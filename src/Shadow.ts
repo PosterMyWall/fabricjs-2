@@ -171,6 +171,14 @@ export class Shadow {
     return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
   }
 
+  isLightShadow(): boolean {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW;
+  }
+
+  isStrongShadow(): boolean {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW;
+  }
+
   /**
    * Returns a string representation of an instance
    * @see http://www.w3.org/TR/css-text-decor-3/#text-shadow

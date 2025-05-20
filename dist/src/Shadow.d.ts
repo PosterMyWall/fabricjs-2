@@ -101,6 +101,8 @@ export declare class Shadow {
     isShadow(): boolean;
     isCustomShadow(): boolean;
     isGlow(): boolean;
+    isLightShadow(): boolean;
+    isStrongShadow(): boolean;
     /**
      * Returns a string representation of an instance
      * @see http://www.w3.org/TR/css-text-decor-3/#text-shadow

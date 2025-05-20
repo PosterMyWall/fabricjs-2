@@ -383,7 +383,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.6.2-pmw-46";
+  var version = "6.6.2-pmw-47";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -4987,6 +4987,12 @@
     }
     isGlow() {
       return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
+    }
+    isLightShadow() {
+      return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW;
+    }
+    isStrongShadow() {
+      return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW;
     }
 
     /**
