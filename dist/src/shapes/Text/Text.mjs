@@ -1436,7 +1436,7 @@ class FabricText extends StyledText {
   static fromObject(object) {
     return this._fromObject({
       ...object,
-      styles: stylesFromArray(object.styles || {}, object.text)
+      styles: stylesFromArray(object.styles || {}, object.text || '')
     }, {
       extraParam: 'text'
     });

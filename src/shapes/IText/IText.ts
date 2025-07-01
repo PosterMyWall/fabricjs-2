@@ -21,6 +21,7 @@ import type { ObjectToCanvasElementOptions } from '../Object/Object';
 import type { FabricObject } from '../Object/FabricObject';
 import { createCanvasElementFor } from '../../util/misc/dom';
 import { applyCanvasTransform } from '../../util/internals/applyCanvasTransform';
+import type {CompleteTextStyleDeclaration} from '../Text/StyledText';
 
 export type CursorBoundaries = {
   left: number;
@@ -390,6 +391,12 @@ export class IText<
     complete?: boolean,
   ) {
     return super.getSelectionStyles(startIndex, endIndex, complete);
+  }
+
+  public getStylesForSelection(): CompleteTextStyleDeclaration[] {
+    return this.selectionStart === this.selectionEnd
+      ? [this.getStyleAtPosition(Math.max(0, this.selectionStart - 1), true) as CompleteTextStyleDeclaration]
+      : this.getSelectionStyles(this.selectionStart, this.selectionEnd, true) as CompleteTextStyleDeclaration[];
   }
 
   /**

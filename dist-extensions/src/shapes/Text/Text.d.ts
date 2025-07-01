@@ -46,6 +46,8 @@ interface UniqueTextProps {
     squigglyline: boolean;
     ignoreDelegatedSet: boolean;
     squigglylineColor: string;
+    isStrokeForBold: boolean;
+    text: string;
     textAlign: string;
     direction: CanvasDirection;
     path?: Path;
@@ -133,6 +135,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     linethrough: boolean;
     squigglyline: boolean;
     squigglylineColor: string;
+    isStrokeForBold: boolean;
     /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
     ignoreDelegatedSet: boolean;
     /**

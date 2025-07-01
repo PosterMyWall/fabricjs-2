@@ -108,6 +108,8 @@ interface UniqueTextProps {
   squigglyline: boolean;
   ignoreDelegatedSet: boolean;
   squigglylineColor: string;
+  isStrokeForBold: boolean;
+  text: string;
   textAlign: string;
   direction: CanvasDirection;
   path?: Path;
@@ -222,6 +224,7 @@ export class FabricText<
   declare squigglyline: boolean;
   /*PMW*/
   declare squigglylineColor: string;
+  declare isStrokeForBold: boolean;
 
   //*PMW*
   /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
@@ -2132,7 +2135,7 @@ export class FabricText<
     return this._fromObject<S>(
       {
         ...object,
-        styles: stylesFromArray(object.styles || {}, object.text),
+        styles: stylesFromArray(object.styles || {}, object.text || ''),
       },
       {
         extraParam: 'text',

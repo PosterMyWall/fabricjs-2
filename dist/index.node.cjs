@@ -435,7 +435,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "6.6.2-pmw-47";
+var version = "6.6.2-pmw-48";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -19155,7 +19155,7 @@ const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
 const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
 const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
-const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor'];
+const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'isStrokeForBold', 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor'];
 
 // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
 // regexes, list of properties that are not suppose to change by instances, magic consts.
@@ -19174,6 +19174,7 @@ const textDefaultValues = {
   squigglyline: false,
   ignoreDelegatedSet: false,
   squigglylineColor: '',
+  isStrokeForBold: false,
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
@@ -21131,7 +21132,7 @@ class FabricText extends StyledText {
   static fromObject(object) {
     return this._fromObject({
       ...object,
-      styles: stylesFromArray(object.styles || {}, object.text)
+      styles: stylesFromArray(object.styles || {}, object.text || '')
     }, {
       extraParam: 'text'
     });
@@ -23507,6 +23508,9 @@ class IText extends ITextClickBehavior {
     let endIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.selectionEnd;
     let complete = arguments.length > 2 ? arguments[2] : undefined;
     return super.getSelectionStyles(startIndex, endIndex, complete);
+  }
+  getStylesForSelection() {
+    return this.selectionStart === this.selectionEnd ? [this.getStyleAtPosition(Math.max(0, this.selectionStart - 1), true)] : this.getSelectionStyles(this.selectionStart, this.selectionEnd, true);
   }
 
   /**

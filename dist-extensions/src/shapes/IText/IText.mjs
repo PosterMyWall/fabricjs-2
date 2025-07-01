@@ -242,6 +242,9 @@ class IText extends ITextClickBehavior {
     let complete = arguments.length > 2 ? arguments[2] : undefined;
     return super.getSelectionStyles(startIndex, endIndex, complete);
   }
+  getStylesForSelection() {
+    return this.selectionStart === this.selectionEnd ? [this.getStyleAtPosition(Math.max(0, this.selectionStart - 1), true)] : this.getSelectionStyles(this.selectionStart, this.selectionEnd, true);
+  }
 
   /**
    * Sets style of a current selection, if no selection exist, do not set anything.

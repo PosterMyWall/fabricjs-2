@@ -4,6 +4,7 @@ import type { TClassProperties, TFiller, TOptions } from '../../typedefs';
 import type { SerializedTextProps, TextProps } from '../Text/Text';
 import type { ObjectToCanvasElementOptions } from '../Object/Object';
 import type { FabricObject } from '../Object/FabricObject';
+import type { CompleteTextStyleDeclaration } from '../Text/StyledText';
 export type CursorBoundaries = {
     left: number;
     top: number;
@@ -213,7 +214,8 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      * @param {Boolean} [complete] get full style or not
      * @return {Array} styles an array with one, zero or more Style objects
      */
-    getSelectionStyles(startIndex?: number, endIndex?: number, complete?: boolean): Partial<import("../Text/StyledText").CompleteTextStyleDeclaration>[];
+    getSelectionStyles(startIndex?: number, endIndex?: number, complete?: boolean): Partial<CompleteTextStyleDeclaration>[];
+    getStylesForSelection(): CompleteTextStyleDeclaration[];
     /**
      * Sets style of a current selection, if no selection exist, do not set anything.
      * @param {Object} [styles] Styles object

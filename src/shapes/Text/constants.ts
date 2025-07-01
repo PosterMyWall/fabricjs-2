@@ -49,12 +49,14 @@ export type StylePropertiesType =
   | 'overline'
   | 'underline'
   | 'squigglyline'
+  | 'isStrokeForBold'
   | 'linethrough';
 
 export const styleProperties: Readonly<StylePropertiesType[]> = [
   ...fontProperties,
   ...textDecorationProperties,
   STROKE,
+  'isStrokeForBold',
   'strokeWidth',
   FILL,
   'deltaY',
@@ -78,6 +80,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   squigglyline: false,
   ignoreDelegatedSet: false,
   squigglylineColor: '',
+  isStrokeForBold: false,
   textAlign: LEFT,
   fontStyle: 'normal',
   lineHeight: 1.16,
