@@ -48,6 +48,25 @@ export default defineConfig({
           name: 'unit-chromium',
         },
       },
+      {
+        extends: true,
+        test: {
+          browser: {
+            provider: 'playwright',
+            enabled: true,
+            headless: true,
+            instances: [
+              {
+                browser: 'firefox',
+                context: {
+                  hasTouch: true,
+                },
+              },
+            ],
+          },
+          name: 'unit-firefox',
+        },
+      },
     ],
     include: [
       'src/**/*.test.{ts,tsx}',
@@ -57,7 +76,7 @@ export default defineConfig({
     ],
     coverage: {
       reportsDirectory: '.nyc_output',
-      reporter: ['json'],
+      reporter: ['json', 'text'],
       exclude: [
         'test/**',
         'dist/**',
