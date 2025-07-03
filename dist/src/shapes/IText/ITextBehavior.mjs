@@ -264,8 +264,7 @@ class ITextBehavior extends FabricText {
    * @param {Number} selectionStart Index of a character
    */
   selectWord(selectionStart) {
-    var _selectionStart;
-    selectionStart = (_selectionStart = selectionStart) !== null && _selectionStart !== void 0 ? _selectionStart : this.selectionStart;
+    selectionStart = selectionStart !== null && selectionStart !== void 0 ? selectionStart : this.selectionStart;
     // search backwards
     const newSelectionStart = this.searchWordBoundary(selectionStart, -1),
       // search forward
@@ -283,8 +282,7 @@ class ITextBehavior extends FabricText {
    * @param {Number} selectionStart Index of a character
    */
   selectLine(selectionStart) {
-    var _selectionStart2;
-    selectionStart = (_selectionStart2 = selectionStart) !== null && _selectionStart2 !== void 0 ? _selectionStart2 : this.selectionStart;
+    selectionStart = selectionStart !== null && selectionStart !== void 0 ? selectionStart : this.selectionStart;
     const newSelectionStart = this.findLineBoundaryLeft(selectionStart),
       newSelectionEnd = this.findLineBoundaryRight(selectionStart);
     this.selectionStart = newSelectionStart;

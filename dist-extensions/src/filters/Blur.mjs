@@ -1,5 +1,4 @@
 import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-import { createCanvasElement } from '../util/misc/dom.mjs';
 import { BaseFilter } from './BaseFilter.mjs';
 import { isWebGLPipelineState } from './utils.mjs';
 import { classRegistry } from '../ClassRegistry.mjs';
@@ -40,65 +39,102 @@ class Blur extends BaseFilter {
       this.applyTo2d(options);
     }
   }
-  applyTo2d(options) {
-    options.imageData = this.simpleBlur(options);
-  }
-  simpleBlur(_ref) {
+  applyTo2d(_ref) {
     let {
-      ctx,
-      imageData,
-      filterBackend: {
-        resources
+      imageData: {
+        data,
+        width,
+        height
       }
     } = _ref;
-    const {
-      width,
-      height
-    } = imageData;
-    if (!resources.blurLayer1) {
-      resources.blurLayer1 = createCanvasElement();
-      resources.blurLayer2 = createCanvasElement();
+    // this code mimic the shader for output consistency
+    // it samples 31 pixels across the image over a distance that depends from the blur value.
+    this.aspectRatio = width / height;
+    this.horizontal = true;
+    let blurValue = this.getBlurValue() * width;
+    const imageData = new Uint8ClampedArray(data);
+    const samples = 15;
+    const bytesInRow = 4 * width;
+    for (let i = 0; i < data.length; i += 4) {
+      let r = 0.0,
+        g = 0.0,
+        b = 0.0,
+        a = 0.0,
+        totalA = 0;
+      const minIRow = i - i % bytesInRow;
+      const maxIRow = minIRow + bytesInRow;
+      // for now let's keep noise out of the way
+      // let pixelOffset = 0;
+      // const offset = Math.random() * 3;
+      // if (offset > 2) {
+      //   pixelOffset = 4;
+      // } else if (offset < 1) {
+      //   pixelOffset = -4;
+      // }
+      for (let j = -15 + 1; j < samples; j++) {
+        const percent = j / samples;
+        const distance = Math.floor(blurValue * percent) * 4;
+        const weight = 1 - Math.abs(percent);
+        let sampledPixel = i + distance; // + pixelOffset;
+        // try to implement edge mirroring
+        if (sampledPixel < minIRow) {
+          sampledPixel = minIRow;
+        } else if (sampledPixel > maxIRow) {
+          sampledPixel = maxIRow;
+        }
+        const localAlpha = data[sampledPixel + 3] * weight;
+        r += data[sampledPixel] * localAlpha;
+        g += data[sampledPixel + 1] * localAlpha;
+        b += data[sampledPixel + 2] * localAlpha;
+        a += localAlpha;
+        totalA += weight;
+      }
+      imageData[i] = r / a;
+      imageData[i + 1] = g / a;
+      imageData[i + 2] = b / a;
+      imageData[i + 3] = a / totalA;
     }
-    const canvas1 = resources.blurLayer1;
-    const canvas2 = resources.blurLayer2;
-    if (canvas1.width !== width || canvas1.height !== height) {
-      canvas2.width = canvas1.width = width;
-      canvas2.height = canvas1.height = height;
+    this.horizontal = false;
+    blurValue = this.getBlurValue() * height;
+    for (let i = 0; i < imageData.length; i += 4) {
+      let r = 0.0,
+        g = 0.0,
+        b = 0.0,
+        a = 0.0,
+        totalA = 0;
+      const minIRow = i % bytesInRow;
+      const maxIRow = imageData.length - bytesInRow + minIRow;
+      // for now let's keep noise out of the way
+      // let pixelOffset = 0;
+      // const offset = Math.random() * 3;
+      // if (offset > 2) {
+      //   pixelOffset = bytesInRow;
+      // } else if (offset < 1) {
+      //   pixelOffset = -bytesInRow;
+      // }
+      for (let j = -15 + 1; j < samples; j++) {
+        const percent = j / samples;
+        const distance = Math.floor(blurValue * percent) * bytesInRow;
+        const weight = 1 - Math.abs(percent);
+        let sampledPixel = i + distance; // + pixelOffset;
+        // try to implement edge mirroring
+        if (sampledPixel < minIRow) {
+          sampledPixel = minIRow;
+        } else if (sampledPixel > maxIRow) {
+          sampledPixel = maxIRow;
+        }
+        const localAlpha = imageData[sampledPixel + 3] * weight;
+        r += imageData[sampledPixel] * localAlpha;
+        g += imageData[sampledPixel + 1] * localAlpha;
+        b += imageData[sampledPixel + 2] * localAlpha;
+        a += localAlpha;
+        totalA += weight;
+      }
+      data[i] = r / a;
+      data[i + 1] = g / a;
+      data[i + 2] = b / a;
+      data[i + 3] = a / totalA;
     }
-    const ctx1 = canvas1.getContext('2d'),
-      ctx2 = canvas2.getContext('2d'),
-      nSamples = 15,
-      blur = this.blur * 0.06 * 0.5;
-    let random, percent, j, i;
-
-    // load first canvas
-    ctx1.putImageData(imageData, 0, 0);
-    ctx2.clearRect(0, 0, width, height);
-    for (i = -15; i <= nSamples; i++) {
-      random = (Math.random() - 0.5) / 4;
-      percent = i / nSamples;
-      j = blur * percent * width + random;
-      ctx2.globalAlpha = 1 - Math.abs(percent);
-      ctx2.drawImage(canvas1, j, random);
-      ctx1.drawImage(canvas2, 0, 0);
-      ctx2.globalAlpha = 1;
-      ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-    }
-    for (i = -15; i <= nSamples; i++) {
-      random = (Math.random() - 0.5) / 4;
-      percent = i / nSamples;
-      j = blur * percent * height + random;
-      ctx2.globalAlpha = 1 - Math.abs(percent);
-      ctx2.drawImage(canvas1, random, j);
-      ctx1.drawImage(canvas2, 0, 0);
-      ctx2.globalAlpha = 1;
-      ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-    }
-    ctx.drawImage(canvas1, 0, 0);
-    const newImageData = ctx.getImageData(0, 0, canvas1.width, canvas1.height);
-    ctx1.globalAlpha = 1;
-    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-    return newImageData;
   }
 
   /**
@@ -114,32 +150,33 @@ class Blur extends BaseFilter {
   isNeutralState() {
     return this.blur === 0;
   }
+  getBlurValue() {
+    let blurScale = 1;
+    const {
+      horizontal,
+      aspectRatio
+    } = this;
+    if (horizontal) {
+      if (aspectRatio > 1) {
+        // image is wide, i want to shrink radius horizontal
+        blurScale = 1 / aspectRatio;
+      }
+    } else {
+      if (aspectRatio < 1) {
+        // image is tall, i want to shrink radius vertical
+        blurScale = aspectRatio;
+      }
+    }
+    return blurScale * this.blur * 0.12;
+  }
 
   /**
    * choose right value of image percentage to blur with
    * @returns {Array} a numeric array with delta values
    */
   chooseRightDelta() {
-    let blurScale = 1;
-    const delta = [0, 0];
-    if (this.horizontal) {
-      if (this.aspectRatio > 1) {
-        // image is wide, i want to shrink radius horizontal
-        blurScale = 1 / this.aspectRatio;
-      }
-    } else {
-      if (this.aspectRatio < 1) {
-        // image is tall, i want to shrink radius vertical
-        blurScale = this.aspectRatio;
-      }
-    }
-    const blur = blurScale * this.blur * 0.12;
-    if (this.horizontal) {
-      delta[0] = blur;
-    } else {
-      delta[1] = blur;
-    }
-    return delta;
+    const blur = this.getBlurValue();
+    return this.horizontal ? [blur, 0] : [0, blur];
   }
 }
 /**

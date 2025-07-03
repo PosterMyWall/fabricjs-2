@@ -383,7 +383,7 @@
   }
   const cache = new Cache();
 
-  var version = "6.6.2-pmw-48";
+  var version = "6.6.2-pmw-49";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -4776,7 +4776,77 @@
     return new RegExp('^(' + arr.join('|') + ')\\b', 'i');
   }
 
-  const reNum = String.raw`(?:[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)`;
+  const TEXT_DECORATION_THICKNESS = 'textDecorationThickness';
+  const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
+  const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
+  const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
+  const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction', TEXT_DECORATION_THICKNESS];
+  const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'isStrokeForBold', 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor', TEXT_DECORATION_THICKNESS];
+
+  // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
+  // regexes, list of properties that are not suppose to change by instances, magic consts.
+  // this will be a separated effort
+  const textDefaultValues = {
+    _reNewline: reNewline,
+    _reSpacesAndTabs: /[ \t\r]/g,
+    _reSpaceAndTab: /[ \t\r]/,
+    _reWords: /\S+/g,
+    fontSize: 40,
+    fontWeight: 'normal',
+    fontFamily: 'Times New Roman',
+    underline: false,
+    overline: false,
+    linethrough: false,
+    squigglyline: false,
+    ignoreDelegatedSet: false,
+    squigglylineColor: '#FF0000',
+    isStrokeForBold: false,
+    textAlign: LEFT,
+    fontStyle: 'normal',
+    lineHeight: 1.16,
+    textBackgroundColor: '',
+    stroke: null,
+    shadow: null,
+    path: undefined,
+    pathStartOffset: 0,
+    pathSide: LEFT,
+    pathAlign: 'baseline',
+    cacheExpansionFactor: 1,
+    charSpacing: 0,
+    deltaY: 0,
+    direction: 'ltr',
+    CACHE_FONT_SIZE: 400,
+    MIN_TEXT_WIDTH: 2,
+    // Text magic numbers
+    superscript: {
+      size: 0.6,
+      // fontSize factor
+      baseline: -0.35 // baseline-shift factor (upwards)
+    },
+    subscript: {
+      size: 0.6,
+      // fontSize factor
+      baseline: 0.11 // baseline-shift factor (downwards)
+    },
+    _fontSizeFraction: 0.222,
+    offsets: {
+      underline: 0.1,
+      squigglyline: 0.1,
+      linethrough: -0.28167,
+      // added 1/30 to original number
+      overline: -0.81333 // added 1/15 to original number
+    },
+    _fontSizeMult: 1.13,
+    [TEXT_DECORATION_THICKNESS]: 66.667 // before implementation was 1/15
+  };
+  const JUSTIFY = 'justify';
+  const JUSTIFY_LEFT = 'justify-left';
+  const JUSTIFY_RIGHT = 'justify-right';
+  const JUSTIFY_CENTER = 'justify-center';
+
+  // matches, e.g.: +14.56e-12, etc.
+  const reNum = String.raw`[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?`;
+  const viewportSeparator = String.raw`(?:\s*,?\s+|\s*,\s*)`;
   const svgNS = 'http://www.w3.org/2000/svg';
   const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
   const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
@@ -4813,7 +4883,8 @@
       'clip-path': 'clipPath',
       'clip-rule': 'clipRule',
       'vector-effect': 'strokeUniform',
-      'image-rendering': 'imageSmoothing'
+      'image-rendering': 'imageSmoothing',
+      'text-decoration-thickness': TEXT_DECORATION_THICKNESS
     },
     fSize = 'font-size',
     cPath = 'clip-path';
@@ -4822,8 +4893,8 @@
   const svgValidParentsRegEx = getSvgRegex(svgValidParents);
 
   // http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute
-  // matches, e.g.: +14.56e-12, etc.
-  const reViewBoxAttrValue = new RegExp('^' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*' + '$');
+
+  const reViewBoxAttrValue = new RegExp(String.raw`^\s*(${reNum})${viewportSeparator}(${reNum})${viewportSeparator}(${reNum})${viewportSeparator}(${reNum})\s*$`);
 
   const unitVectorX = new Point(1, 0);
   const zero = new Point();
@@ -9045,7 +9116,7 @@
         scaleY: 1
       }).y;
     const shearing = 2 * offset * skewingSide /
-    // we max out fractions to safeguard from asymptotic behavior
+     // we max out fractions to safeguard from asymptotic behavior
     Math.max(b, 1) +
     // add starting state
     shearingStart;
@@ -10342,6 +10413,15 @@
    * @return {String} Escaped version of a string
    */
   const escapeXml = string => string.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let segmenter;
+  const getSegmenter = () => {
+    if (!segmenter) {
+      segmenter = 'Intl' in getFabricWindow() && 'Segmenter' in Intl && new Intl.Segmenter(undefined, {
+        granularity: 'grapheme'
+      });
+    }
+    return segmenter;
+  };
 
   /**
    * Divide a string in the user perceived single units
@@ -10349,6 +10429,21 @@
    * @return {Array} array containing the graphemes
    */
   const graphemeSplit = textstring => {
+    segmenter || getSegmenter();
+    if (segmenter) {
+      const segments = segmenter.segment(textstring);
+      return Array.from(segments).map(_ref => {
+        let {
+          segment
+        } = _ref;
+        return segment;
+      });
+    }
+
+    //Fallback
+    return graphemeSplitImpl(textstring);
+  };
+  const graphemeSplitImpl = textstring => {
     const graphemes = [];
     for (let i = 0, chr; i < textstring.length; i++) {
       if ((chr = getWholeChar(textstring, i)) === false) {
@@ -10412,7 +10507,7 @@
    */
   const hasStyleChanged = function (prevStyle, thisStyle) {
     let forTextSpans = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-    return prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough);
+    return prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textDecorationThickness !== thisStyle.textDecorationThickness || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough);
   };
 
   /**
@@ -10703,7 +10798,7 @@
       }
     } else if (attr === 'textAnchor' /* text-anchor */) {
       ouputValue = value === 'start' ? LEFT : value === 'end' ? RIGHT : CENTER;
-    } else if (attr === 'charSpacing') {
+    } else if (attr === 'charSpacing' || attr === TEXT_DECORATION_THICKNESS) {
       // parseUnit returns px and we convert it to em
       parsed = parseUnit(value, fontSize) / fontSize * 1000;
     } else if (attr === 'paintFirst') {
@@ -17932,6 +18027,13 @@
   // @TODO this code is terrible and Line should be a special case of polyline.
 
   const coordProps = ['x1', 'x2', 'y1', 'y2'];
+  /**
+   * A Class to draw a line
+   * A bunch of methods will be added to Polyline to handle the line case
+   * The line class is very strange to work with, is all special, it hardly aligns
+   * to what a developer want everytime there is an angle
+   * @deprecated
+   */
   class Line extends FabricObject {
     /**
      * Constructor
@@ -18924,8 +19026,7 @@
             renderBackground = false;
           }
           if (renderBackground) {
-            var _height;
-            ctx.fillRect(-this.width / 2, top, this.width, (_height = height) !== null && _height !== void 0 ? _height : 0);
+            ctx.fillRect(-this.width / 2, top, this.width, height !== null && height !== void 0 ? height : 0);
             top = null;
             height = null;
           }
@@ -19098,70 +19199,6 @@
       return this.layoutType == 'layout-13';
     }
   }
-
-  const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
-  const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
-  const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
-  const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction'];
-  const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'isStrokeForBold', 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor'];
-
-  // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
-  // regexes, list of properties that are not suppose to change by instances, magic consts.
-  // this will be a separated effort
-  const textDefaultValues = {
-    _reNewline: reNewline,
-    _reSpacesAndTabs: /[ \t\r]/g,
-    _reSpaceAndTab: /[ \t\r]/,
-    _reWords: /\S+/g,
-    fontSize: 40,
-    fontWeight: 'normal',
-    fontFamily: 'Times New Roman',
-    underline: false,
-    overline: false,
-    linethrough: false,
-    squigglyline: false,
-    ignoreDelegatedSet: false,
-    squigglylineColor: '',
-    isStrokeForBold: false,
-    textAlign: LEFT,
-    fontStyle: 'normal',
-    lineHeight: 1.16,
-    superscript: {
-      size: 0.6,
-      // fontSize factor
-      baseline: -0.35 // baseline-shift factor (upwards)
-    },
-    subscript: {
-      size: 0.6,
-      // fontSize factor
-      baseline: 0.11 // baseline-shift factor (downwards)
-    },
-    textBackgroundColor: '',
-    stroke: null,
-    shadow: null,
-    path: undefined,
-    pathStartOffset: 0,
-    pathSide: LEFT,
-    pathAlign: 'baseline',
-    cacheExpansionFactor: 1,
-    _fontSizeFraction: 0.222,
-    offsets: {
-      underline: 0.1,
-      linethrough: -0.315,
-      overline: -0.88,
-      squigglyline: 0.1
-    },
-    _fontSizeMult: 1.13,
-    charSpacing: 0,
-    deltaY: 0,
-    direction: 'ltr',
-    CACHE_FONT_SIZE: 400,
-    MIN_TEXT_WIDTH: 2
-  };
-  const JUSTIFY = 'justify';
-  const JUSTIFY_LEFT = 'justify-left';
-  const JUSTIFY_RIGHT = 'justify-right';
-  const JUSTIFY_CENTER = 'justify-center';
 
   class StyledText extends FabricObject {
     /**
@@ -19485,7 +19522,7 @@
       } = _ref;
       const noShadow = true,
         textDecoration = this.getSvgTextDecoration(this);
-      return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', this.fontFamily ? `font-family="${this.fontFamily.replace(dblQuoteRegex, "'")}" ` : '', this.fontSize ? `font-size="${this.fontSize}" ` : '', this.fontStyle ? `font-style="${this.fontStyle}" ` : '', this.fontWeight ? `font-weight="${this.fontWeight}" ` : '', textDecoration ? `text-decoration="${textDecoration}" ` : '', this.direction === 'rtl' ? `direction="${this.direction}" ` : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
+      return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', `font-family="${this.fontFamily.replace(dblQuoteRegex, "'")}" `, `font-size="${this.fontSize}" `, this.fontStyle ? `font-style="${this.fontStyle}" ` : '', this.fontWeight ? `font-weight="${this.fontWeight}" ` : '', textDecoration ? `text-decoration="${textDecoration}" ` : '', this.direction === 'rtl' ? `direction="${this.direction}" ` : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
     }
 
     /**
@@ -19626,7 +19663,7 @@
      * @return {String}
      */
     getSvgStyles(skipShadow) {
-      return `${super.getSvgStyles(skipShadow)} white-space: pre;`;
+      return `${super.getSvgStyles(skipShadow)} text-decoration-thickness: ${toFixed(this.textDecorationThickness * this.getObjectScaling().y / 10, config.NUM_FRACTION_DIGITS)}%; white-space: pre;`;
     }
 
     /**
@@ -19644,10 +19681,19 @@
         fontSize,
         fontStyle,
         fontWeight,
-        deltaY
+        deltaY,
+        textDecorationThickness,
+        linethrough,
+        overline,
+        underline
       } = style;
-      const textDecoration = this.getSvgTextDecoration(style);
-      return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? `stroke-width: ${strokeWidth}; ` : '', fontFamily ? `font-family: ${!fontFamily.includes("'") && !fontFamily.includes('"') ? `'${fontFamily}'` : fontFamily}; ` : '', fontSize ? `font-size: ${fontSize}px; ` : '', fontStyle ? `font-style: ${fontStyle}; ` : '', fontWeight ? `font-weight: ${fontWeight}; ` : '', textDecoration ? `text-decoration: ${textDecoration}; ` : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? `baseline-shift: ${-deltaY}; ` : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
+      const textDecoration = this.getSvgTextDecoration({
+        underline: underline !== null && underline !== void 0 ? underline : this.underline,
+        overline: overline !== null && overline !== void 0 ? overline : this.overline,
+        linethrough: linethrough !== null && linethrough !== void 0 ? linethrough : this.linethrough
+      });
+      const thickness = textDecorationThickness || this.textDecorationThickness;
+      return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? `stroke-width: ${strokeWidth}; ` : '', fontFamily ? `font-family: ${!fontFamily.includes("'") && !fontFamily.includes('"') ? `'${fontFamily}'` : fontFamily}; ` : '', fontSize ? `font-size: ${fontSize}px; ` : '', fontStyle ? `font-style: ${fontStyle}; ` : '', fontWeight ? `font-weight: ${fontWeight}; ` : '', textDecoration ? `text-decoration: ${textDecoration}; text-decoration-thickness: ${toFixed(thickness * this.getObjectScaling().y / 10, config.NUM_FRACTION_DIGITS)}%; ` : '', fill ? colorPropToSVG(FILL, fill) : '', deltaY ? `baseline-shift: ${-deltaY}; ` : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
     }
 
     /**
@@ -20671,6 +20717,7 @@
       const leftOffset = this._getLeftOffset(),
         path = this.path,
         charSpacing = this._getWidthOfCharSpacing(),
+        offsetAligner = type === 'linethrough' ? 0.5 : type === 'overline' ? 1 : 0,
         offsetY = this.offsets[type];
       for (let i = 0, len = this._textLines.length; i < len; i++) {
         const heightOfLine = this.getHeightOfLine(i);
@@ -20685,8 +20732,10 @@
         let boxWidth = 0;
         let lastDecoration = this.getValueOfPropertyAt(i, 0, type);
         let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
-        let currentDecoration;
-        let currentFill;
+        let lastTickness = this.getValueOfPropertyAt(i, 0, TEXT_DECORATION_THICKNESS);
+        let currentDecoration = lastDecoration;
+        let currentFill = lastFill;
+        let currentTickness = lastTickness;
         const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
         let size = this.getHeightOfChar(i, 0);
         let dy = this.getValueOfPropertyAt(i, 0, 'deltaY');
@@ -20694,36 +20743,33 @@
           const charBox = this.__charBounds[i][j];
           currentDecoration = this.getValueOfPropertyAt(i, j, type);
           currentFill = this.getValueOfPropertyAt(i, j, FILL);
+          currentTickness = this.getValueOfPropertyAt(i, j, TEXT_DECORATION_THICKNESS);
           const currentSize = this.getHeightOfChar(i, j);
           const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
           if (path && currentDecoration && currentFill) {
+            const finalTickness = this.fontSize * currentTickness / 1000;
             ctx.save();
             // bug? verify lastFill is a valid fill here.
-            ctx.fillStyle = lastFill;
+            ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
             ctx.translate(charBox.renderLeft, charBox.renderTop);
             ctx.rotate(charBox.angle);
-            ctx.fillRect(-charBox.kernedWidth / 2, offsetY * currentSize + currentDy, charBox.kernedWidth, this.fontSize / 15);
+            this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
             ctx.restore();
-          } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentDy !== dy) && boxWidth > 0) {
+          } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentTickness !== lastTickness || currentDy !== dy) && boxWidth > 0) {
+            const finalTickness = this.fontSize * lastTickness / 1000;
             let drawStart = leftOffset + lineLeftOffset + boxStart;
             if (this.direction === 'rtl') {
               drawStart = this.width - drawStart - boxWidth;
             }
-            // *PMW*
-            const opts = {
-              type: type,
-              boxWidth: boxWidth,
-              decoration: lastDecoration,
-              fill: lastFill,
-              x: drawStart,
-              y: top + offsetY * size + dy,
-              w: boxWidth,
-              h: this.fontSize / 15
-            };
-            this._renderTextLineDecoration(ctx, opts);
+            if (lastDecoration && lastFill && lastTickness) {
+              // bug? verify lastFill is a valid fill here.
+              ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
+              this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
+            }
             boxStart = charBox.left;
             boxWidth = charBox.width;
             lastDecoration = currentDecoration;
+            lastTickness = currentTickness;
             lastFill = currentFill;
             size = currentSize;
             dy = currentDy;
@@ -20735,19 +20781,9 @@
         if (this.direction === 'rtl') {
           drawStart = this.width - drawStart - boxWidth;
         }
-        ctx.fillStyle = currentFill;
-        // *PMW*
-        const opts = {
-          type: type,
-          boxWidth: boxWidth,
-          decoration: currentDecoration,
-          fill: currentFill,
-          x: drawStart,
-          y: top + offsetY * size + dy,
-          w: boxWidth - charSpacing,
-          h: this.fontSize / 15
-        };
-        this._renderTextLineDecoration(ctx, opts);
+        ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
+        const finalTickness = this.fontSize * currentTickness / 1000;
+        currentDecoration && currentFill && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
         topOffset += heightOfLine;
       }
 
@@ -20758,13 +20794,12 @@
     }
 
     /**
-     * *PMW*
+     *  *PMW*
+     * Handle squigglyline
      * @private
-     * @param {CanvasRenderingContext2D} ctx Context to render on
-     * @param {Object} opts
      */
-    _renderTextLineDecoration(ctx, opts) {
-      if (opts.type === 'squigglyline') {
+    fillTextDecorationRect(ctx, type, x, y, w, h) {
+      if (type === 'squigglyline') {
         const polyPoints = [],
           scaleX = 0.35,
           scaleY = 0.45,
@@ -20775,32 +20810,39 @@
             }
             return (6 - g) * 5;
           };
-        ctx.fillStyle = this.squigglylineColor ? this.squigglylineColor : opts.fill;
-        for (let x = 0; x < opts.boxWidth; x += 0.5) {
+        for (let x = 0; x < w; x += 0.5) {
           polyPoints.push({
             x: x - 10,
             y: funct(x * scaleX) * scaleY
           });
         }
         for (let j = 0; j < polyPoints.length; j++) {
-          opts.decoration && opts.fill && ctx.fillRect(opts.x + polyPoints[j].x + 8, opts.y + polyPoints[j].y, 2, 2);
+          ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
         }
       } else {
-        // *PMW* use first color of gradient instead of last fill for text styles (underline, linethrough),
-        // Issue is fixed on updated method obj.set('textDecoration', 'underline') can use that one once
-        // it has support for multiple styles at a time and selection styles
-        if (opts.fill && typeof opts.fill !== 'string' && opts.fill.colorStops && opts.fill.colorStops.length) {
-          ctx.fillStyle = opts.fill.colorStops[0].color;
-        } else if (opts.fill && typeof opts.fill !== 'string' && opts.fill.source) {
-          //Use pattern for underline, linethrough on text mask
-          const pattern = ctx.createPattern(opts.fill.source, 'repeat');
-          if (pattern) {
-            ctx.fillStyle = pattern;
-          }
-        }
-        // *PMW*
-        opts.decoration && opts.fill && ctx.fillRect(opts.x, opts.y, opts.w, opts.h);
+        ctx.fillRect(x, y, w, h);
       }
+    }
+
+    /**
+     *  *PMW*
+     * Handle squigglyline, gradient fill and pattern fill for text decoration
+     * @private
+     */
+    getFillForTextDecoration(ctx, type, fill) {
+      if (type === 'squigglyline') {
+        return this.squigglylineColor;
+      }
+      if (fill && typeof fill !== 'string' && 'colorStops' in fill && fill.colorStops.length) {
+        return fill.colorStops[0].color;
+      } else if (fill && typeof fill !== 'string' && 'source' in fill) {
+        //Use pattern for underline, linethrough on text mask
+        const pattern = ctx.createPattern(fill.source, 'repeat');
+        if (pattern) {
+          return pattern;
+        }
+      }
+      return fill;
     }
 
     /**
@@ -21705,8 +21747,7 @@
      * @param {Number} selectionStart Index of a character
      */
     selectWord(selectionStart) {
-      var _selectionStart;
-      selectionStart = (_selectionStart = selectionStart) !== null && _selectionStart !== void 0 ? _selectionStart : this.selectionStart;
+      selectionStart = selectionStart !== null && selectionStart !== void 0 ? selectionStart : this.selectionStart;
       // search backwards
       const newSelectionStart = this.searchWordBoundary(selectionStart, -1),
         // search forward
@@ -21724,8 +21765,7 @@
      * @param {Number} selectionStart Index of a character
      */
     selectLine(selectionStart) {
-      var _selectionStart2;
-      selectionStart = (_selectionStart2 = selectionStart) !== null && _selectionStart2 !== void 0 ? _selectionStart2 : this.selectionStart;
+      selectionStart = selectionStart !== null && selectionStart !== void 0 ? selectionStart : this.selectionStart;
       const newSelectionStart = this.findLineBoundaryLeft(selectionStart),
         newSelectionEnd = this.findLineBoundaryRight(selectionStart);
       this.selectionStart = newSelectionStart;
@@ -24078,7 +24118,6 @@
         for (const p2 in obj[p1]) {
           const p2Number = parseInt(p2, 10);
           if (p2Number >= offset && (!shouldLimit || p2Number < nextOffset)) {
-            // eslint-disable-next-line no-unused-vars
             for (const p3 in obj[p1][p2]) {
               return false;
             }
@@ -24795,7 +24834,10 @@
      * @param {HTMLCanvasElement} targetCanvas The destination for filtered output to be drawn.
      */
     applyFilters(filters, sourceElement, sourceWidth, sourceHeight, targetCanvas) {
-      const ctx = targetCanvas.getContext('2d');
+      const ctx = targetCanvas.getContext('2d', {
+        willReadFrequently: true,
+        desynchronized: true
+      });
       if (!ctx) {
         return;
       }
@@ -26490,6 +26532,7 @@
     const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, poly.calcOwnMatrix());
     poly.points[pointIndex] = mouseLocalPosition.add(poly.pathOffset);
     poly.setDimensions();
+    poly.set('dirty', true);
     return true;
   };
 
@@ -27514,15 +27557,21 @@
     }
     void main() {
       vec4 color = vec4(0.0);
-      float total = 0.0;
+      float totalC = 0.0;
+      float totalA = 0.0;
       float offset = random(v3offset);
       for (float t = -nSamples; t <= nSamples; t++) {
         float percent = (t + offset - 0.5) / nSamples;
+        vec4 sample = texture2D(uTexture, vTexCoord + uDelta * percent);
         float weight = 1.0 - abs(percent);
-        color += texture2D(uTexture, vTexCoord + uDelta * percent) * weight;
-        total += weight;
+        float alpha = weight * sample.a;
+        color.rgb += sample.rgb * alpha;
+        color.a += alpha;
+        totalA += weight;
+        totalC += alpha;
       }
-      gl_FragColor = color / total;
+      gl_FragColor.rgb = color.rgb / totalC;
+      gl_FragColor.a = color.a / totalA;
     }
   `;
 
@@ -27561,65 +27610,102 @@
         this.applyTo2d(options);
       }
     }
-    applyTo2d(options) {
-      options.imageData = this.simpleBlur(options);
-    }
-    simpleBlur(_ref) {
+    applyTo2d(_ref) {
       let {
-        ctx,
-        imageData,
-        filterBackend: {
-          resources
+        imageData: {
+          data,
+          width,
+          height
         }
       } = _ref;
-      const {
-        width,
-        height
-      } = imageData;
-      if (!resources.blurLayer1) {
-        resources.blurLayer1 = createCanvasElement();
-        resources.blurLayer2 = createCanvasElement();
+      // this code mimic the shader for output consistency
+      // it samples 31 pixels across the image over a distance that depends from the blur value.
+      this.aspectRatio = width / height;
+      this.horizontal = true;
+      let blurValue = this.getBlurValue() * width;
+      const imageData = new Uint8ClampedArray(data);
+      const samples = 15;
+      const bytesInRow = 4 * width;
+      for (let i = 0; i < data.length; i += 4) {
+        let r = 0.0,
+          g = 0.0,
+          b = 0.0,
+          a = 0.0,
+          totalA = 0;
+        const minIRow = i - i % bytesInRow;
+        const maxIRow = minIRow + bytesInRow;
+        // for now let's keep noise out of the way
+        // let pixelOffset = 0;
+        // const offset = Math.random() * 3;
+        // if (offset > 2) {
+        //   pixelOffset = 4;
+        // } else if (offset < 1) {
+        //   pixelOffset = -4;
+        // }
+        for (let j = -15 + 1; j < samples; j++) {
+          const percent = j / samples;
+          const distance = Math.floor(blurValue * percent) * 4;
+          const weight = 1 - Math.abs(percent);
+          let sampledPixel = i + distance; // + pixelOffset;
+          // try to implement edge mirroring
+          if (sampledPixel < minIRow) {
+            sampledPixel = minIRow;
+          } else if (sampledPixel > maxIRow) {
+            sampledPixel = maxIRow;
+          }
+          const localAlpha = data[sampledPixel + 3] * weight;
+          r += data[sampledPixel] * localAlpha;
+          g += data[sampledPixel + 1] * localAlpha;
+          b += data[sampledPixel + 2] * localAlpha;
+          a += localAlpha;
+          totalA += weight;
+        }
+        imageData[i] = r / a;
+        imageData[i + 1] = g / a;
+        imageData[i + 2] = b / a;
+        imageData[i + 3] = a / totalA;
       }
-      const canvas1 = resources.blurLayer1;
-      const canvas2 = resources.blurLayer2;
-      if (canvas1.width !== width || canvas1.height !== height) {
-        canvas2.width = canvas1.width = width;
-        canvas2.height = canvas1.height = height;
+      this.horizontal = false;
+      blurValue = this.getBlurValue() * height;
+      for (let i = 0; i < imageData.length; i += 4) {
+        let r = 0.0,
+          g = 0.0,
+          b = 0.0,
+          a = 0.0,
+          totalA = 0;
+        const minIRow = i % bytesInRow;
+        const maxIRow = imageData.length - bytesInRow + minIRow;
+        // for now let's keep noise out of the way
+        // let pixelOffset = 0;
+        // const offset = Math.random() * 3;
+        // if (offset > 2) {
+        //   pixelOffset = bytesInRow;
+        // } else if (offset < 1) {
+        //   pixelOffset = -bytesInRow;
+        // }
+        for (let j = -15 + 1; j < samples; j++) {
+          const percent = j / samples;
+          const distance = Math.floor(blurValue * percent) * bytesInRow;
+          const weight = 1 - Math.abs(percent);
+          let sampledPixel = i + distance; // + pixelOffset;
+          // try to implement edge mirroring
+          if (sampledPixel < minIRow) {
+            sampledPixel = minIRow;
+          } else if (sampledPixel > maxIRow) {
+            sampledPixel = maxIRow;
+          }
+          const localAlpha = imageData[sampledPixel + 3] * weight;
+          r += imageData[sampledPixel] * localAlpha;
+          g += imageData[sampledPixel + 1] * localAlpha;
+          b += imageData[sampledPixel + 2] * localAlpha;
+          a += localAlpha;
+          totalA += weight;
+        }
+        data[i] = r / a;
+        data[i + 1] = g / a;
+        data[i + 2] = b / a;
+        data[i + 3] = a / totalA;
       }
-      const ctx1 = canvas1.getContext('2d'),
-        ctx2 = canvas2.getContext('2d'),
-        nSamples = 15,
-        blur = this.blur * 0.06 * 0.5;
-      let random, percent, j, i;
-
-      // load first canvas
-      ctx1.putImageData(imageData, 0, 0);
-      ctx2.clearRect(0, 0, width, height);
-      for (i = -15; i <= nSamples; i++) {
-        random = (Math.random() - 0.5) / 4;
-        percent = i / nSamples;
-        j = blur * percent * width + random;
-        ctx2.globalAlpha = 1 - Math.abs(percent);
-        ctx2.drawImage(canvas1, j, random);
-        ctx1.drawImage(canvas2, 0, 0);
-        ctx2.globalAlpha = 1;
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-      }
-      for (i = -15; i <= nSamples; i++) {
-        random = (Math.random() - 0.5) / 4;
-        percent = i / nSamples;
-        j = blur * percent * height + random;
-        ctx2.globalAlpha = 1 - Math.abs(percent);
-        ctx2.drawImage(canvas1, random, j);
-        ctx1.drawImage(canvas2, 0, 0);
-        ctx2.globalAlpha = 1;
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-      }
-      ctx.drawImage(canvas1, 0, 0);
-      const newImageData = ctx.getImageData(0, 0, canvas1.width, canvas1.height);
-      ctx1.globalAlpha = 1;
-      ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-      return newImageData;
     }
 
     /**
@@ -27635,32 +27721,33 @@
     isNeutralState() {
       return this.blur === 0;
     }
+    getBlurValue() {
+      let blurScale = 1;
+      const {
+        horizontal,
+        aspectRatio
+      } = this;
+      if (horizontal) {
+        if (aspectRatio > 1) {
+          // image is wide, i want to shrink radius horizontal
+          blurScale = 1 / aspectRatio;
+        }
+      } else {
+        if (aspectRatio < 1) {
+          // image is tall, i want to shrink radius vertical
+          blurScale = aspectRatio;
+        }
+      }
+      return blurScale * this.blur * 0.12;
+    }
 
     /**
      * choose right value of image percentage to blur with
      * @returns {Array} a numeric array with delta values
      */
     chooseRightDelta() {
-      let blurScale = 1;
-      const delta = [0, 0];
-      if (this.horizontal) {
-        if (this.aspectRatio > 1) {
-          // image is wide, i want to shrink radius horizontal
-          blurScale = 1 / this.aspectRatio;
-        }
-      } else {
-        if (this.aspectRatio < 1) {
-          // image is tall, i want to shrink radius vertical
-          blurScale = this.aspectRatio;
-        }
-      }
-      const blur = blurScale * this.blur * 0.12;
-      if (this.horizontal) {
-        delta[0] = blur;
-      } else {
-        delta[1] = blur;
-      }
-      return delta;
+      const blur = this.getBlurValue();
+      return this.horizontal ? [blur, 0] : [0, blur];
     }
   }
   /**
@@ -29634,7 +29721,6 @@ void main() {
   exports.controlsUtils = index;
   exports.createCollectionMixin = createCollectionMixin;
   exports.filters = filters;
-  exports.getCSSRules = getCSSRules;
   exports.getEnv = getEnv;
   exports.getFabricDocument = getFabricDocument;
   exports.getFabricWindow = getFabricWindow;
@@ -29645,12 +29731,7 @@ void main() {
   exports.isWebGLPipelineState = isWebGLPipelineState;
   exports.loadSVGFromString = loadSVGFromString;
   exports.loadSVGFromURL = loadSVGFromURL;
-  exports.parseAttributes = parseAttributes;
-  exports.parseFontDeclaration = parseFontDeclaration;
-  exports.parsePointsAttribute = parsePointsAttribute;
   exports.parseSVGDocument = parseSVGDocument;
-  exports.parseStyleAttribute = parseStyleAttribute;
-  exports.parseTransformAttribute = parseTransformAttribute;
   exports.runningAnimations = runningAnimations;
   exports.setEnv = setEnv;
   exports.setFilterBackend = setFilterBackend;

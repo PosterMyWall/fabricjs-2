@@ -26,7 +26,10 @@ class Canvas2dFilterBackend {
    * @param {HTMLCanvasElement} targetCanvas The destination for filtered output to be drawn.
    */
   applyFilters(filters, sourceElement, sourceWidth, sourceHeight, targetCanvas) {
-    const ctx = targetCanvas.getContext('2d');
+    const ctx = targetCanvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true
+    });
     if (!ctx) {
       return;
     }

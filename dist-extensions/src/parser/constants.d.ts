@@ -1,4 +1,5 @@
 export declare const reNum: string;
+export declare const viewportSeparator: string;
 export declare const svgNS = "http://www.w3.org/2000/svg";
 export declare const reFontDeclaration: RegExp;
 export declare const svgValidTagNames: string[], svgViewBoxElements: string[], svgInvalidAncestors: string[], svgValidParents: string[], attributesMap: {
@@ -32,6 +33,7 @@ export declare const svgValidTagNames: string[], svgViewBoxElements: string[], s
     'clip-rule': string;
     'vector-effect': string;
     'image-rendering': string;
+    'text-decoration-thickness': string;
 }, fSize = "font-size", cPath = "clip-path";
 export declare const svgValidTagNamesRegEx: RegExp;
 export declare const svgViewBoxElementsRegEx: RegExp;

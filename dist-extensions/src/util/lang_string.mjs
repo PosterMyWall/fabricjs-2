@@ -1,11 +1,4 @@
-/**
- * Capitalizes a string
- * @param {String} string String to capitalize
- * @param {Boolean} [firstLetterOnly] If true only first letter is capitalized
- * and other letters stay untouched, if false first letter is capitalized
- * and other letters are converted to lowercase.
- * @return {String} Capitalized version of a string
- */
+import { getFabricWindow } from '../env/index.mjs';
 
 /**
  * Escapes XML in a string
@@ -13,6 +6,15 @@
  * @return {String} Escaped version of a string
  */
 const escapeXml = string => string.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+let segmenter;
+const getSegmenter = () => {
+  if (!segmenter) {
+    segmenter = 'Intl' in getFabricWindow() && 'Segmenter' in Intl && new Intl.Segmenter(undefined, {
+      granularity: 'grapheme'
+    });
+  }
+  return segmenter;
+};
 
 /**
  * Divide a string in the user perceived single units
@@ -20,6 +22,21 @@ const escapeXml = string => string.replace(/&/g, '&amp;').replace(/"/g, '&quot;'
  * @return {Array} array containing the graphemes
  */
 const graphemeSplit = textstring => {
+  segmenter || getSegmenter();
+  if (segmenter) {
+    const segments = segmenter.segment(textstring);
+    return Array.from(segments).map(_ref => {
+      let {
+        segment
+      } = _ref;
+      return segment;
+    });
+  }
+
+  //Fallback
+  return graphemeSplitImpl(textstring);
+};
+const graphemeSplitImpl = textstring => {
   const graphemes = [];
   for (let i = 0, chr; i < textstring.length; i++) {
     if ((chr = getWholeChar(textstring, i)) === false) {

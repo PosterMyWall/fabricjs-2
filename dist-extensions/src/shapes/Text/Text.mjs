@@ -12,7 +12,7 @@ import { getPathSegmentsInfo, getPointOnPath } from '../../util/path/index.mjs';
 import '../Object/FabricObject.mjs';
 import { TextSVGExportMixin } from './TextSVGExportMixin.mjs';
 import { applyMixins } from '../../util/applyMixins.mjs';
-import { textLayoutProperties, additionalProps, textDefaultValues, JUSTIFY, JUSTIFY_CENTER, JUSTIFY_RIGHT, JUSTIFY_LEFT } from './constants.mjs';
+import { textLayoutProperties, additionalProps, textDefaultValues, JUSTIFY, JUSTIFY_CENTER, JUSTIFY_RIGHT, JUSTIFY_LEFT, TEXT_DECORATION_THICKNESS } from './constants.mjs';
 import { isFiller } from '../../util/typeAssertions.mjs';
 import { cacheProperties } from '../Object/defaultValues.mjs';
 
@@ -1027,6 +1027,7 @@ class FabricText extends StyledText {
     const leftOffset = this._getLeftOffset(),
       path = this.path,
       charSpacing = this._getWidthOfCharSpacing(),
+      offsetAligner = type === 'linethrough' ? 0.5 : type === 'overline' ? 1 : 0,
       offsetY = this.offsets[type];
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       const heightOfLine = this.getHeightOfLine(i);
@@ -1041,8 +1042,10 @@ class FabricText extends StyledText {
       let boxWidth = 0;
       let lastDecoration = this.getValueOfPropertyAt(i, 0, type);
       let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
-      let currentDecoration;
-      let currentFill;
+      let lastTickness = this.getValueOfPropertyAt(i, 0, TEXT_DECORATION_THICKNESS);
+      let currentDecoration = lastDecoration;
+      let currentFill = lastFill;
+      let currentTickness = lastTickness;
       const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
       let size = this.getHeightOfChar(i, 0);
       let dy = this.getValueOfPropertyAt(i, 0, 'deltaY');
@@ -1050,36 +1053,33 @@ class FabricText extends StyledText {
         const charBox = this.__charBounds[i][j];
         currentDecoration = this.getValueOfPropertyAt(i, j, type);
         currentFill = this.getValueOfPropertyAt(i, j, FILL);
+        currentTickness = this.getValueOfPropertyAt(i, j, TEXT_DECORATION_THICKNESS);
         const currentSize = this.getHeightOfChar(i, j);
         const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
         if (path && currentDecoration && currentFill) {
+          const finalTickness = this.fontSize * currentTickness / 1000;
           ctx.save();
           // bug? verify lastFill is a valid fill here.
-          ctx.fillStyle = lastFill;
+          ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
-          ctx.fillRect(-charBox.kernedWidth / 2, offsetY * currentSize + currentDy, charBox.kernedWidth, this.fontSize / 15);
+          this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
           ctx.restore();
-        } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentDy !== dy) && boxWidth > 0) {
+        } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentTickness !== lastTickness || currentDy !== dy) && boxWidth > 0) {
+          const finalTickness = this.fontSize * lastTickness / 1000;
           let drawStart = leftOffset + lineLeftOffset + boxStart;
           if (this.direction === 'rtl') {
             drawStart = this.width - drawStart - boxWidth;
           }
-          // *PMW*
-          const opts = {
-            type: type,
-            boxWidth: boxWidth,
-            decoration: lastDecoration,
-            fill: lastFill,
-            x: drawStart,
-            y: top + offsetY * size + dy,
-            w: boxWidth,
-            h: this.fontSize / 15
-          };
-          this._renderTextLineDecoration(ctx, opts);
+          if (lastDecoration && lastFill && lastTickness) {
+            // bug? verify lastFill is a valid fill here.
+            ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
+            this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
+          }
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastDecoration = currentDecoration;
+          lastTickness = currentTickness;
           lastFill = currentFill;
           size = currentSize;
           dy = currentDy;
@@ -1091,19 +1091,9 @@ class FabricText extends StyledText {
       if (this.direction === 'rtl') {
         drawStart = this.width - drawStart - boxWidth;
       }
-      ctx.fillStyle = currentFill;
-      // *PMW*
-      const opts = {
-        type: type,
-        boxWidth: boxWidth,
-        decoration: currentDecoration,
-        fill: currentFill,
-        x: drawStart,
-        y: top + offsetY * size + dy,
-        w: boxWidth - charSpacing,
-        h: this.fontSize / 15
-      };
-      this._renderTextLineDecoration(ctx, opts);
+      ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
+      const finalTickness = this.fontSize * currentTickness / 1000;
+      currentDecoration && currentFill && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
       topOffset += heightOfLine;
     }
 
@@ -1114,13 +1104,12 @@ class FabricText extends StyledText {
   }
 
   /**
-   * *PMW*
+   *  *PMW*
+   * Handle squigglyline
    * @private
-   * @param {CanvasRenderingContext2D} ctx Context to render on
-   * @param {Object} opts
    */
-  _renderTextLineDecoration(ctx, opts) {
-    if (opts.type === 'squigglyline') {
+  fillTextDecorationRect(ctx, type, x, y, w, h) {
+    if (type === 'squigglyline') {
       const polyPoints = [],
         scaleX = 0.35,
         scaleY = 0.45,
@@ -1131,32 +1120,39 @@ class FabricText extends StyledText {
           }
           return (6 - g) * 5;
         };
-      ctx.fillStyle = this.squigglylineColor ? this.squigglylineColor : opts.fill;
-      for (let x = 0; x < opts.boxWidth; x += 0.5) {
+      for (let x = 0; x < w; x += 0.5) {
         polyPoints.push({
           x: x - 10,
           y: funct(x * scaleX) * scaleY
         });
       }
       for (let j = 0; j < polyPoints.length; j++) {
-        opts.decoration && opts.fill && ctx.fillRect(opts.x + polyPoints[j].x + 8, opts.y + polyPoints[j].y, 2, 2);
+        ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
       }
     } else {
-      // *PMW* use first color of gradient instead of last fill for text styles (underline, linethrough),
-      // Issue is fixed on updated method obj.set('textDecoration', 'underline') can use that one once
-      // it has support for multiple styles at a time and selection styles
-      if (opts.fill && typeof opts.fill !== 'string' && opts.fill.colorStops && opts.fill.colorStops.length) {
-        ctx.fillStyle = opts.fill.colorStops[0].color;
-      } else if (opts.fill && typeof opts.fill !== 'string' && opts.fill.source) {
-        //Use pattern for underline, linethrough on text mask
-        const pattern = ctx.createPattern(opts.fill.source, 'repeat');
-        if (pattern) {
-          ctx.fillStyle = pattern;
-        }
-      }
-      // *PMW*
-      opts.decoration && opts.fill && ctx.fillRect(opts.x, opts.y, opts.w, opts.h);
+      ctx.fillRect(x, y, w, h);
     }
+  }
+
+  /**
+   *  *PMW*
+   * Handle squigglyline, gradient fill and pattern fill for text decoration
+   * @private
+   */
+  getFillForTextDecoration(ctx, type, fill) {
+    if (type === 'squigglyline') {
+      return this.squigglylineColor;
+    }
+    if (fill && typeof fill !== 'string' && 'colorStops' in fill && fill.colorStops.length) {
+      return fill.colorStops[0].color;
+    } else if (fill && typeof fill !== 'string' && 'source' in fill) {
+      //Use pattern for underline, linethrough on text mask
+      const pattern = ctx.createPattern(fill.source, 'repeat');
+      if (pattern) {
+        return pattern;
+      }
+    }
+    return fill;
   }
 
   /**

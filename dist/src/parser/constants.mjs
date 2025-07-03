@@ -1,7 +1,10 @@
 import { getSvgRegex } from './getSvgRegex.mjs';
 import { TOP, LEFT } from '../constants.mjs';
+import { TEXT_DECORATION_THICKNESS } from '../shapes/Text/constants.mjs';
 
-const reNum = String.raw`(?:[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)`;
+// matches, e.g.: +14.56e-12, etc.
+const reNum = String.raw`[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?`;
+const viewportSeparator = String.raw`(?:\s*,?\s+|\s*,\s*)`;
 const svgNS = 'http://www.w3.org/2000/svg';
 const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
 const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
@@ -38,7 +41,8 @@ const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'r
     'clip-path': 'clipPath',
     'clip-rule': 'clipRule',
     'vector-effect': 'strokeUniform',
-    'image-rendering': 'imageSmoothing'
+    'image-rendering': 'imageSmoothing',
+    'text-decoration-thickness': TEXT_DECORATION_THICKNESS
   },
   fSize = 'font-size',
   cPath = 'clip-path';
@@ -47,8 +51,8 @@ const svgViewBoxElementsRegEx = getSvgRegex(svgViewBoxElements);
 const svgValidParentsRegEx = getSvgRegex(svgValidParents);
 
 // http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute
-// matches, e.g.: +14.56e-12, etc.
-const reViewBoxAttrValue = new RegExp('^' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*,?' + '\\s*(' + reNum + '+)\\s*' + '$');
 
-export { attributesMap, cPath, fSize, reFontDeclaration, reNum, reViewBoxAttrValue, svgInvalidAncestors, svgNS, svgValidParents, svgValidParentsRegEx, svgValidTagNames, svgValidTagNamesRegEx, svgViewBoxElements, svgViewBoxElementsRegEx };
+const reViewBoxAttrValue = new RegExp(String.raw`^\s*(${reNum})${viewportSeparator}(${reNum})${viewportSeparator}(${reNum})${viewportSeparator}(${reNum})\s*$`);
+
+export { attributesMap, cPath, fSize, reFontDeclaration, reNum, reViewBoxAttrValue, svgInvalidAncestors, svgNS, svgValidParents, svgValidParentsRegEx, svgValidTagNames, svgValidTagNamesRegEx, svgViewBoxElements, svgViewBoxElementsRegEx, viewportSeparator };
 //# sourceMappingURL=constants.mjs.map

@@ -16,7 +16,7 @@ export declare class Composed extends BaseFilter<'Composed', ComposedOwnProps, C
     subFilters: ComposedOwnProps['subFilters'];
     static type: string;
     constructor(options?: {
-        subFilters?: BaseFilter<string, object>[];
+        subFilters?: BaseFilter<string>[];
     } & Record<string, any>);
     /**
      * Apply this container's filters to the input image provided.

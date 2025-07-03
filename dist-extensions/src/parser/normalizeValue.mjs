@@ -2,6 +2,7 @@ import { multiplyTransformMatrices } from '../util/misc/matrix.mjs';
 import { parseUnit } from '../util/misc/svgParsing.mjs';
 import { parseTransformAttribute } from './parseTransformAttribute.mjs';
 import { FILL, STROKE, NONE, LEFT, RIGHT, CENTER } from '../constants.mjs';
+import { TEXT_DECORATION_THICKNESS } from '../shapes/Text/constants.mjs';
 
 function normalizeValue(attr, value, parentAttributes, fontSize) {
   const isArray = Array.isArray(value);
@@ -36,7 +37,7 @@ function normalizeValue(attr, value, parentAttributes, fontSize) {
     }
   } else if (attr === 'textAnchor' /* text-anchor */) {
     ouputValue = value === 'start' ? LEFT : value === 'end' ? RIGHT : CENTER;
-  } else if (attr === 'charSpacing') {
+  } else if (attr === 'charSpacing' || attr === TEXT_DECORATION_THICKNESS) {
     // parseUnit returns px and we convert it to em
     parsed = parseUnit(value, fontSize) / fontSize * 1000;
   } else if (attr === 'paintFirst') {

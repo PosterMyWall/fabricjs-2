@@ -1,7 +1,9 @@
 import { getSvgRegex } from './getSvgRegex.mjs';
 import { TOP, LEFT } from '../constants.mjs';
+import { TEXT_DECORATION_THICKNESS } from '../shapes/Text/constants.mjs';
 
-const reNum = String.raw`(?:[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)`;
+// matches, e.g.: +14.56e-12, etc.
+const reNum = String.raw`[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?`;
 const reFontDeclaration = new RegExp('(normal|italic)?\\s*(normal|small-caps)?\\s*' + '(normal|bold|bolder|lighter|100|200|300|400|500|600|700|800|900)?\\s*(' + reNum + '(?:px|cm|mm|em|pt|pc|in)*)(?:\\/(normal|' + reNum + '))?\\s+(.*)');
 const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'rect', 'line', 'image', 'text'],
   svgViewBoxElements = ['symbol', 'image', 'marker', 'pattern', 'view', 'svg'],
@@ -37,7 +39,8 @@ const svgValidTagNames = ['path', 'circle', 'polygon', 'polyline', 'ellipse', 'r
     'clip-path': 'clipPath',
     'clip-rule': 'clipRule',
     'vector-effect': 'strokeUniform',
-    'image-rendering': 'imageSmoothing'
+    'image-rendering': 'imageSmoothing',
+    'text-decoration-thickness': TEXT_DECORATION_THICKNESS
   },
   fSize = 'font-size',
   cPath = 'clip-path';

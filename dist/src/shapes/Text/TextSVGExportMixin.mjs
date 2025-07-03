@@ -57,7 +57,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     } = _ref;
     const noShadow = true,
       textDecoration = this.getSvgTextDecoration(this);
-    return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', this.fontFamily ? `font-family="${this.fontFamily.replace(dblQuoteRegex, "'")}" ` : '', this.fontSize ? `font-size="${this.fontSize}" ` : '', this.fontStyle ? `font-style="${this.fontStyle}" ` : '', this.fontWeight ? `font-weight="${this.fontWeight}" ` : '', textDecoration ? `text-decoration="${textDecoration}" ` : '', this.direction === 'rtl' ? `direction="${this.direction}" ` : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
+    return [textBgRects.join(''), '\t\t<text xml:space="preserve" ', `font-family="${this.fontFamily.replace(dblQuoteRegex, "'")}" `, `font-size="${this.fontSize}" `, this.fontStyle ? `font-style="${this.fontStyle}" ` : '', this.fontWeight ? `font-weight="${this.fontWeight}" ` : '', textDecoration ? `text-decoration="${textDecoration}" ` : '', this.direction === 'rtl' ? `direction="${this.direction}" ` : '', 'style="', this.getSvgStyles(noShadow), '"', this.addPaintOrder(), ' >', textSpans.join(''), '</text>\n'];
   }
 
   /**
@@ -198,7 +198,7 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgStyles(skipShadow) {
-    return `${super.getSvgStyles(skipShadow)} white-space: pre;`;
+    return `${super.getSvgStyles(skipShadow)} text-decoration-thickness: ${toFixed(this.textDecorationThickness * this.getObjectScaling().y / 10, config.NUM_FRACTION_DIGITS)}%; white-space: pre;`;
   }
 
   /**
@@ -216,10 +216,19 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       fontSize,
       fontStyle,
       fontWeight,
-      deltaY
+      deltaY,
+      textDecorationThickness,
+      linethrough,
+      overline,
+      underline
     } = style;
-    const textDecoration = this.getSvgTextDecoration(style);
-    return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? `stroke-width: ${strokeWidth}; ` : '', fontFamily ? `font-family: ${!fontFamily.includes("'") && !fontFamily.includes('"') ? `'${fontFamily}'` : fontFamily}; ` : '', fontSize ? `font-size: ${fontSize}px; ` : '', fontStyle ? `font-style: ${fontStyle}; ` : '', fontWeight ? `font-weight: ${fontWeight}; ` : '', textDecoration ? `text-decoration: ${textDecoration}; ` : textDecoration, fill ? colorPropToSVG(FILL, fill) : '', deltaY ? `baseline-shift: ${-deltaY}; ` : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
+    const textDecoration = this.getSvgTextDecoration({
+      underline: underline !== null && underline !== void 0 ? underline : this.underline,
+      overline: overline !== null && overline !== void 0 ? overline : this.overline,
+      linethrough: linethrough !== null && linethrough !== void 0 ? linethrough : this.linethrough
+    });
+    const thickness = textDecorationThickness || this.textDecorationThickness;
+    return [stroke ? colorPropToSVG(STROKE, stroke) : '', strokeWidth ? `stroke-width: ${strokeWidth}; ` : '', fontFamily ? `font-family: ${!fontFamily.includes("'") && !fontFamily.includes('"') ? `'${fontFamily}'` : fontFamily}; ` : '', fontSize ? `font-size: ${fontSize}px; ` : '', fontStyle ? `font-style: ${fontStyle}; ` : '', fontWeight ? `font-weight: ${fontWeight}; ` : '', textDecoration ? `text-decoration: ${textDecoration}; text-decoration-thickness: ${toFixed(thickness * this.getObjectScaling().y / 10, config.NUM_FRACTION_DIGITS)}%; ` : '', fill ? colorPropToSVG(FILL, fill) : '', deltaY ? `baseline-shift: ${-deltaY}; ` : '', useWhiteSpace ? 'white-space: pre; ' : ''].join('');
   }
 
   /**

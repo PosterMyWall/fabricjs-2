@@ -36,6 +36,7 @@ const polyActionHandler = (eventData, transform, x, y) => {
   const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, poly.calcOwnMatrix());
   poly.points[pointIndex] = mouseLocalPosition.add(poly.pathOffset);
   poly.setDimensions();
+  poly.set('dirty', true);
   return true;
 };
 

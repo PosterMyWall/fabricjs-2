@@ -138,8 +138,7 @@ class Table extends Group {
           renderBackground = false;
         }
         if (renderBackground) {
-          var _height;
-          ctx.fillRect(-this.width / 2, top, this.width, (_height = height) !== null && _height !== void 0 ? _height : 0);
+          ctx.fillRect(-this.width / 2, top, this.width, height !== null && height !== void 0 ? height : 0);
           top = null;
           height = null;
         }

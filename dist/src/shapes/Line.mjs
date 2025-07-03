@@ -19,6 +19,13 @@ import { cacheProperties } from './Object/defaultValues.mjs';
 // @TODO this code is terrible and Line should be a special case of polyline.
 
 const coordProps = ['x1', 'x2', 'y1', 'y2'];
+/**
+ * A Class to draw a line
+ * A bunch of methods will be added to Polyline to handle the line case
+ * The line class is very strange to work with, is all special, it hardly aligns
+ * to what a developer want everytime there is an angle
+ * @deprecated
+ */
 class Line extends FabricObject {
   /**
    * Constructor

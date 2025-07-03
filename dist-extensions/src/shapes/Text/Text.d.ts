@@ -51,6 +51,7 @@ interface UniqueTextProps {
     textAlign: string;
     direction: CanvasDirection;
     path?: Path;
+    textDecorationThickness: number;
 }
 export interface SerializedTextProps extends SerializedObjectProps, UniqueTextProps {
     styles: TextStyleArray | TextStyle;
@@ -218,9 +219,21 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     path?: Path;
     /**
+     * The text decoration tickness for underline, overline and strikethrough
+     * The tickness is expressed in thousandths of fontSize ( em ).
+     * The original value was 1/15 that translates to 66.6667 thousandths.
+     * The choice of unit of measure is to align with charSpacing.
+     * You can slim the tickness without issues, while large underline or overline may end up
+     * outside the bounding box of the text. In order to fix that a bigger refactor of the code
+     * is needed and is out of scope for now. If you need such large overline on the first line
+     * of text or large underline on the last line of text, consider disabling caching as a
+     * workaround
+     * @default 66.667
+     */
+    textDecorationThickness: number;
+    /**
      * Offset amount for text path starting position
      * Only used when text has a path
-     * @type Number
      * @default
      */
     pathStartOffset: number;
@@ -641,12 +654,17 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     _renderTextDecoration(ctx: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline' | 'squigglyline'): void;
     /**
-     * *PMW*
+     *  *PMW*
+     * Handle squigglyline
      * @private
-     * @param {CanvasRenderingContext2D} ctx Context to render on
-     * @param {Object} opts
      */
-    _renderTextLineDecoration(ctx: CanvasRenderingContext2D, opts: Record<string, any>): void;
+    private fillTextDecorationRect;
+    /**
+     *  *PMW*
+     * Handle squigglyline, gradient fill and pattern fill for text decoration
+     * @private
+     */
+    private getFillForTextDecoration;
     /**
      * *PMW*
      * Draws a background for the object big as its untrasformed dimensions

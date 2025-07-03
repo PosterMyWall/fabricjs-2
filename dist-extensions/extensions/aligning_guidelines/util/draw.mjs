@@ -55,7 +55,7 @@ function drawPoint(canvas, arr) {
 }
 function drawPointList(canvas, list) {
   const arr = list.map(item => {
-    const isVertical = ('y2' in item);
+    const isVertical = 'y2' in item;
     const x = isVertical ? item.x : item.x1;
     const y = isVertical ? item.y1 : item.y;
     return new Point(x, y);

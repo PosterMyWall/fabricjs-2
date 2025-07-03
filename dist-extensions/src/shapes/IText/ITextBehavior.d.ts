@@ -86,7 +86,7 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
         toValue: number;
         duration: number;
         delay?: number;
-        onComplete?: TOnAnimationChangeCallback<number, void>;
+        onComplete?: TOnAnimationChangeCallback<number>;
     }): ValueAnimation;
     /**
      * changes the cursor from visible to invisible

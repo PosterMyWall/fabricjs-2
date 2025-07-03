@@ -30,8 +30,7 @@ export declare class Blur extends BaseFilter<'Blur', BlurOwnProps> {
     static uniformLocations: string[];
     getFragmentSource(): string;
     applyTo(options: TWebGLPipelineState | T2DPipelineState): void;
-    applyTo2d(options: T2DPipelineState): void;
-    simpleBlur({ ctx, imageData, filterBackend: { resources }, }: T2DPipelineState): ImageData;
+    applyTo2d({ imageData: { data, width, height } }: T2DPipelineState): void;
     /**
      * Send data from this filter to its shader program's uniforms.
      *
@@ -40,6 +39,7 @@ export declare class Blur extends BaseFilter<'Blur', BlurOwnProps> {
      */
     sendUniformData(gl: WebGLRenderingContext, uniformLocations: TWebGLUniformLocationMap): void;
     isNeutralState(): boolean;
+    getBlurValue(): number;
     /**
      * choose right value of image percentage to blur with
      * @returns {Array} a numeric array with delta values
