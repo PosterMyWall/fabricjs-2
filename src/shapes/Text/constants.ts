@@ -84,7 +84,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   linethrough: false,
   squigglyline: false,
   ignoreDelegatedSet: false,
-  squigglylineColor: '',
+  squigglylineColor: '#FF0000',
   isStrokeForBold: false,
   textAlign: LEFT,
   fontStyle: 'normal',
@@ -97,7 +97,6 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   pathSide: LEFT,
   pathAlign: 'baseline',
   cacheExpansionFactor: 1,
-  _fontSizeFraction: 0.222,
   charSpacing: 0,
   deltaY: 0,
   direction: 'ltr',
@@ -115,6 +114,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   _fontSizeFraction: 0.222,
   offsets: {
     underline: 0.1,
+    squigglyline: 0.1,
     linethrough: -0.28167, // added 1/30 to original number
     overline: -0.81333, // added 1/15 to original number
   },

@@ -1092,7 +1092,10 @@ export class FabricText<
       // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
       // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
       // *PMW* preventing height to be smaller than selector size.
-      height += ((i === len - 1 && this.lineHeight < 1) ? lineHeight / this.lineHeight : lineHeight);
+      height +=
+        i === len - 1 && this.lineHeight < 1
+          ? lineHeight / this.lineHeight
+          : lineHeight;
     }
     return height;
   }
@@ -1652,10 +1655,16 @@ export class FabricText<
           const finalTickness = (this.fontSize * currentTickness) / 1000;
           ctx.save();
           // bug? verify lastFill is a valid fill here.
-          ctx.fillStyle = lastFill as string;
+          ctx.fillStyle = this.getFillForTextDecoration(
+            ctx,
+            type,
+            lastFill as string,
+          );
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
-          ctx.fillRect(
+          this.fillTextDecorationRect(
+            ctx,
+            type,
             -charBox.kernedWidth / 2,
             offsetY * currentSize + currentDy - offsetAligner * finalTickness,
             charBox.kernedWidth,
@@ -1677,8 +1686,14 @@ export class FabricText<
           }
           if (lastDecoration && lastFill && lastTickness) {
             // bug? verify lastFill is a valid fill here.
-            ctx.fillStyle = lastFill as string;
-            ctx.fillRect(
+            ctx.fillStyle = this.getFillForTextDecoration(
+              ctx,
+              type,
+              lastFill as string,
+            );
+            this.fillTextDecorationRect(
+              ctx,
+              type,
               drawStart,
               top + offsetY * size + dy - offsetAligner * finalTickness,
               boxWidth,
@@ -1700,12 +1715,18 @@ export class FabricText<
       if (this.direction === 'rtl') {
         drawStart = this.width - drawStart - boxWidth;
       }
-      ctx.fillStyle = currentFill as string;
+      ctx.fillStyle = this.getFillForTextDecoration(
+        ctx,
+        type,
+        currentFill as string,
+      );
       const finalTickness = (this.fontSize * currentTickness) / 1000;
       currentDecoration &&
         currentFill &&
         currentTickness &&
-        ctx.fillRect(
+        this.fillTextDecorationRect(
+          ctx,
+          type,
           drawStart,
           top + offsetY * size + dy - offsetAligner * finalTickness,
           boxWidth - charSpacing,
@@ -1721,16 +1742,19 @@ export class FabricText<
   }
 
   /**
-   * *PMW*
+   *  *PMW*
+   * Handle squigglyline
    * @private
-   * @param {CanvasRenderingContext2D} ctx Context to render on
-   * @param {Object} opts
    */
-  _renderTextLineDecoration(
+  private fillTextDecorationRect(
     ctx: CanvasRenderingContext2D,
-    opts: Record<string, any>
+    type: 'underline' | 'linethrough' | 'overline' | 'squigglyline',
+    x: number,
+    y: number,
+    w: number,
+    h: number,
   ) {
-    if (opts.type === 'squigglyline') {
+    if (type === 'squigglyline') {
       const polyPoints = [],
         scaleX = 0.35,
         scaleY = 0.45,
@@ -1742,52 +1766,52 @@ export class FabricText<
 
           return (6 - g) * 5;
         };
-      ctx.fillStyle = this.squigglylineColor
-        ? this.squigglylineColor
-        : opts.fill;
-      for (let x = 0; x < opts.boxWidth; x += 0.5) {
+
+      for (let x = 0; x < w; x += 0.5) {
         polyPoints.push({
           x: x - 10,
           y: funct(x * scaleX) * scaleY,
         });
       }
+
       for (let j = 0; j < polyPoints.length; j++) {
-        opts.decoration &&
-          opts.fill &&
-          ctx.fillRect(
-            opts.x + polyPoints[j].x + 8,
-            opts.y + polyPoints[j].y,
-            2,
-            2
-          );
+        ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
       }
     } else {
-      // *PMW* use first color of gradient instead of last fill for text styles (underline, linethrough),
-      // Issue is fixed on updated method obj.set('textDecoration', 'underline') can use that one once
-      // it has support for multiple styles at a time and selection styles
-      if (
-        opts.fill &&
-        typeof opts.fill !== 'string' &&
-        opts.fill.colorStops &&
-        opts.fill.colorStops.length
-      ) {
-        ctx.fillStyle = opts.fill.colorStops[0].color;
-      } else if (
-        opts.fill &&
-        typeof opts.fill !== 'string' &&
-        opts.fill.source
-      ) {
-        //Use pattern for underline, linethrough on text mask
-        const pattern = ctx.createPattern(opts.fill.source, 'repeat');
-        if(pattern) {
-          ctx.fillStyle = pattern;
-        }
-      }
-      // *PMW*
-      opts.decoration &&
-        opts.fill &&
-        ctx.fillRect(opts.x, opts.y, opts.w, opts.h);
+      ctx.fillRect(x, y, w, h);
     }
+  }
+
+  /**
+   *  *PMW*
+   * Handle squigglyline, gradient fill and pattern fill for text decoration
+   * @private
+   */
+  private getFillForTextDecoration(
+    ctx: CanvasRenderingContext2D,
+    type: 'underline' | 'linethrough' | 'overline' | 'squigglyline',
+    fill: string | TFiller | null,
+  ): CanvasPattern | string {
+    if (type === 'squigglyline') {
+      return this.squigglylineColor;
+    }
+
+    if (
+      fill &&
+      typeof fill !== 'string' &&
+      'colorStops' in fill &&
+      fill.colorStops.length
+    ) {
+      return fill.colorStops[0].color;
+    } else if (fill && typeof fill !== 'string' && 'source' in fill) {
+      //Use pattern for underline, linethrough on text mask
+      const pattern = ctx.createPattern(fill.source, 'repeat');
+      if (pattern) {
+        return pattern;
+      }
+    }
+
+    return fill as string;
   }
 
   /**
@@ -1814,7 +1838,7 @@ export class FabricText<
       -dim.x / 2 - this.padding / scaleX,
       -dim.y / 2 - this.padding / scaleY,
       dim.x + (this.padding / scaleX) * 2,
-      dim.y + (this.padding / scaleY) * 2
+      dim.y + (this.padding / scaleY) * 2,
     );
     // if there is background color no other shadows
     // should be casted
