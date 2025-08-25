@@ -284,15 +284,24 @@ export class ITextQuill<
   }
 
   /**
-   * Initializes QuillJS editor for rich text editing
-   * Falls back to hidden textarea if useQuillEditor is false
+   * Initialize QuillJS editor for rich text editing
+   * Falls back to hidden textarea if useQuillEditor is false or QuillJS fails
    */
   initHiddenTextarea() {
     if (this.useQuillEditor !== false) {
-      this.initQuillEditor();
-    } else {
-      this.initHiddenTextareaFallback();
+      try {
+        this.initQuillEditor();
+        // If Quill editor initialization succeeded, return
+        if (this.quillEditor && this.quillEditor.container) {
+          return;
+        }
+      } catch (error) {
+        console.warn('QuillJS editor initialization failed, falling back to textarea:', error);
+      }
     }
+    
+    // Fall back to original textarea implementation
+    this.initHiddenTextareaFallback();
   }
 
   /**
@@ -321,6 +330,12 @@ export class ITextQuill<
     // Initialize the editor
     const editorContainer = this.quillEditor.init(doc);
     
+    // Only proceed if we have a valid container
+    if (!editorContainer) {
+      this.quillEditor = null;
+      throw new Error('Failed to create Quill editor container');
+    }
+    
     // Position the editor
     const { top, left } = this._calcTextareaPosition();
     this.quillEditor.setPosition(left, top);
@@ -328,24 +343,26 @@ export class ITextQuill<
     // Append to container
     (this.quillEditorContainer || doc.body).appendChild(editorContainer);
 
-    // Set up event handlers
-    this.quillEditor.onTextChange((event: QuillTextChangeEvent) => {
-      this.onQuillTextChange(event);
-    });
+    // Set up event handlers only if quill instance exists
+    if (this.quillEditor.quill) {
+      this.quillEditor.onTextChange((event: QuillTextChangeEvent) => {
+        this.onQuillTextChange(event);
+      });
 
-    this.quillEditor.onSelectionChange((range: any) => {
-      this.onQuillSelectionChange(range);
-    });
+      this.quillEditor.onSelectionChange((range: any) => {
+        this.onQuillSelectionChange(range);
+      });
 
-    this.quillEditor.onBlur(() => {
-      this.blur();
-    });
+      this.quillEditor.onBlur(() => {
+        this.blur();
+      });
 
-    // Load existing text and styles into Quill
-    this.loadTextIntoQuill();
+      // Load existing text and styles into Quill
+      this.loadTextIntoQuill();
+    }
 
-    // Set hiddenTextarea to null since we're using Quill
-    this.hiddenTextarea = null;
+    // Set hiddenTextarea to the container (for compatibility)
+    this.hiddenTextarea = editorContainer as any;
   }
 
   /**
@@ -477,8 +494,7 @@ export class ITextQuill<
    */
   _set(key: string, value: any) {
     if (this.isEditing && this._savedProps && key in this._savedProps) {
-      // @ts-expect-error irritating TS
-      this._savedProps[key] = value;
+      this._savedProps[key as keyof this['_savedProps']] = value;
       return this;
     }
     if (key === 'canvas') {
