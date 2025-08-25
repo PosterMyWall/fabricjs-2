@@ -86,6 +86,9 @@ export { FabricText,
 FabricText as Text, } from './src/shapes/Text/Text';
 export type { ITextProps, SerializedITextProps, CursorRenderingData, CursorBoundaries, } from './src/shapes/IText/IText';
 export { IText } from './src/shapes/IText/IText';
+export type { ITextQuillProps, SerializedITextQuillProps, } from './src/shapes/IText/ITextQuill';
+export { ITextQuill } from './src/shapes/IText/ITextQuill';
+export { QuillTextEditor } from './src/shapes/IText/QuillTextEditor';
 export type { GraphemeData, SerializedTextboxProps, TextboxProps, } from './src/shapes/Textbox';
 export { Textbox } from './src/shapes/Textbox';
 export type { CompleteTextStyleDeclaration, TextStyleDeclaration, TextStyle, } from './src/shapes/Text/StyledText';

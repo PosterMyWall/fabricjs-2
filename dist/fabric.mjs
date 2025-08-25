@@ -36,6 +36,8 @@ export { Table } from './src/shapes/Table.mjs';
 export { CustomBorderTable } from './src/shapes/Menu.mjs';
 export { FabricText, FabricText as Text } from './src/shapes/Text/Text.mjs';
 export { IText } from './src/shapes/IText/IText.mjs';
+export { ITextQuill } from './src/shapes/IText/ITextQuill.mjs';
+export { QuillTextEditor } from './src/shapes/IText/QuillTextEditor.mjs';
 export { Textbox } from './src/shapes/Textbox.mjs';
 export { Group } from './src/shapes/Group.mjs';
 export { LayoutManager } from './src/LayoutManager/LayoutManager.mjs';
