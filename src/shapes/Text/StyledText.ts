@@ -234,13 +234,14 @@ export abstract class StyledText<
   }
 
   /**
-   * Sets style of a current selection, if no selection exist, do not set anything.
+   * Sets style of a current selection, if no selection exist, set style at cursor position for future typing.
    * @param {Object} styles Styles object
    * @param {Number} startIndex Start index to get styles at
    * @param {Number} [endIndex] End index to get styles at, if not specified startIndex + 1
    */
   setSelectionStyles(styles: object, startIndex: number, endIndex?: number) {
-    for (let i = startIndex; i < (endIndex || startIndex); i++) {
+    const actualEndIndex = endIndex === undefined || endIndex === startIndex ? startIndex + 1 : endIndex;
+    for (let i = startIndex; i < actualEndIndex; i++) {
       this._extendStyles(i, styles);
     }
     /* not included in _extendStyles to avoid clearing cache more than once */

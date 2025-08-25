@@ -880,9 +880,10 @@ describe('IText', () => {
 
     expect(
       iText.styles[0][0],
-      'styles should not change without selection',
+      'styles should be applied at cursor position when no selection',
     ).toEqual({
-      fill: '#112233',
+      fill: 'red',
+      stroke: 'yellow',
     });
 
     iText.selectionEnd = 0;

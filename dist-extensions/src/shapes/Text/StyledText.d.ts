@@ -69,7 +69,7 @@ export declare abstract class StyledText<Props extends TOptions<FabricObjectProp
      */
     getStyleAtPosition(position: number, complete?: boolean): Partial<CompleteTextStyleDeclaration>;
     /**
-     * Sets style of a current selection, if no selection exist, do not set anything.
+     * Sets style of a current selection, if no selection exist, set style at cursor position for future typing.
      * @param {Object} styles Styles object
      * @param {Number} startIndex Start index to get styles at
      * @param {Number} [endIndex] End index to get styles at, if not specified startIndex + 1
