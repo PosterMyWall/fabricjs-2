@@ -128,6 +128,12 @@ export type {
 } from './src/shapes/IText/IText';
 export { IText } from './src/shapes/IText/IText';
 export type {
+  ITextQuillProps,
+  SerializedITextQuillProps,
+} from './src/shapes/IText/ITextQuill';
+export { ITextQuill } from './src/shapes/IText/ITextQuill';
+export { QuillTextEditor } from './src/shapes/IText/QuillTextEditor';
+export type {
   GraphemeData,
   SerializedTextboxProps,
   TextboxProps,
