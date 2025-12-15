@@ -422,22 +422,18 @@ class Resize extends BaseFilter {
  * Resize type
  * for webgl resizeType is just lanczos, for canvas2d can be:
  * bilinear, hermite, sliceHack, lanczos.
- * @default
  */
 /**
  * Scale factor for resizing, x axis
  * @param {Number} scaleX
- * @default
  */
 /**
  * Scale factor for resizing, y axis
  * @param {Number} scaleY
- * @default
  */
 /**
  * LanczosLobes parameter for lanczos filter, valid for resizeType lanczos
  * @param {Number} lanczosLobes
- * @default
  */
 _defineProperty(Resize, "type", 'Resize');
 _defineProperty(Resize, "defaults", resizeDefaultValues);

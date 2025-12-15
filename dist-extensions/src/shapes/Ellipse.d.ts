@@ -16,13 +16,11 @@ export declare class Ellipse<Props extends TOptions<EllipseProps> = Partial<Elli
     /**
      * Horizontal radius
      * @type Number
-     * @default
      */
     rx: number;
     /**
      * Vertical radius
      * @type Number
-     * @default
      */
     ry: number;
     static type: string;
@@ -70,15 +68,11 @@ export declare class Ellipse<Props extends TOptions<EllipseProps> = Partial<Elli
     _render(ctx: CanvasRenderingContext2D): void;
     /**
      * List of attribute names to account for when parsing SVG element (used by {@link Ellipse.fromElement})
-     * @static
-     * @memberOf Ellipse
      * @see http://www.w3.org/TR/SVG/shapes.html#EllipseElement
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Returns {@link Ellipse} instance from an SVG element
-     * @static
-     * @memberOf Ellipse
      * @param {HTMLElement} element Element to parse
      * @return {Ellipse}
      */

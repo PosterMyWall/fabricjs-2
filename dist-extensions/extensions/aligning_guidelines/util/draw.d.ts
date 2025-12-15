@@ -1,6 +1,8 @@
-import type { Canvas } from '@postermywall/fabricjs-2';
-import type { HorizontalLine, VerticalLine } from '../typedefs';
-export declare function drawPointList(canvas: Canvas, list: Array<VerticalLine | HorizontalLine>): void;
-export declare function drawVerticalLine(canvas: Canvas, coords: VerticalLine): void;
-export declare function drawHorizontalLine(canvas: Canvas, coords: HorizontalLine): void;
+import { Point } from '@postermywall/fabricjs-2';
+import type { AligningGuidelines } from '..';
+export declare function drawLine(this: AligningGuidelines, origin: Point, target: Point): void;
+export declare function drawX(this: AligningGuidelines, point: Point, _: number): void;
+export declare function drawPointList(this: AligningGuidelines): void;
+export declare function drawVerticalLine(this: AligningGuidelines): void;
+export declare function drawHorizontalLine(this: AligningGuidelines): void;
 //# sourceMappingURL=draw.d.ts.map

@@ -1,4 +1,6 @@
-export { initAligningGuidelines, type AligningLineConfig, } from './aligning_guidelines';
+export { AligningGuidelines } from './aligning_guidelines';
+export type * from './aligning_guidelines/typedefs';
 export { originUpdaterWrapper, installOriginWrapperUpdater, } from './data_updaters/origins';
-export { gradientUpdaterWrapper } from './data_updaters/gradient';
+export { gradientUpdaterWrapper, installGradientUpdater, } from './data_updaters/gradient';
+export { addGestures, pinchEventHandler, rotateEventHandler, } from './westures_integration';
 //# sourceMappingURL=index.d.ts.map

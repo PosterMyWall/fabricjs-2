@@ -48,7 +48,7 @@ const shadowDefaultValues = {
 };
 class Shadow {
   /**
-   * @see {@link http://fabricjs.com/shadows|Shadow demo}
+   * @see {@link http://fabric5.fabricjs.com/shadows|Shadow demo}
    * @param {Object|String} [options] Options object with any of color, blur, offsetX, offsetY properties or string (e.g. "rgba(0,0,0,0.2) 2px 2px 10px")
    */
 
@@ -150,7 +150,6 @@ class Shadow {
 /**
  * Shadow color
  * @type String
- * @default
  */
 /**
  * Shadow blur
@@ -159,29 +158,24 @@ class Shadow {
 /**
  * Shadow horizontal offset
  * @type Number
- * @default
  */
 /**
  * Shadow vertical offset
  * @type Number
- * @default
  */
 /**
  * Whether the shadow should affect stroke operations
  * @type Boolean
- * @default
  */
 /**
  * Indicates whether toObject should include default values
  * @type Boolean
- * @default
  */
 /**
  * When `false`, the shadow will scale with the object.
  * When `true`, the shadow's offsetX, offsetY, and blur will not be affected by the object's scale.
  * default to false
  * @type Boolean
- * @default
  */
 _defineProperty(Shadow, "ownDefaults", shadowDefaultValues);
 _defineProperty(Shadow, "type", 'shadow');

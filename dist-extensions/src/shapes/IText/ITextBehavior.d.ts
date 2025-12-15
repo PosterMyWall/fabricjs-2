@@ -198,6 +198,9 @@ export declare abstract class ITextBehavior<Props extends TOptions<TextProps> = 
      */
     _updateTextarea(): void;
     /**
+     * This function updates the text value from the hidden textarea and recalculates the text bounding box
+     * size and position.
+     * It is called by fabricJS internals, do not use it directly.
      * @private
      */
     updateFromTextArea(): void;

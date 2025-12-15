@@ -20,9 +20,9 @@ const canvasDefaults = {
   perPixelTargetFind: false,
   targetFindTolerance: 0,
   skipTargetFind: false,
-  stopContextMenu: false,
-  fireRightClick: false,
-  fireMiddleClick: false,
+  stopContextMenu: true,
+  fireRightClick: true,
+  fireMiddleClick: true,
   enablePointerEvents: false,
   containerClass: 'canvas-container',
   preserveObjectStacking: true

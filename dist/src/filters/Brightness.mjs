@@ -59,7 +59,6 @@ class Brightness extends BaseFilter {
  * translated to -255 to 255 for 2d
  * 0.0039215686 is the part of 1 that get translated to 1 in 2d
  * @param {Number} brightness
- * @default
  */
 _defineProperty(Brightness, "type", 'Brightness');
 _defineProperty(Brightness, "defaults", brightnessDefaultValues);

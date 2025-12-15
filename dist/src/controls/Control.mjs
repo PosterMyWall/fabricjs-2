@@ -205,7 +205,7 @@ class Control {
    * @param {FabricObject} object on which the control is displayed
    * @return {String}
    */
-  cursorStyleHandler(eventData, control, fabricObject) {
+  cursorStyleHandler(eventData, control, fabricObject, coord) {
     return control.cursorStyle;
   }
 

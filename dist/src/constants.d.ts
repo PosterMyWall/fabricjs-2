@@ -2,6 +2,7 @@ import type { TMat2D } from './typedefs';
 export declare const VERSION: string;
 export declare function noop(): void;
 export declare const halfPI: number;
+export declare const quarterPI: number;
 export declare const twoMathPi: number;
 export declare const PiBy180: number;
 export declare const iMatrix: TMat2D;
@@ -32,4 +33,7 @@ export declare const SKEW_Y = "skewY";
 export declare const FILL = "fill";
 export declare const STROKE = "stroke";
 export declare const MODIFIED = "modified";
+export declare const LTR = "ltr";
+export declare const RTL = "rtl";
+export declare const NORMAL = "normal";
 //# sourceMappingURL=constants.d.ts.map

@@ -145,18 +145,15 @@ class BlendColor extends BaseFilter {
  * Color to make the blend operation with. default to a reddish color since black or white
  * gives always strong result.
  * @type String
- * @default
  **/
 /**
  * Blend mode for the filter: one of multiply, add, difference, screen, subtract,
  * darken, lighten, overlay, exclusion, tint.
  * @type String
- * @default
  **/
 /**
  * alpha value. represent the strength of the blend color operation.
  * @type Number
- * @default
  **/
 _defineProperty(BlendColor, "defaults", blendColorDefaultValues);
 _defineProperty(BlendColor, "type", 'BlendColor');

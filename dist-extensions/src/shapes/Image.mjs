@@ -29,7 +29,7 @@ const imageDefaultValues = {
 const IMAGE_PROPS = ['cropX', 'cropY'];
 
 /**
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#images}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-1#images}
  */
 class FabricImage extends FabricObject {
   static getDefaults() {
@@ -358,7 +358,6 @@ class FabricImage extends FabricObject {
 
   /**
    * Applies filters assigned to this image (from "filters" array) or from filter param
-   * @method applyFilters
    * @param {Array} filters to be applied
    * @param {Boolean} forResizing specify if the filter operation is a resize operation
    */
@@ -634,13 +633,11 @@ class FabricImage extends FabricObject {
 
   /**
    * List of attribute names to account for when parsing SVG element (used by {@link FabricImage.fromElement})
-   * @static
    * @see {@link http://www.w3.org/TR/SVG/struct.html#ImageElement}
    */
 
   /**
    * Creates an instance of FabricImage from its object representation
-   * @static
    * @param {Object} object Object to create an instance from
    * @param {object} [options] Options object
    * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
@@ -675,7 +672,6 @@ class FabricImage extends FabricObject {
 
   /**
    * Creates an instance of Image from an URL string
-   * @static
    * @param {String} url URL to create an image from
    * @param {LoadImageOptions} [options] Options object
    * @returns {Promise<FabricImage>}
@@ -694,7 +690,6 @@ class FabricImage extends FabricObject {
 
   /**
    * Returns {@link FabricImage} instance from an SVG element
-   * @static
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal

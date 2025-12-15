@@ -3,19 +3,17 @@ import type { Shadow } from '../Shadow';
 import type { Canvas } from '../canvas/Canvas';
 import type { TBrushEventData } from './typedefs';
 /**
- * @see {@link http://fabricjs.com/freedrawing|Freedrawing demo}
+ * @see {@link http://fabric5.fabricjs.com/freedrawing|Freedrawing demo}
  */
 export declare abstract class BaseBrush {
     /**
      * Color of a brush
      * @type String
-     * @default
      */
     color: string;
     /**
      * Width of a brush, has to be a Number, no string literals
      * @type Number
-     * @default
      */
     width: number;
     /**
@@ -23,31 +21,26 @@ export declare abstract class BaseBrush {
      * <b>Backwards incompatibility note:</b> This property replaces "shadowColor" (String), "shadowOffsetX" (Number),
      * "shadowOffsetY" (Number) and "shadowBlur" (Number) since v1.2.12
      * @type Shadow
-     * @default
      */
     shadow: Shadow | null;
     /**
      * Line endings style of a brush (one of "butt", "round", "square")
      * @type String
-     * @default
      */
     strokeLineCap: CanvasLineCap;
     /**
      * Corner style of a brush (one of "bevel", "round", "miter")
      * @type String
-     * @default
      */
     strokeLineJoin: CanvasLineJoin;
     /**
      * Maximum miter length (used for strokeLineJoin = "miter") of a brush's
      * @type Number
-     * @default
      */
     strokeMiterLimit: number;
     /**
      * Stroke Dash Array.
      * @type Array
-     * @default
      */
     strokeDashArray: number[] | null;
     /**

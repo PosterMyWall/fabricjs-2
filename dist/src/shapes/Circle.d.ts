@@ -88,15 +88,11 @@ export declare class Circle<Props extends TOptions<CircleProps> = Partial<Circle
     _toSVG(): string[];
     /**
      * List of attribute names to account for when parsing SVG element (used by {@link Circle.fromElement})
-     * @static
-     * @memberOf Circle
      * @see: http://www.w3.org/TR/SVG/shapes.html#CircleElement
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Returns {@link Circle} instance from an SVG element
-     * @static
-     * @memberOf Circle
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Partial Circle object to default missing properties on the element.
      * @throws {Error} If value of `r` attribute is missing or invalid

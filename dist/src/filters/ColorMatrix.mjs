@@ -10,8 +10,8 @@ const colorMatrixDefaultValues = {
 
 /**
    * Color Matrix filter class
-   * @see {@link http://fabricjs.com/image-filters|ImageFilters demo}
-   * @see {@Link http://phoboslab.org/log/2013/11/fast-image-filters-with-webgl demo}
+   * @see {@link http://fabric5.fabricjs.com/image-filters|ImageFilters demo}
+   * @see {@link http://phoboslab.org/log/2013/11/fast-image-filters-with-webgl demo}
    * @example <caption>Kodachrome filter</caption>
    * const filter = new ColorMatrix({
    *  matrix: [
@@ -83,7 +83,6 @@ class ColorMatrix extends BaseFilter {
  * outside the -1, 1 range.
  * 0.0039215686 is the part of 1 that get translated to 1 in 2d
  * @param {Array} matrix array of 20 numbers.
- * @default
  */
 /**
  * Lock the colormatrix on the color part, skipping alpha, mainly for non webgl scenario

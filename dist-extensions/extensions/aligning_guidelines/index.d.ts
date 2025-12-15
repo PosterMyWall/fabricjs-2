@@ -1,5 +1,50 @@
-import type { Canvas } from '@postermywall/fabricjs-2';
-import type { AligningLineConfig } from './typedefs';
-export type { AligningLineConfig } from './typedefs';
-export declare function initAligningGuidelines(canvas: Canvas, options?: Partial<AligningLineConfig>): () => void;
+import { type BasicTransformEvent, type Canvas, type FabricObject, type TPointerEvent, type Point } from '@postermywall/fabricjs-2';
+import type { AligningLineConfig, OriginMap } from './typedefs';
+type TransformEvent = BasicTransformEvent<TPointerEvent> & {
+    target: FabricObject;
+};
+export declare class AligningGuidelines {
+    canvas: Canvas;
+    horizontalLines: Set<string>;
+    verticalLines: Set<string>;
+    cacheMap: Map<string, Point[]>;
+    /**
+     * When we drag to resize using center points like mt, ml, mb, and mr,
+     * we do not need to draw line segments; we only need to draw the target points.
+     */
+    onlyDrawPoint: boolean;
+    /** Alignment method is required when customizing. */
+    contraryOriginMap: OriginMap;
+    xSize: number;
+    lineDash: number[] | undefined;
+    /** At what distance from the shape does alignment begin? */
+    margin: number;
+    /** Aligning line dimensions */
+    width: number;
+    /** Aligning line color */
+    color: string;
+    /** Close Vertical line, default false. */
+    closeVLine: boolean;
+    /** Close horizontal line, default false. */
+    closeHLine: boolean;
+    constructor(canvas: Canvas, options?: Partial<AligningLineConfig>);
+    initBehavior(): void;
+    /** Returns shapes that can draw aligning lines, default returns all shapes on the canvas excluding groups. */
+    getObjectsByTarget(target: FabricObject): Set<FabricObject<Partial<import("@postermywall/fabricjs-2").FabricObjectProps>, import("@postermywall/fabricjs-2").SerializedObjectProps, import("@postermywall/fabricjs-2").ObjectEvents>>;
+    /** When the user customizes the controller, this property is set to enable or disable automatic alignment through point scaling/resizing. */
+    getPointMap(target: FabricObject): import("./typedefs").PointMap;
+    /** When the user customizes the controller, this property is used to enable or disable alignment positioning through points. */
+    getContraryMap(target: FabricObject): import("./typedefs").PointMap;
+    /** Users can customize. */
+    getCaCheMapValue(object: FabricObject): Point[];
+    drawLine(origin: Point, target: Point): void;
+    drawX(point: Point, dir: number): void;
+    mouseUp(): void;
+    scalingOrResizing(e: TransformEvent): void;
+    moving(e: TransformEvent): void;
+    beforeRender(): void;
+    afterRender(): void;
+    dispose(): void;
+}
+export {};
 //# sourceMappingURL=index.d.ts.map

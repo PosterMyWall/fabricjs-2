@@ -75,13 +75,11 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
     /**
      * Index where text selection starts (or where cursor is when there is no selection)
      * @type Number
-     * @default
      */
     selectionStart: number;
     /**
      * Index where text selection ends
      * @type Number
-     * @default
      */
     selectionEnd: number;
     compositionStart: number;
@@ -89,7 +87,6 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
     /**
      * Color of text selection
      * @type String
-     * @default
      */
     selectionColor: string;
     column: number;
@@ -97,25 +94,21 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
     /**
      * Indicates whether text is in editing mode
      * @type Boolean
-     * @default
      */
     isEditing: boolean;
     /**
      * Indicates whether a text can be edited
      * @type Boolean
-     * @default
      */
     editable: boolean;
     /**
      * Border color of text object while it's in editing mode
      * @type String
-     * @default
      */
     editingBorderColor: string;
     /**
      * Width of cursor (in px)
      * @type Number
-     * @default
      */
     cursorWidth: number;
     /**
@@ -124,26 +117,22 @@ export declare class IText<Props extends TOptions<ITextProps> = Partial<ITextPro
      * if set to a color value that fabric can understand, it will
      * be used instead of the color of the text at the current position.
      * @type String
-     * @default
      */
     cursorColor: string;
     /**
      * Delay between cursor blink (in ms)
      * @type Number
-     * @default
      */
     cursorDelay: number;
     /**
      * Duration of cursor fade in (in ms)
      * @type Number
-     * @default
      */
     cursorDuration: number;
     compositionColor: string;
     /**
      * Indicates whether internal text char widths can be cached
      * @type Boolean
-     * @default
      */
     caching: boolean;
     static ownDefaults: Partial<TClassProperties<IText<Partial<ITextProps>, SerializedITextProps, ITextEvents>>>;

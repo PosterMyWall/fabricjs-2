@@ -1,9 +1,10 @@
 import { reNum } from '../../parser/constants.mjs';
+import { normalizeWs } from './normalizeWhiteSpace.mjs';
 
 const regex = new RegExp(`(${reNum})`, 'gi');
-const cleanupSvgAttribute = attributeValue => attributeValue.replace(regex, ' $1 ')
+const cleanupSvgAttribute = attributeValue => normalizeWs(attributeValue.replace(regex, ' $1 ')
 // replace annoying commas and arbitrary whitespace with single spaces
-.replace(/,/gi, ' ').replace(/\s+/gi, ' ');
+.replace(/,/gi, ' '));
 
 export { cleanupSvgAttribute };
 //# sourceMappingURL=cleanupSvgAttribute.mjs.map

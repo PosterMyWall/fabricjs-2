@@ -22,7 +22,6 @@ export declare class Point implements XY {
      * Adds another point to this one
      * @param {XY} that
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     addEquals(that: XY): Point;
@@ -36,7 +35,6 @@ export declare class Point implements XY {
      * Adds value to this point
      * @param {Number} scalar
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     scalarAddEquals(scalar: number): Point;
@@ -50,7 +48,6 @@ export declare class Point implements XY {
      * Subtracts another point from this point
      * @param {XY} that
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     subtractEquals(that: XY): Point;
@@ -64,7 +61,6 @@ export declare class Point implements XY {
      * Subtracts value from this point
      * @param {Number} scalar
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     scalarSubtractEquals(scalar: number): Point;
@@ -84,7 +80,6 @@ export declare class Point implements XY {
      * Multiplies this point by a value
      * @param {Number} scalar
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     scalarMultiplyEquals(scalar: number): Point;
@@ -104,7 +99,6 @@ export declare class Point implements XY {
      * Divides this point by a value
      * @param {Number} scalar
      * @return {Point} thisArg
-     * @chainable
      * @deprecated
      */
     scalarDivideEquals(scalar: number): Point;
@@ -179,25 +173,21 @@ export declare class Point implements XY {
      * Sets x/y of this point
      * @param {Number} x
      * @param {Number} y
-     * @chainable
      */
     setXY(x: number, y: number): this;
     /**
      * Sets x of this point
      * @param {Number} x
-     * @chainable
      */
     setX(x: number): this;
     /**
      * Sets y of this point
      * @param {Number} y
-     * @chainable
      */
     setY(y: number): this;
     /**
      * Sets x/y of this point from another point
      * @param {XY} that
-     * @chainable
      */
     setFromPoint(that: XY): this;
     /**
@@ -212,8 +202,6 @@ export declare class Point implements XY {
     clone(): Point;
     /**
      * Rotates `point` around `origin` with `radians`
-     * @static
-     * @memberOf fabric.util
      * @param {XY} origin The origin of the rotation
      * @param {TRadian} radians The radians of the angle for the rotation
      * @return {Point} The new rotated point
@@ -221,8 +209,6 @@ export declare class Point implements XY {
     rotate(radians: TRadian, origin?: XY): Point;
     /**
      * Apply transform t to point p
-     * @static
-     * @memberOf fabric.util
      * @param  {TMat2D} t The transform
      * @param  {Boolean} [ignoreOffset] Indicates that the offset should not be applied
      * @return {Point} The transformed point

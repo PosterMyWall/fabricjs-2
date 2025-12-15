@@ -3,8 +3,6 @@ import type { Abortable } from '../typedefs';
 export declare class BaseFilter<Name extends string, OwnProps extends Record<string, any> = object, SerializedProps extends Record<string, any> = OwnProps> {
     /**
      * Filter type
-     * @param {String} type
-     * @default
      */
     get type(): Name;
     /**

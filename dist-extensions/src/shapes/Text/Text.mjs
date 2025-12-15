@@ -1,6 +1,6 @@
 import { defineProperty as _defineProperty } from '../../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { cache } from '../../cache.mjs';
-import { STROKE, BOTTOM, TOP, CENTER, RIGHT, FILL, LEFT, DEFAULT_SVG_FONT_SIZE } from '../../constants.mjs';
+import { STROKE, BOTTOM, TOP, CENTER, RTL, RIGHT, LTR, FILL, LEFT, DEFAULT_SVG_FONT_SIZE } from '../../constants.mjs';
 import { StyledText } from './StyledText.mjs';
 import { SHARED_ATTRIBUTES } from '../../parser/attributes.mjs';
 import { parseAttributes } from '../../parser/parseAttributes.mjs';
@@ -14,6 +14,7 @@ import { TextSVGExportMixin } from './TextSVGExportMixin.mjs';
 import { applyMixins } from '../../util/applyMixins.mjs';
 import { textLayoutProperties, additionalProps, textDefaultValues, JUSTIFY, JUSTIFY_CENTER, JUSTIFY_RIGHT, JUSTIFY_LEFT, TEXT_DECORATION_THICKNESS } from './constants.mjs';
 import { isFiller } from '../../util/typeAssertions.mjs';
+import { normalizeWs } from '../../util/internals/normalizeWhiteSpace.mjs';
 import { cacheProperties } from '../Object/defaultValues.mjs';
 
 let measuringContext;
@@ -43,7 +44,7 @@ function getMeasuringContext() {
 
 /**
  * Text class
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#text}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
 class FabricText extends StyledText {
   static getDefaults() {
@@ -334,6 +335,7 @@ class FabricText extends StyledText {
       let drawStart;
       let currentColor;
       let lastColor = this.getValueOfPropertyAt(i, 0, 'textBackgroundColor');
+      const bgHeight = this.getHeightOfLineImpl(i);
       for (let j = 0; j < jlen; j++) {
         // at this point charbox are either standard or full with pathInfo if there is a path.
         const charBox = this.__charBounds[i][j];
@@ -343,15 +345,15 @@ class FabricText extends StyledText {
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
           ctx.fillStyle = currentColor;
-          currentColor && ctx.fillRect(-charBox.width / 2, -heightOfLine / this.lineHeight * (1 - this._fontSizeFraction), charBox.width, heightOfLine / this.lineHeight);
+          currentColor && ctx.fillRect(-charBox.width / 2, -bgHeight * (1 - this._fontSizeFraction), charBox.width, bgHeight);
           ctx.restore();
         } else if (currentColor !== lastColor) {
           drawStart = leftOffset + lineLeftOffset + boxStart;
-          if (this.direction === 'rtl') {
+          if (this.direction === RTL) {
             drawStart = this.width - drawStart - boxWidth;
           }
           ctx.fillStyle = lastColor;
-          lastColor && ctx.fillRect(drawStart, lineTopOffset, boxWidth, heightOfLine / this.lineHeight);
+          lastColor && ctx.fillRect(drawStart, lineTopOffset, boxWidth, bgHeight);
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastColor = currentColor;
@@ -361,11 +363,11 @@ class FabricText extends StyledText {
       }
       if (currentColor && !this.path) {
         drawStart = leftOffset + lineLeftOffset + boxStart;
-        if (this.direction === 'rtl') {
+        if (this.direction === RTL) {
           drawStart = this.width - drawStart - boxWidth;
         }
         ctx.fillStyle = currentColor;
-        ctx.fillRect(drawStart, lineTopOffset, boxWidth, heightOfLine / this.lineHeight);
+        ctx.fillRect(drawStart, lineTopOffset, boxWidth, bgHeight);
       }
       lineTopOffset += heightOfLine;
     }
@@ -388,18 +390,18 @@ class FabricText extends StyledText {
   _measureChar(_char, charStyle, previousChar, prevCharStyle) {
     const fontCache = cache.getFontCache(charStyle),
       fontDeclaration = this._getFontDeclaration(charStyle),
-      couple = previousChar + _char,
+      couple = previousChar ? previousChar + _char : _char,
       stylesAreEqual = previousChar && fontDeclaration === this._getFontDeclaration(prevCharStyle),
       fontMultiplier = charStyle.fontSize / this.CACHE_FONT_SIZE;
     let width, coupleWidth, previousWidth, kernedWidth;
-    if (previousChar && fontCache[previousChar] !== undefined) {
-      previousWidth = fontCache[previousChar];
+    if (previousChar && fontCache.has(previousChar)) {
+      previousWidth = fontCache.get(previousChar);
     }
-    if (fontCache[_char] !== undefined) {
-      kernedWidth = width = fontCache[_char];
+    if (fontCache.has(_char)) {
+      kernedWidth = width = fontCache.get(_char);
     }
-    if (stylesAreEqual && fontCache[couple] !== undefined) {
-      coupleWidth = fontCache[couple];
+    if (stylesAreEqual && fontCache.has(couple)) {
+      coupleWidth = fontCache.get(couple);
       kernedWidth = coupleWidth - previousWidth;
     }
     if (width === undefined || previousWidth === undefined || coupleWidth === undefined) {
@@ -408,16 +410,16 @@ class FabricText extends StyledText {
       this._setTextStyles(ctx, charStyle, true);
       if (width === undefined) {
         kernedWidth = width = ctx.measureText(_char).width;
-        fontCache[_char] = width;
+        fontCache.set(_char, width);
       }
       if (previousWidth === undefined && stylesAreEqual && previousChar) {
         previousWidth = ctx.measureText(previousChar).width;
-        fontCache[previousChar] = previousWidth;
+        fontCache.set(previousChar, previousWidth);
       }
       if (stylesAreEqual && coupleWidth === undefined) {
         // we can measure the kerning couple and subtract the width of the previous character
         coupleWidth = ctx.measureText(couple).width;
-        fontCache[couple] = coupleWidth;
+        fontCache.set(couple, coupleWidth);
         // safe to use the non-null since if undefined we defined it before.
         kernedWidth = coupleWidth - previousWidth;
       }
@@ -574,13 +576,16 @@ class FabricText extends StyledText {
   }
 
   /**
-   * Calculate height of line at 'lineIndex'
+   * Calculate height of line at 'lineIndex',
+   * without the lineHeigth multiplication factor
+   * @private
    * @param {Number} lineIndex index of line to calculate
    * @return {Number}
    */
-  getHeightOfLine(lineIndex) {
-    if (this.__lineHeights[lineIndex]) {
-      return this.__lineHeights[lineIndex];
+  getHeightOfLineImpl(lineIndex) {
+    const lh = this.__lineHeights;
+    if (lh[lineIndex]) {
+      return lh[lineIndex];
     }
 
     // char 0 is measured before the line cycle because it needs to char
@@ -589,7 +594,16 @@ class FabricText extends StyledText {
     for (let i = 1, len = this._textLines[lineIndex].length; i < len; i++) {
       maxHeight = Math.max(this.getHeightOfChar(lineIndex, i), maxHeight);
     }
-    return this.__lineHeights[lineIndex] = maxHeight * this.lineHeight * this._fontSizeMult;
+    return lh[lineIndex] = maxHeight * this._fontSizeMult;
+  }
+
+  /**
+   * Calculate height of line at 'lineIndex'
+   * @param {Number} lineIndex index of line to calculate
+   * @return {Number}
+   */
+  getHeightOfLine(lineIndex) {
+    return this.getHeightOfLineImpl(lineIndex) * this.lineHeight;
   }
 
   /**
@@ -599,10 +613,12 @@ class FabricText extends StyledText {
     let lineHeight,
       height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
-      lineHeight = this.getHeightOfLine(i);
       // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
-      // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
+      // height +=
+      //   i === len - 1 ? this.getHeightOfLineImpl(i) : this.getHeightOfLine(i);
+
       // *PMW* preventing height to be smaller than selector size.
+      lineHeight = this.getHeightOfLine(i);
       height += i === len - 1 && this.lineHeight < 1 ? lineHeight / this.lineHeight : lineHeight;
     }
     return height;
@@ -613,7 +629,7 @@ class FabricText extends StyledText {
    * @return {Number} Left offset
    */
   _getLeftOffset() {
-    return this.direction === 'ltr' ? -this.width / 2 : this.width / 2;
+    return this.direction === LTR ? -this.width / 2 : this.width / 2;
   }
 
   /**
@@ -635,11 +651,8 @@ class FabricText extends StyledText {
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
     for (let i = 0, len = this._textLines.length; i < len; i++) {
-      const heightOfLine = this.getHeightOfLine(i),
-        maxHeight = heightOfLine / this.lineHeight,
-        leftOffset = this._getLineLeftOffset(i);
-      this._renderTextLine(method, ctx, this._textLines[i], left + leftOffset, top + lineHeights + maxHeight, i);
-      lineHeights += heightOfLine;
+      this._renderTextLine(method, ctx, this._textLines[i], left + this._getLineLeftOffset(i), top + lineHeights + this.getHeightOfLineImpl(i), i);
+      lineHeights += this.getHeightOfLine(i);
     }
     ctx.restore();
   }
@@ -684,12 +697,11 @@ class FabricText extends StyledText {
    * @param {Number} lineIndex
    */
   _renderChars(method, ctx, line, left, top, lineIndex) {
-    const lineHeight = this.getHeightOfLine(lineIndex),
-      isJustify = this.textAlign.includes(JUSTIFY),
+    const isJustify = this.textAlign.includes(JUSTIFY),
       path = this.path,
       shortCut = !isJustify && this.charSpacing === 0 && this.isEmptyStyles(lineIndex) && !path,
-      isLtr = this.direction === 'ltr',
-      sign = this.direction === 'ltr' ? 1 : -1,
+      isLtr = this.direction === LTR,
+      sign = this.direction === LTR ? 1 : -1,
       // this was changed in the PR #7674
       // currentDirection = ctx.canvas.getAttribute('dir');
       currentDirection = ctx.direction;
@@ -702,11 +714,11 @@ class FabricText extends StyledText {
       drawingLeft;
     ctx.save();
     if (currentDirection !== this.direction) {
-      ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
-      ctx.direction = isLtr ? 'ltr' : 'rtl';
+      ctx.canvas.setAttribute('dir', isLtr ? LTR : RTL);
+      ctx.direction = isLtr ? LTR : RTL;
       ctx.textAlign = isLtr ? LEFT : RIGHT;
     }
-    top -= lineHeight * this._fontSizeFraction / this.lineHeight;
+    top -= this.getHeightOfLineImpl(lineIndex) * this._fontSizeFraction;
     if (shortCut) {
       // render all the line in one pass without checking
       // drawingLeft = isLtr ? left : left - this.getLineWidth(lineIndex);
@@ -955,8 +967,8 @@ class FabricText extends StyledText {
     if (textAlign === JUSTIFY_RIGHT) {
       leftOffset = lineDiff;
     }
-    if (direction === 'rtl') {
-      if (textAlign === RIGHT || textAlign === JUSTIFY || textAlign === JUSTIFY_RIGHT) {
+    if (direction === RTL) {
+      if (textAlign === RIGHT || textAlign === JUSTIFY_RIGHT) {
         leftOffset = 0;
       } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
         leftOffset = -lineDiff;
@@ -1068,7 +1080,7 @@ class FabricText extends StyledText {
         } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentTickness !== lastTickness || currentDy !== dy) && boxWidth > 0) {
           const finalTickness = this.fontSize * lastTickness / 1000;
           let drawStart = leftOffset + lineLeftOffset + boxStart;
-          if (this.direction === 'rtl') {
+          if (this.direction === RTL) {
             drawStart = this.width - drawStart - boxWidth;
           }
           if (lastDecoration && lastFill && lastTickness) {
@@ -1088,7 +1100,7 @@ class FabricText extends StyledText {
         }
       }
       let drawStart = leftOffset + lineLeftOffset + boxStart;
-      if (this.direction === 'rtl') {
+      if (this.direction === RTL) {
         drawStart = this.width - drawStart - boxWidth;
       }
       ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
@@ -1359,8 +1371,6 @@ class FabricText extends StyledText {
 
   /**
    * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
-   * @static
-   * @memberOf Text
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    */
@@ -1380,7 +1390,7 @@ class FabricText extends StyledText {
       ...options,
       ...parsedAttributes
     };
-    const textContent = (element.textContent || '').replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
+    const textContent = normalizeWs(element.textContent || '').trim();
 
     // this code here is probably the usual issue for SVG center find
     // this can later looked at again and probably removed.
@@ -1451,8 +1461,6 @@ _defineProperty(FabricText, "genericFonts", ['serif', 'sans-serif', 'monospace',
 /* _FROM_SVG_START_ */
 /**
  * List of attribute names to account for when parsing SVG element (used by {@link FabricText.fromElement})
- * @static
- * @memberOf Text
  * @see: http://www.w3.org/TR/SVG/text.html#TextElement
  */
 _defineProperty(FabricText, "ATTRIBUTE_NAMES", SHARED_ATTRIBUTES.concat('x', 'y', 'dx', 'dy', 'font-family', 'font-style', 'font-weight', 'font-size', 'letter-spacing', 'text-decoration', 'text-anchor'));

@@ -1,33 +1,30 @@
 import { Point } from '@postermywall/fabricjs-2';
-import { aligningLineConfig } from '../constant.mjs';
 
-function drawLine(canvas, origin, target) {
-  const {
-    width,
-    color
-  } = aligningLineConfig;
-  const ctx = canvas.getSelectionContext();
-  const viewportTransform = canvas.viewportTransform;
-  const zoom = canvas.getZoom();
+function drawLine(origin, target) {
+  const ctx = this.canvas.getTopContext();
+  const viewportTransform = this.canvas.viewportTransform;
+  const zoom = this.canvas.getZoom();
   ctx.save();
   ctx.transform(...viewportTransform);
-  ctx.lineWidth = width / zoom;
-  ctx.strokeStyle = color;
-  ctx.setLineDash([5, 3]);
+  ctx.lineWidth = this.width / zoom;
+  if (this.lineDash) ctx.setLineDash(this.lineDash);
+  ctx.strokeStyle = this.color;
   ctx.beginPath();
   ctx.moveTo(origin.x, origin.y);
   ctx.lineTo(target.x, target.y);
   ctx.stroke();
-  drawX(ctx, zoom, origin);
-  drawX(ctx, zoom, target);
+  if (this.lineDash) ctx.setLineDash([]);
+  this.drawX(origin, -1);
+  this.drawX(target, 1);
   ctx.restore();
 }
-const xSize = 2.4;
-function drawX(ctx, zoom, point) {
-  if (!aligningLineConfig.drawX) {
+function drawX(point, _) {
+  if (!this.drawX) {
     return;
   }
-  const size = xSize / zoom;
+  const ctx = this.canvas.getTopContext();
+  const zoom = this.canvas.getZoom();
+  const size = this.xSize / zoom;
   ctx.save();
   ctx.translate(point.x, point.y);
   ctx.beginPath();
@@ -38,42 +35,50 @@ function drawX(ctx, zoom, point) {
   ctx.stroke();
   ctx.restore();
 }
-function drawPoint(canvas, arr) {
-  const {
-    width,
-    color
-  } = aligningLineConfig;
-  const ctx = canvas.getSelectionContext();
-  const viewportTransform = canvas.viewportTransform;
-  const zoom = canvas.getZoom();
+function drawPoint(arr) {
+  const ctx = this.canvas.getTopContext();
+  const viewportTransform = this.canvas.viewportTransform;
+  const zoom = this.canvas.getZoom();
   ctx.save();
   ctx.transform(...viewportTransform);
-  ctx.lineWidth = width / zoom;
-  ctx.strokeStyle = color;
-  for (const item of arr) drawX(ctx, zoom, item);
+  ctx.lineWidth = this.width / zoom;
+  ctx.strokeStyle = this.color;
+  for (const item of arr) this.drawX(item, 0);
   ctx.restore();
 }
-function drawPointList(canvas, list) {
-  const arr = list.map(item => {
-    const isVertical = 'y2' in item;
-    const x = isVertical ? item.x : item.x1;
-    const y = isVertical ? item.y1 : item.y;
-    return new Point(x, y);
-  });
-  drawPoint(canvas, arr);
+function drawPointList() {
+  const list = [];
+  if (!this.closeVLine) {
+    for (const v of this.verticalLines) list.push(JSON.parse(v));
+  }
+  if (!this.closeHLine) {
+    for (const h of this.horizontalLines) list.push(JSON.parse(h));
+  }
+  const arr = list.map(item => item.target);
+  drawPoint.call(this, arr);
 }
-function drawVerticalLine(canvas, coords) {
-  const x = coords.x;
-  const origin = new Point(x, coords.y1);
-  const target = new Point(x, coords.y2);
-  drawLine(canvas, origin, target);
+function drawVerticalLine() {
+  if (this.closeVLine) return;
+  for (const v of this.verticalLines) {
+    const {
+      origin,
+      target
+    } = JSON.parse(v);
+    const o = new Point(target.x, origin.y);
+    this.drawLine(o, target);
+  }
 }
-function drawHorizontalLine(canvas, coords) {
-  const y = coords.y;
-  const origin = new Point(coords.x1, y);
-  const target = new Point(coords.x2, y);
-  drawLine(canvas, origin, target);
+function drawHorizontalLine() {
+  if (this.closeHLine) return;
+  for (const v of this.horizontalLines) {
+    const {
+      origin,
+      target
+    } = JSON.parse(v);
+    const o = new Point(origin.x, target.y);
+    this.drawLine(o, target);
+  }
 }
 
-export { drawHorizontalLine, drawPointList, drawVerticalLine };
+export { drawHorizontalLine, drawLine, drawPointList, drawVerticalLine, drawX };
 //# sourceMappingURL=draw.mjs.map

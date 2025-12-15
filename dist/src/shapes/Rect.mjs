@@ -109,8 +109,6 @@ class Rect extends FabricObject {
 
   /**
    * List of attribute names to account for when parsing SVG element (used by `Rect.fromElement`)
-   * @static
-   * @memberOf Rect
    * @see: http://www.w3.org/TR/SVG/shapes.html#RectElement
    */
 
@@ -118,8 +116,6 @@ class Rect extends FabricObject {
 
   /**
    * Returns {@link Rect} instance from an SVG element
-   * @static
-   * @memberOf Rect
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    */
@@ -148,12 +144,10 @@ class Rect extends FabricObject {
 /**
  * Horizontal border radius
  * @type Number
- * @default
  */
 /**
  * Vertical border radius
  * @type Number
- * @default
  */
 _defineProperty(Rect, "type", 'Rect');
 _defineProperty(Rect, "cacheProperties", [...cacheProperties, ...RECT_PROPS]);

@@ -19,8 +19,6 @@ export declare const removeColorDefaultValues: RemoveColorOwnProps;
 export declare class RemoveColor extends BaseFilter<'RemoveColor', RemoveColorOwnProps> {
     /**
      * Color to remove, in any format understood by {@link Color}.
-     * @param {String} type
-     * @default
      */
     color: RemoveColorOwnProps['color'];
     /**

@@ -144,7 +144,6 @@ class BlendImage extends BaseFilter {
 
   /**
    * Create filter instance from an object representation
-   * @static
    * @param {object} object Object to create an instance from
    * @param {object} [options]
    * @param {AbortSignal} [options.signal] handle aborting image loading, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
@@ -172,7 +171,6 @@ class BlendImage extends BaseFilter {
  * alpha channel of the filter image, and apply those values to the base
  * image's alpha channel.
  * @type String
- * @default
  **/
 /**
  * alpha value. represent the strength of the blend image operation.

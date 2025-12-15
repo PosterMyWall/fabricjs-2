@@ -18,7 +18,6 @@ export declare class Noise extends BaseFilter<'Noise', NoiseOwnProps> {
     /**
      * Noise value, from
      * @param {Number} noise
-     * @default
      */
     noise: NoiseOwnProps['noise'];
     static type: string;

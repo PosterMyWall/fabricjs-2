@@ -3,7 +3,8 @@ import { Point } from '../../Point.mjs';
 import { FabricText } from '../Text/Text.mjs';
 import { animate } from '../../util/animation/animate.mjs';
 import { getDocumentFromElement } from '../../util/dom_misc.mjs';
-import { reNewline, MODIFIED, LEFT, RIGHT } from '../../constants.mjs';
+import { reNewline, LTR, LEFT, RIGHT, MODIFIED } from '../../constants.mjs';
+import { JUSTIFY } from '../Text/constants.mjs';
 
 /**
  *  extend this regex to support non english languages
@@ -431,21 +432,36 @@ class ITextBehavior extends FabricText {
   }
 
   /**
+   * This function updates the text value from the hidden textarea and recalculates the text bounding box
+   * size and position.
+   * It is called by fabricJS internals, do not use it directly.
    * @private
    */
   updateFromTextArea() {
-    if (!this.hiddenTextarea) {
+    const {
+      hiddenTextarea,
+      direction,
+      textAlign,
+      inCompositionMode
+    } = this;
+    if (!hiddenTextarea) {
       return;
     }
+    // we want to anchor the textarea position depending on text alignment
+    // or in case of text justify depending on ltr/rtl direction.
+    // this.textAlign.replace('justify-', '') leverages the fact that our textAlign values all contain the word left/right/center,
+    // that match the originX values.
+    const anchorX = textAlign !== JUSTIFY ? textAlign.replace('justify-', '') : direction === LTR ? LEFT : RIGHT;
+    const originalPosition = this.getPositionByOrigin(anchorX, 'top');
     this.cursorOffsetCache = {};
-    const textarea = this.hiddenTextarea;
-    this.text = textarea.value;
+    this.text = hiddenTextarea.value;
     this.set('dirty', true);
     this.initDimensions();
+    this.setPositionByOrigin(originalPosition, anchorX, 'top');
     this.setCoords();
-    const newSelection = this.fromStringToGraphemeSelection(textarea.selectionStart, textarea.selectionEnd, textarea.value);
+    const newSelection = this.fromStringToGraphemeSelection(hiddenTextarea.selectionStart, hiddenTextarea.selectionEnd, hiddenTextarea.value);
     this.selectionEnd = this.selectionStart = newSelection.selectionEnd;
-    if (!this.inCompositionMode) {
+    if (!inCompositionMode) {
       this.selectionStart = newSelection.selectionStart;
     }
     this.updateTextareaPosition();

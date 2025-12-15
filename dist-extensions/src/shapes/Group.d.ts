@@ -80,7 +80,6 @@ export declare class Group extends Group_base implements GroupProps {
     /**
      * Used to optimize performance
      * set to `false` if you don't need contained objects to be targets of events
-     * @default
      * @type boolean
      */
     subTargetCheck: boolean;
@@ -109,7 +108,6 @@ export declare class Group extends Group_base implements GroupProps {
      * that will take care of enabling subTargetCheck and necessary object events.
      * There is too much attached to group interactivity to just be evaluated by a
      * boolean in the code
-     * @default
      * @deprecated
      * @type boolean
      */
@@ -355,8 +353,6 @@ export declare class Group extends Group_base implements GroupProps {
     /**
      * @todo support loading from svg
      * @private
-     * @static
-     * @memberOf Group
      * @param {Object} object Object to create a group from
      * @returns {Promise<Group>}
      */

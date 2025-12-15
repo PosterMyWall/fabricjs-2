@@ -2,11 +2,11 @@ import { defineProperty as _defineProperty } from '../_virtual/_rollupPluginBabe
 import { config } from './config.mjs';
 
 class Cache {
+  /**
+   * Cache of widths of chars in text rendering.
+   */
+
   constructor() {
-    /**
-     * Cache of widths of chars in text rendering.
-     */
-    _defineProperty(this, "charWidthsCache", {});
     /**
      * This object keeps the results of the boundsOfCurve calculation mapped by the joined arguments necessary to calculate it.
      * It does speed up calculation, if you parse and add always the same paths, but in case of heavy usage of freedrawing
@@ -16,7 +16,9 @@ class Cache {
      * It was an internal variable, is accessible since version 2.3.4
      */
     _defineProperty(this, "boundsOfCurveCache", {});
+    this.charWidthsCache = new Map();
   }
+
   /**
    * @return {Object} reference to cache
    */
@@ -27,15 +29,16 @@ class Cache {
       fontWeight
     } = _ref;
     fontFamily = fontFamily.toLowerCase();
-    if (!this.charWidthsCache[fontFamily]) {
-      this.charWidthsCache[fontFamily] = {};
+    const cache = this.charWidthsCache;
+    if (!cache.has(fontFamily)) {
+      cache.set(fontFamily, new Map());
     }
-    const fontCache = this.charWidthsCache[fontFamily];
+    const fontCache = cache.get(fontFamily);
     const cacheKey = `${fontStyle.toLowerCase()}_${(fontWeight + '').toLowerCase()}`;
-    if (!fontCache[cacheKey]) {
-      fontCache[cacheKey] = {};
+    if (!fontCache.has(cacheKey)) {
+      fontCache.set(cacheKey, new Map());
     }
-    return fontCache[cacheKey];
+    return fontCache.get(cacheKey);
   }
 
   /**
@@ -50,11 +53,10 @@ class Cache {
    * @param {String} [fontFamily] font family to clear
    */
   clearFontCache(fontFamily) {
-    fontFamily = (fontFamily || '').toLowerCase();
     if (!fontFamily) {
-      this.charWidthsCache = {};
-    } else if (this.charWidthsCache[fontFamily]) {
-      delete this.charWidthsCache[fontFamily];
+      this.charWidthsCache = new Map();
+    } else {
+      this.charWidthsCache.delete((fontFamily || '').toLowerCase());
     }
   }
 

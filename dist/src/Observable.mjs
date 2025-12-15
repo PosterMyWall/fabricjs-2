@@ -1,8 +1,8 @@
 import { defineProperty as _defineProperty } from '../_virtual/_rollupPluginBabelHelpers.mjs';
 
 /**
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#events}
- * @see {@link http://fabricjs.com/events|Events demo}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#events}
+ * @see {@link http://fabric5.fabricjs.com/events|Events demo}
  */
 class Observable {
   constructor() {

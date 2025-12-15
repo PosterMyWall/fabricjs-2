@@ -1,3 +1,4 @@
+import type { NORMAL } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type { CompleteTextStyleDeclaration, TextStyle, TextStyleDeclaration } from './StyledText';
 import { StyledText } from './StyledText';
@@ -6,6 +7,8 @@ import type { TextStyleArray } from '../../util/misc/textStyles';
 import type { Path } from '../Path';
 import type { FabricObjectProps, SerializedObjectProps } from '../Object/types';
 import type { StylePropertiesType } from './constants';
+import { JUSTIFY, JUSTIFY_CENTER, JUSTIFY_LEFT, JUSTIFY_RIGHT } from './constants';
+import { CENTER, LEFT, RIGHT } from '../../constants';
 import type { CSSRules } from '../../parser/typedefs';
 export type TPathSide = 'left' | 'right';
 export type TPathAlign = 'baseline' | 'center' | 'ascender' | 'descender';
@@ -15,6 +18,8 @@ export type TextLinesInfo = {
     graphemeText: string[];
     _unwrappedLines: string[][];
 };
+export type TextAlign = typeof LEFT | typeof CENTER | typeof RIGHT | typeof JUSTIFY | typeof JUSTIFY_LEFT | typeof JUSTIFY_CENTER | typeof JUSTIFY_RIGHT;
+export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
 /**
  * Measure and return the info of a single grapheme.
  * needs the the info of previous graphemes already filled
@@ -37,18 +42,17 @@ interface UniqueTextProps {
     cacheExpansionFactor: number;
     fontWeight: string | number;
     fontFamily: string;
-    fontStyle: string;
+    fontStyle: FontStyle;
     pathSide: TPathSide;
     pathAlign: TPathAlign;
     underline: boolean;
     overline: boolean;
     linethrough: boolean;
+    textAlign: TextAlign;
     squigglyline: boolean;
     ignoreDelegatedSet: boolean;
     squigglylineColor: string;
     isStrokeForBold: boolean;
-    text: string;
-    textAlign: string;
     direction: CanvasDirection;
     path?: Path;
     textDecorationThickness: number;
@@ -61,7 +65,7 @@ export interface TextProps extends FabricObjectProps, UniqueTextProps {
 }
 /**
  * Text class
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#text}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
 export declare class FabricText<Props extends TOptions<TextProps> = Partial<TextProps>, SProps extends SerializedTextProps = SerializedTextProps, EventSpec extends ObjectEvents = ObjectEvents> extends StyledText<Props, SProps, EventSpec> implements UniqueTextProps {
     /**
@@ -96,7 +100,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Font size (in pixels)
      * @type Number
-     * @default
      */
     fontSize: number;
     /**
@@ -107,31 +110,26 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Font weight (e.g. bold, normal, 400, 600, 800)
      * @type {(Number|String)}
-     * @default
      */
     fontWeight: string | number;
     /**
      * Font family
      * @type String
-     * @default
      */
     fontFamily: string;
     /**
      * Text decoration underline.
      * @type Boolean
-     * @default
      */
     underline: boolean;
     /**
      * Text decoration overline.
      * @type Boolean
-     * @default
      */
     overline: boolean;
     /**
      * Text decoration linethrough.
      * @type Boolean
-     * @default
      */
     linethrough: boolean;
     squigglyline: boolean;
@@ -142,20 +140,17 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Text alignment. Possible values: "left", "center", "right", "justify",
      * "justify-left", "justify-center" or "justify-right".
-     * @type String
-     * @default
+     * @type TextAlign
      */
-    textAlign: string;
+    textAlign: TextAlign;
     /**
      * Font style . Possible values: "", "normal", "italic" or "oblique".
-     * @type String
-     * @default
+     * @type FontStyle
      */
-    fontStyle: string;
+    fontStyle: FontStyle;
     /**
      * Line height
      * @type Number
-     * @default
      */
     lineHeight: number;
     /**
@@ -191,7 +186,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Background color of text lines
      * @type String
-     * @default
      */
     textBackgroundColor: string;
     styles: TextStyle;
@@ -215,7 +209,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      *     pathSide: 'left',
      *     pathStartOffset: 0
      * });
-     * @default
      */
     path?: Path;
     /**
@@ -234,14 +227,12 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Offset amount for text path starting position
      * Only used when text has a path
-     * @default
      */
     pathStartOffset: number;
     /**
      * Which side of the path the text should be drawn on.
      * Only used when text has a path
      * @type {TPathSide} 'left|right'
-     * @default
      */
     pathSide: TPathSide;
     /**
@@ -250,7 +241,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * (one of "baseline", "center", "ascender", "descender")
      * This feature is in BETA, and its behavior may change
      * @type TPathAlign
-     * @default
      */
     pathAlign: TPathAlign;
     /**
@@ -269,20 +259,17 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * Text Line proportion to font Size (in pixels)
      * @type Number
-     * @default
      */
     _fontSizeMult: number;
     /**
      * additional space between characters
      * expressed in thousands of em unit
      * @type Number
-     * @default
      */
     charSpacing: number;
     /**
      * Baseline shift, styles only, keep at 0 for the main text object
      * @type {Number}
-     * @default
      */
     deltaY: number;
     /**
@@ -294,7 +281,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * https://www.w3.org/International/questions/qa-bidi-unicode-controls
      * @since 4.5.0
      * @type {CanvasDirection} 'ltr|rtl'
-     * @default
      */
     direction: CanvasDirection;
     /**
@@ -307,7 +293,6 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * use this size when measuring text. To avoid IE11 rounding errors
      * @type {Number}
-     * @default
      * @readonly
      * @private
      */
@@ -315,20 +300,17 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * contains the min text width to avoid getting 0
      * @type {Number}
-     * @default
      */
     MIN_TEXT_WIDTH: number;
     /**
      * contains the the text of the object, divided in lines as they are displayed
      * on screen. Wrapping will divide the text independently of line breaks
      * @type {string[]}
-     * @default
      */
     textLines: string[];
     /**
      * same as textlines, but each line is an array of graphemes as split by splitByGrapheme
      * @type {string[]}
-     * @default
      */
     _textLines: string[][];
     _unwrappedTextLines: string[][];
@@ -502,6 +484,14 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @returns {GraphemeBBox} grapheme bbox
      */
     _getGraphemeBox(grapheme: string, lineIndex: number, charIndex: number, prevGrapheme?: string, skipLeft?: boolean): GraphemeBBox;
+    /**
+     * Calculate height of line at 'lineIndex',
+     * without the lineHeigth multiplication factor
+     * @private
+     * @param {Number} lineIndex index of line to calculate
+     * @return {Number}
+     */
+    private getHeightOfLineImpl;
     /**
      * Calculate height of line at 'lineIndex'
      * @param {Number} lineIndex index of line to calculate
@@ -735,15 +725,11 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     static genericFonts: string[];
     /**
      * List of attribute names to account for when parsing SVG element (used by {@link FabricText.fromElement})
-     * @static
-     * @memberOf Text
      * @see: http://www.w3.org/TR/SVG/text.html#TextElement
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
-     * @static
-     * @memberOf Text
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Options object
      */

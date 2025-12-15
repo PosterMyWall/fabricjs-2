@@ -1,6 +1,6 @@
 import type { ControlActionHandler, TPointerEvent, TransformActionHandler } from '../EventTypeDefs';
 import { Point } from '../Point';
-import type { InteractiveFabricObject } from '../shapes/Object/InteractiveObject';
+import type { InteractiveFabricObject, TOCoord } from '../shapes/Object/InteractiveObject';
 import type { TCornerPoint, TDegree, TMat2D } from '../typedefs';
 import type { ControlRenderingStyleOverride } from './controlRendering';
 export declare class Control {
@@ -180,7 +180,7 @@ export declare class Control {
      * @param {FabricObject} object on which the control is displayed
      * @return {String}
      */
-    cursorStyleHandler(eventData: TPointerEvent, control: Control, fabricObject: InteractiveFabricObject): string;
+    cursorStyleHandler(eventData: TPointerEvent, control: Control, fabricObject: InteractiveFabricObject, coord: TOCoord): string;
     /**
      * Returns the action name. The basic implementation just return the actionName property.
      * @param {Event} eventData the native mouse event

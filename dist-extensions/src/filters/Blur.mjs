@@ -71,7 +71,7 @@ class Blur extends BaseFilter {
       // } else if (offset < 1) {
       //   pixelOffset = -4;
       // }
-      for (let j = -15 + 1; j < samples; j++) {
+      for (let j = -samples + 1; j < samples; j++) {
         const percent = j / samples;
         const distance = Math.floor(blurValue * percent) * 4;
         const weight = 1 - Math.abs(percent);
@@ -112,7 +112,7 @@ class Blur extends BaseFilter {
       // } else if (offset < 1) {
       //   pixelOffset = -bytesInRow;
       // }
-      for (let j = -15 + 1; j < samples; j++) {
+      for (let j = -samples + 1; j < samples; j++) {
         const percent = j / samples;
         const distance = Math.floor(blurValue * percent) * bytesInRow;
         const weight = 1 - Math.abs(percent);
@@ -184,7 +184,6 @@ class Blur extends BaseFilter {
  * specific to keep the image blur constant at different resolutions
  * range between 0 and 1.
  * @type Number
- * @default
  */
 _defineProperty(Blur, "type", 'Blur');
 _defineProperty(Blur, "defaults", blurDefaultValues);

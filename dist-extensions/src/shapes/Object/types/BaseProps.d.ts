@@ -3,7 +3,7 @@ export interface BaseProps {
     /**
      * Left position of an object.
      * Note that by default it's relative to object left.
-     * You can change this by setting {@link originX}
+     * You can change this by setting originX
      * @type Number
      * @default 0
      */
@@ -11,7 +11,7 @@ export interface BaseProps {
     /**
      * Top position of an object.
      * Note that by default it's relative to object top.
-     * You can change this by setting {@link originY}
+     * You can change this by setting originY
      * @type Number
      * @default 0
      */
@@ -19,13 +19,11 @@ export interface BaseProps {
     /**
      * Object width
      * @type Number
-     * @default
      */
     width: number;
     /**
      * Object height
      * @type Number
-     * @default
      */
     height: number;
     /**

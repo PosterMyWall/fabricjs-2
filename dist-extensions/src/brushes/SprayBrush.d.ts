@@ -6,37 +6,31 @@ export declare class SprayBrush extends BaseBrush {
     /**
      * Width of a spray
      * @type Number
-     * @default
      */
     width: number;
     /**
      * Density of a spray (number of dots per chunk)
      * @type Number
-     * @default
      */
     density: number;
     /**
      * Width of spray dots
      * @type Number
-     * @default
      */
     dotWidth: number;
     /**
      * Width variance of spray dots
      * @type Number
-     * @default
      */
     dotWidthVariance: number;
     /**
      * Whether opacity of a dot should be random
      * @type Boolean
-     * @default
      */
     randomOpacity: boolean;
     /**
      * Whether overlapping dots (rectangles) should be removed (for performance reasons)
      * @type Boolean
-     * @default
      */
     optimizeOverlapping: boolean;
     private sprayChunks;

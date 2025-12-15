@@ -30,6 +30,5 @@ export { easing as ease };
 export { cancelAnimFrame, requestAnimFrame } from './animation/AnimationFrameProvider.mjs';
 export { removeFromArray } from './internals/removeFromArray.mjs';
 export { getRandomInt } from './internals/getRandomInt.mjs';
-export { request } from './internals/dom_request.mjs';
 export { removeTransformMatrixForSvgParsing } from './transform_matrix_removal.mjs';
 //# sourceMappingURL=index.mjs.map

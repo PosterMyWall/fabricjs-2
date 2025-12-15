@@ -13,7 +13,6 @@ class CircleBrush extends BaseBrush {
     /**
      * Width of a brush
      * @type Number
-     * @default
      */
     _defineProperty(this, "width", 10);
     this.points = [];

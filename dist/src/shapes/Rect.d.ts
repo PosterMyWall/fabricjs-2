@@ -18,13 +18,11 @@ export declare class Rect<Props extends TOptions<RectProps> = Partial<RectProps>
     /**
      * Horizontal border radius
      * @type Number
-     * @default
      */
     rx: number;
     /**
      * Vertical border radius
      * @type Number
-     * @default
      */
     ry: number;
     static type: string;
@@ -60,15 +58,11 @@ export declare class Rect<Props extends TOptions<RectProps> = Partial<RectProps>
     _toSVG(): string[];
     /**
      * List of attribute names to account for when parsing SVG element (used by `Rect.fromElement`)
-     * @static
-     * @memberOf Rect
      * @see: http://www.w3.org/TR/SVG/shapes.html#RectElement
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Returns {@link Rect} instance from an SVG element
-     * @static
-     * @memberOf Rect
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Options object
      */

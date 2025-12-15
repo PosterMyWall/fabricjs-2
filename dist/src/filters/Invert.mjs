@@ -64,12 +64,10 @@ class Invert extends BaseFilter {
 /**
  * Invert also alpha.
  * @param {Boolean} alpha
- * @default
  **/
 /**
  * Filter invert. if false, does nothing
  * @param {Boolean} invert
- * @default
  */
 _defineProperty(Invert, "type", 'Invert');
 _defineProperty(Invert, "defaults", invertDefaultValues);

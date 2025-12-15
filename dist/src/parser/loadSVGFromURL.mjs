@@ -1,10 +1,10 @@
-import { request } from '../util/internals/dom_request.mjs';
-import { parseSVGDocument, createEmptyResponse } from './parseSVGDocument.mjs';
+import { createEmptyResponse } from './parseSVGDocument.mjs';
+import { loadSVGFromString } from './loadSVGFromString.mjs';
+import { FabricError } from '../util/internals/console.mjs';
 
 /**
  * Takes url corresponding to an SVG document, and parses it into a set of fabric objects.
- * Note that SVG is fetched via XMLHttpRequest, so it needs to conform to SOP (Same Origin Policy)
- * @memberOf fabric
+ * Note that SVG is fetched via fetch API, so it needs to conform to SOP (Same Origin Policy)
  * @param {string} url where the SVG is
  * @param {TSvgParsedCallback} callback Invoked when the parsing is done, with null if parsing wasn't possible with the list of svg nodes.
  * {@link TSvgParsedCallback} also receives `allElements` array as the last argument. This is the full list of svg nodes available in the document.
@@ -18,20 +18,16 @@ import { parseSVGDocument, createEmptyResponse } from './parseSVGDocument.mjs';
  */
 function loadSVGFromURL(url, reviver) {
   let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  // need to handle error properly
-  return new Promise((resolve, reject) => {
-    const onComplete = r => {
-      const xml = r.responseXML;
-      if (xml) {
-        resolve(xml);
-      }
-      reject();
-    };
-    request(url.replace(/^\n\s*/, '').trim(), {
-      onComplete,
-      signal: options.signal
-    });
-  }).then(parsedDoc => parseSVGDocument(parsedDoc, reviver, options)).catch(() => {
+  return fetch(url.replace(/^\n\s*/, '').trim(), {
+    signal: options.signal
+  }).then(response => {
+    if (!response.ok) {
+      throw new FabricError(`HTTP error! status: ${response.status}`);
+    }
+    return response.text();
+  }).then(svgText => {
+    return loadSVGFromString(svgText, reviver, options);
+  }).catch(() => {
     // this is an unhappy path, we dont care about speed
     return createEmptyResponse();
   });

@@ -31,7 +31,7 @@ import { Intersection } from '../Intersection.mjs';
  * Canvas class
  * @class Canvas
  * @extends StaticCanvas
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#canvas}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-1#canvas}
  *
  * @fires object:modified at the end of a transform
  * @fires object:rotating while an object is being rotated from the control
@@ -132,28 +132,21 @@ class SelectableCanvas extends StaticCanvas {
      * When true, mouse events on canvas (mousedown/mousemove/mouseup) result in free drawing.
      * After mousedown, mousemove creates a shape,
      * and then mouseup finalizes it and adds an instance of `fabric.Path` onto canvas.
-     * @tutorial {@link http://fabricjs.com/fabric-intro-part-4#free_drawing}
+     * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-4#free_drawing}
      * @type Boolean
-     * @default
      */
     // event config
     /**
-     * Keep track of the subTargets for Mouse Events, ordered bottom up from innermost nested subTarget
-     * @type FabricObject[]
+     * Keep track of the hovered target in the previous event
+     * @type FabricObject | null
+     * @private
      */
-    _defineProperty(this, "targets", []);
     /**
-     * hold the list of nested targets hovered
+     * hold the list of nested targets hovered in the previous events
      * @type FabricObject[]
      * @private
      */
     _defineProperty(this, "_hoveredTargets", []);
-    /**
-     * hold the list of objects to render
-     * @type FabricObject[]
-     * @private
-     */
-    _defineProperty(this, "_objectsToRender", void 0);
     /**
      * hold a reference to a data structure that contains information
      * on the current on going transform
@@ -544,48 +537,90 @@ class SelectableCanvas extends StaticCanvas {
   }
 
   /**
-   * Method that determines what object we are clicking on
+   * This function is in charge of deciding which is the object that is the current target of an interaction event.
+   * For interaction event we mean a pointer related action on the canvas.
+   * Which is the
    * 11/09/2018 TODO: would be cool if findTarget could discern between being a full target
    * or the outside part of the corner.
    * @param {Event} e mouse event
-   * @return {FabricObject | null} the target found
+   * @return {TargetsInfoWithContainer} the target found
    */
   findTarget(e) {
-    if (this.skipTargetFind) {
-      return undefined;
+    // this._targetInfo is cached by _cacheTransformEventData
+    // and destroyed by _resetTransformEventData
+    if (this._targetInfo) {
+      return this._targetInfo;
     }
-    const pointer = this.getViewportPoint(e),
+    if (this.skipTargetFind) {
+      return {
+        subTargets: [],
+        currentSubTargets: []
+      };
+    }
+    const pointer = this.getScenePoint(e),
       activeObject = this._activeObject,
-      aObjects = this.getActiveObjects();
-    this.targets = [];
-    if (activeObject && aObjects.length >= 1) {
-      if (activeObject.findControl(pointer, isTouchEvent(e))) {
-        // if we hit the corner of the active object, let's return that.
-        return activeObject;
-      } else if (aObjects.length > 1 &&
-      // check pointer is over active selection and possibly perform `subTargetCheck`
-      this.searchPossibleTargets([activeObject], pointer)) {
-        // active selection does not select sub targets like normal groups
-        return activeObject;
-      } else if (activeObject === this.searchPossibleTargets([activeObject], pointer)) {
-        // active object is not an active selection
-        if (!this.preserveObjectStacking) {
-          return activeObject;
-        } else {
-          const subTargets = this.targets;
-          this.targets = [];
-          const target = this.searchPossibleTargets(this._objects, pointer);
-          if (e[this.altSelectionKey] && target && target !== activeObject) {
-            // alt selection: select active object even though it is not the top most target
-            // restore targets
-            this.targets = subTargets;
-            return activeObject;
-          }
-          return target;
-        }
+      aObjects = this.getActiveObjects(),
+      targetInfo = this.searchPossibleTargets(this._objects, pointer);
+    const {
+      subTargets: currentSubTargets,
+      container: currentContainer,
+      target: currentTarget
+    } = targetInfo;
+    const fullTargetInfo = {
+      ...targetInfo,
+      currentSubTargets,
+      currentContainer,
+      currentTarget
+    };
+
+    // simplest case no active object, return a new target
+    if (!activeObject) {
+      return fullTargetInfo;
+    }
+
+    // check pointer is over active selection and possibly perform `subTargetCheck`
+    const activeObjectTargetInfo = {
+      ...this.searchPossibleTargets([activeObject], pointer),
+      currentSubTargets,
+      currentContainer,
+      currentTarget
+    };
+    const activeObjectControl = activeObject.findControl(this.getViewportPoint(e), isTouchEvent(e));
+
+    // we are clicking exactly the control of an active object, shortcut to that object.
+    if (activeObjectControl) {
+      return {
+        ...activeObjectTargetInfo,
+        target: activeObject // we override target in case we are in the outside part of the corner.
+      };
+    }
+
+    // in case we are over the active object
+    if (activeObjectTargetInfo.target) {
+      if (aObjects.length > 1) {
+        // in case of active selection and target hit over the activeSelection, just exit
+        // TODO Verify if we need to override target with container
+        return activeObjectTargetInfo;
+      }
+      // from here onward not an active selection, just an activeOject that maybe is a group
+
+      // preserveObjectStacking is false, so activeObject is drawn on top, just return activeObject
+      if (!this.preserveObjectStacking) {
+        // TODO Verify if we need to override target with container
+        return activeObjectTargetInfo;
+      }
+
+      // In case we are in preserveObjectStacking ( selection in stack )
+      // there is the possibility to force with `altSelectionKey` to return the activeObject
+      // from any point in the stack, even if we have another object completely on top of it.
+      if (this.preserveObjectStacking && e[this.altSelectionKey]) {
+        // TODO Verify if we need to override target with container
+        return activeObjectTargetInfo;
       }
     }
-    return this.searchPossibleTargets(this._objects, pointer);
+
+    // we have an active object, but we ruled out it being our target in any way.
+    return fullTargetInfo;
   }
 
   /**
@@ -627,14 +662,15 @@ class SelectableCanvas extends StaticCanvas {
    * Checks point is inside the object selection condition. Either area with padding
    * or over pixels if perPixelTargetFind is enabled
    * @param {FabricObject} obj Object to test against
-   * @param {Object} [pointer] point from viewport.
+   * @param {Point} pointer point from scene.
    * @return {Boolean} true if point is contained within an area of given object
    * @private
    */
   _checkTarget(obj, pointer) {
-    if (obj && obj.visible && obj.evented && this._pointIsInObjectSelectionArea(obj, sendPointToPlane(pointer, undefined, this.viewportTransform))) {
+    if (obj && obj.visible && obj.evented && this._pointIsInObjectSelectionArea(obj, pointer)) {
       if ((this.perPixelTargetFind || obj.perPixelTargetFind) && !obj.isEditing) {
-        if (!this.isTargetTransparent(obj, pointer.x, pointer.y)) {
+        const viewportPoint = pointer.transform(this.viewportTransform);
+        if (!this.isTargetTransparent(obj, viewportPoint.x, viewportPoint.y)) {
           return true;
         }
       } else {
@@ -645,14 +681,15 @@ class SelectableCanvas extends StaticCanvas {
   }
 
   /**
-   * Internal Function used to search inside objects an object that contains pointer in bounding box or that contains pointerOnCanvas when painted
-   * @param {Array} [objects] objects array to look into
-   * @param {Object} [pointer] x,y object of point coordinates we want to check.
-   * @return {FabricObject} **top most object from given `objects`** that contains pointer
+   * Given an array of objects search possible targets under the pointer position
+   * Returns an
+   * @param {Array} objects objects array to look into
+   * @param {Object} pointer x,y object of point of scene coordinates we want to check.
+   * @param {Object} subTargets If passed, subtargets will be collected inside the array
+   * @return {TargetsInfo} **top most object from given `objects`** that contains pointer
    * @private
    */
-  _searchPossibleTargets(objects, pointer) {
-    // Cache all targets where their bounding box contains point.
+  _searchPossibleTargets(objects, pointer, subTargets) {
     let i = objects.length;
     // Do not check for currently grouped objects, since we check the parent group itself.
     // until we call this function specifically to search inside the activeGroup
@@ -660,42 +697,56 @@ class SelectableCanvas extends StaticCanvas {
       const target = objects[i];
       if (this._checkTarget(target, pointer)) {
         if (isCollection(target) && target.subTargetCheck) {
-          const subTarget = this._searchPossibleTargets(target._objects, pointer);
-          subTarget && this.targets.push(subTarget);
+          const {
+            target: subTarget
+          } = this._searchPossibleTargets(target._objects, pointer, subTargets);
+          subTarget && subTargets.push(subTarget);
         }
-        return target;
+        return {
+          target,
+          subTargets
+        };
       }
     }
+    return {
+      subTargets: []
+    };
   }
 
   /**
-   * Function used to search inside objects an object that contains pointer in bounding box or that contains pointerOnCanvas when painted
-   * @see {@link _searchPossibleTargets}
-   * @param {FabricObject[]} [objects] objects array to look into
-   * @param {Point} [pointer] coordinates from viewport to check.
+   * Search inside an objects array the fiurst object that contains pointer
+   * Collect subTargets of that object inside the subTargets array passed as parameter
+   * @param {FabricObject[]} objects objects array to look into
+   * @param {Point} pointer coordinates from viewport to check.
    * @return {FabricObject} **top most object on screen** that contains pointer
    */
   searchPossibleTargets(objects, pointer) {
-    const target = this._searchPossibleTargets(objects, pointer);
+    const targetInfo = this._searchPossibleTargets(objects, pointer, []);
 
-    // if we found something in this.targets, and the group is interactive, return the innermost subTarget
-    // that is still interactive
-    // TODO: reverify why interactive. the target should be returned always, but selected only
-    // if interactive.
-    if (target && isCollection(target) && target.interactive && this.targets[0]) {
-      /** targets[0] is the innermost nested target, but it could be inside non interactive groups and so not a selection target */
-      const targets = this.targets;
-      for (let i = targets.length - 1; i > 0; i--) {
-        const t = targets[i];
+    // outermost target is the container.
+    targetInfo.container = targetInfo.target;
+    const {
+      container,
+      subTargets
+    } = targetInfo;
+    if (container && isCollection(container) && container.interactive && subTargets[0]) {
+      /** subTargets[0] is the innermost nested target, but it could be inside non interactive groups
+       * and so not a possible selection target.
+       * We loop the array from the end that is outermost innertarget.
+       */
+      for (let i = subTargets.length - 1; i > 0; i--) {
+        const t = subTargets[i];
         if (!(isCollection(t) && t.interactive)) {
           // one of the subtargets was not interactive. that is the last subtarget we can return.
           // we can't dig more deep;
-          return t;
+          targetInfo.target = t;
+          return targetInfo;
         }
       }
-      return targets[0];
+      targetInfo.target = subTargets[0];
+      return targetInfo;
     }
-    return target;
+    return targetInfo;
   }
 
   /**

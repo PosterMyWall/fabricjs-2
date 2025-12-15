@@ -64,7 +64,6 @@ class Saturation extends BaseFilter {
  * A value of 0 has no effect.
  *
  * @param {Number} saturation
- * @default
  */
 _defineProperty(Saturation, "type", 'Saturation');
 _defineProperty(Saturation, "defaults", saturationDefaultValues);

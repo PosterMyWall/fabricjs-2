@@ -4,7 +4,7 @@ import { ITextClickBehavior } from './ITextClickBehavior.mjs';
 import { ctrlKeysMapUp, ctrlKeysMapDown, keysMapRtl, keysMap } from './constants.mjs';
 import { classRegistry } from '../../ClassRegistry.mjs';
 import { JUSTIFY, JUSTIFY_RIGHT, JUSTIFY_LEFT, JUSTIFY_CENTER } from '../Text/constants.mjs';
-import { RIGHT, LEFT, CENTER, FILL } from '../../constants.mjs';
+import { RTL, RIGHT, LEFT, CENTER, FILL } from '../../constants.mjs';
 import { createCanvasElementFor } from '../../util/misc/dom.mjs';
 import { applyCanvasTransform } from '../../util/internals/applyCanvasTransform.mjs';
 
@@ -421,6 +421,10 @@ class IText extends ITextClickBehavior {
       charIndex,
       lineIndex
     } = this.get2DCursorLocation(index);
+    const {
+      textAlign,
+      direction
+    } = this;
     for (let i = 0; i < lineIndex; i++) {
       topOffset += this.getHeightOfLine(i);
     }
@@ -430,20 +434,20 @@ class IText extends ITextClickBehavior {
     if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
       leftOffset -= this._getWidthOfCharSpacing();
     }
-    const boundaries = {
-      top: topOffset,
-      left: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0)
-    };
-    if (this.direction === 'rtl') {
-      if (this.textAlign === RIGHT || this.textAlign === JUSTIFY || this.textAlign === JUSTIFY_RIGHT) {
-        boundaries.left *= -1;
-      } else if (this.textAlign === LEFT || this.textAlign === JUSTIFY_LEFT) {
-        boundaries.left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
-      } else if (this.textAlign === CENTER || this.textAlign === JUSTIFY_CENTER) {
-        boundaries.left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
+    let left = lineLeftOffset + (leftOffset > 0 ? leftOffset : 0);
+    if (direction === RTL) {
+      if (textAlign === RIGHT || textAlign === JUSTIFY || textAlign === JUSTIFY_RIGHT) {
+        left *= -1;
+      } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
+        left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
+      } else if (textAlign === CENTER || textAlign === JUSTIFY_CENTER) {
+        left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
       }
     }
-    return boundaries;
+    return {
+      top: topOffset,
+      left
+    };
   }
 
   /**
@@ -542,9 +546,13 @@ class IText extends ITextClickBehavior {
    * @param {CanvasRenderingContext2D} ctx transformed context to draw on
    */
   _renderSelection(ctx, selection, boundaries) {
+    const {
+      textAlign,
+      direction
+    } = this;
     const selectionStart = selection.selectionStart,
       selectionEnd = selection.selectionEnd,
-      isJustify = this.textAlign.includes(JUSTIFY),
+      isJustify = textAlign.includes(JUSTIFY),
       start = this.get2DCursorLocation(selectionStart),
       end = this.get2DCursorLocation(selectionEnd),
       startLine = start.lineIndex,
@@ -585,12 +593,12 @@ class IText extends ITextClickBehavior {
       } else {
         ctx.fillStyle = this.selectionColor;
       }
-      if (this.direction === 'rtl') {
-        if (this.textAlign === RIGHT || this.textAlign === JUSTIFY || this.textAlign === JUSTIFY_RIGHT) {
+      if (direction === RTL) {
+        if (textAlign === RIGHT || textAlign === JUSTIFY || textAlign === JUSTIFY_RIGHT) {
           drawStart = this.width - drawStart - drawWidth;
-        } else if (this.textAlign === LEFT || this.textAlign === JUSTIFY_LEFT) {
+        } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
           drawStart = boundaries.left + lineOffset - boxEnd;
-        } else if (this.textAlign === CENTER || this.textAlign === JUSTIFY_CENTER) {
+        } else if (textAlign === CENTER || textAlign === JUSTIFY_CENTER) {
           drawStart = boundaries.left + lineOffset - boxEnd;
         }
       }
@@ -645,37 +653,30 @@ class IText extends ITextClickBehavior {
 /**
  * Index where text selection starts (or where cursor is when there is no selection)
  * @type Number
- * @default
  */
 /**
  * Index where text selection ends
  * @type Number
- * @default
  */
 /**
  * Color of text selection
  * @type String
- * @default
  */
 /**
  * Indicates whether text is in editing mode
  * @type Boolean
- * @default
  */
 /**
  * Indicates whether a text can be edited
  * @type Boolean
- * @default
  */
 /**
  * Border color of text object while it's in editing mode
  * @type String
- * @default
  */
 /**
  * Width of cursor (in px)
  * @type Number
- * @default
  */
 /**
  * Color of text cursor color in editing mode.
@@ -683,22 +684,18 @@ class IText extends ITextClickBehavior {
  * if set to a color value that fabric can understand, it will
  * be used instead of the color of the text at the current position.
  * @type String
- * @default
  */
 /**
  * Delay between cursor blink (in ms)
  * @type Number
- * @default
  */
 /**
  * Duration of cursor fade in (in ms)
  * @type Number
- * @default
  */
 /**
  * Indicates whether internal text char widths can be cached
  * @type Boolean
- * @default
  */
 _defineProperty(IText, "ownDefaults", iTextDefaultValues);
 _defineProperty(IText, "type", 'IText');

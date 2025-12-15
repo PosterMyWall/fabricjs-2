@@ -1,13 +1,8 @@
-import type { FabricObject, TBBox } from '@postermywall/fabricjs-2';
-import type { HorizontalLine, VerticalLine } from '../typedefs';
-type CollectLineProps = {
-    activeObject: FabricObject;
-    activeObjectRect: TBBox;
-    objectRect: TBBox;
+import type { FabricObject, Point } from '@postermywall/fabricjs-2';
+import type { AligningGuidelines } from '..';
+import type { LineProps } from '../typedefs';
+export declare function collectLine(this: AligningGuidelines, target: FabricObject, points: Point[]): {
+    vLines: LineProps[];
+    hLines: LineProps[];
 };
-export declare function collectLine(props: CollectLineProps): {
-    vLines: VerticalLine[];
-    hLines: HorizontalLine[];
-};
-export {};
 //# sourceMappingURL=collect-line.d.ts.map

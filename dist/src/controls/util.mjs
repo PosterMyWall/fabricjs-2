@@ -1,7 +1,9 @@
 import { resolveOrigin } from '../util/misc/resolveOrigin.mjs';
 import { Point } from '../Point.mjs';
-import { radiansToDegrees, degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
-import { CENTER } from '../constants.mjs';
+import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
+import { twoMathPi, quarterPI, CENTER } from '../constants.mjs';
+import { calcVectorRotation, createVector } from '../util/misc/vectors.mjs';
+import { sendPointToPlane } from '../util/misc/planeChange.mjs';
 
 const NOT_ALLOWED_CURSOR = 'not-allowed';
 
@@ -46,11 +48,11 @@ const commonEventInfo = (eventData, transform, x, y) => {
  * @param {Control} control the control class
  * @return {Number} 0 - 7 a quadrant number
  */
-function findCornerQuadrant(fabricObject, control) {
-  //  angle is relative to canvas plane
-  const angle = fabricObject.getTotalAngle(),
-    cornerAngle = angle + radiansToDegrees(Math.atan2(control.y, control.x)) + 360;
-  return Math.round(cornerAngle % 360 / 45);
+function findCornerQuadrant(fabricObject, control, coord) {
+  const target = coord;
+  const center = sendPointToPlane(fabricObject.getCenterPoint(), fabricObject.canvas.viewportTransform, undefined);
+  const angle = calcVectorRotation(createVector(center, target)) + twoMathPi;
+  return Math.round(angle % twoMathPi / quarterPI);
 }
 
 /**

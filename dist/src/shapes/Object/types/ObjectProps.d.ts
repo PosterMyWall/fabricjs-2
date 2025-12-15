@@ -29,14 +29,12 @@ export interface ObjectProps extends SerializedObjectProps, ClipPathProps, Objec
     /**
      * When `false`, default object's values are not included in its serialization
      * @type Boolean
-     * @default
      */
     includeDefaultValues: boolean;
     /**
      * When `true`, object is not exported in OBJECT/JSON
      * @since 1.6.3
      * @type Boolean
-     * @default
      */
     excludeFromExport: boolean;
 }

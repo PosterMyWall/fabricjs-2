@@ -19,7 +19,6 @@ export interface ObjectTransformActionProps {
      * The object method `rotate` will always consider this property and never the canvas's one.
      * @since 1.3.4
      * @type Boolean
-     * @default
      */
     centeredRotation: boolean;
     /**
@@ -27,7 +26,6 @@ export interface ObjectTransformActionProps {
      * when being scaled via the controls.
      * @since 1.3.4
      * @type Boolean
-     * @default
      */
     centeredScaling: boolean;
 }

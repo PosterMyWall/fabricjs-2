@@ -36,35 +36,35 @@ class ObjectGeometry extends CommonMethods {
    */
 
   /**
-   * @returns {number} x position according to object's {@link originX} property in canvas coordinate plane
+   * @returns {number} x position according to object's originX property in canvas coordinate plane
    */
   getX() {
     return this.getXY().x;
   }
 
   /**
-   * @param {number} value x position according to object's {@link originX} property in canvas coordinate plane
+   * @param {number} value x position according to object's originX property in canvas coordinate plane
    */
   setX(value) {
     this.setXY(this.getXY().setX(value));
   }
 
   /**
-   * @returns {number} y position according to object's {@link originY} property in canvas coordinate plane
+   * @returns {number} y position according to object's originY property in canvas coordinate plane
    */
   getY() {
     return this.getXY().y;
   }
 
   /**
-   * @param {number} value y position according to object's {@link originY} property in canvas coordinate plane
+   * @param {number} value y position according to object's originY property in canvas coordinate plane
    */
   setY(value) {
     this.setXY(this.getXY().setY(value));
   }
 
   /**
-   * @returns {number} x position according to object's {@link originX} property in parent's coordinate plane\
+   * @returns {number} x position according to object's originX property in parent's coordinate plane\
    * if parent is canvas then this property is identical to {@link getX}
    */
   getRelativeX() {
@@ -72,7 +72,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * @param {number} value x position according to object's {@link originX} property in parent's coordinate plane\
+   * @param {number} value x position according to object's originX property in parent's coordinate plane\
    * if parent is canvas then this method is identical to {@link setX}
    */
   setRelativeX(value) {
@@ -80,7 +80,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * @returns {number} y position according to object's {@link originY} property in parent's coordinate plane\
+   * @returns {number} y position according to object's originY property in parent's coordinate plane\
    * if parent is canvas then this property is identical to {@link getY}
    */
   getRelativeY() {
@@ -88,7 +88,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * @param {number} value y position according to object's {@link originY} property in parent's coordinate plane\
+   * @param {number} value y position according to object's originY property in parent's coordinate plane\
    * if parent is canvas then this property is identical to {@link setY}
    */
   setRelativeY(value) {
@@ -96,7 +96,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * @returns {Point} x position according to object's {@link originX} {@link originY} properties in canvas coordinate plane
+   * @returns {Point} x position according to object's originX originY properties in canvas coordinate plane
    */
   getXY() {
     const relativePosition = this.getRelativeXY();
@@ -105,7 +105,7 @@ class ObjectGeometry extends CommonMethods {
 
   /**
    * Set an object position to a particular point, the point is intended in absolute ( canvas ) coordinate.
-   * You can specify {@link originX} and {@link originY} values,
+   * You can specify originX and originY values,
    * that otherwise are the object's current values.
    * @example <caption>Set object's bottom left corner to point (5,5) on canvas</caption>
    * object.setXY(new Point(5, 5), 'left', 'bottom').
@@ -121,7 +121,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * @returns {Point} x,y position according to object's {@link originX} {@link originY} properties in parent's coordinate plane
+   * @returns {Point} x,y position according to object's originX originY properties in parent's coordinate plane
    */
   getRelativeXY() {
     return new Point(this.left, this.top);
@@ -129,7 +129,7 @@ class ObjectGeometry extends CommonMethods {
 
   /**
    * As {@link setXY}, but in current parent's coordinate plane (the current group if any or the canvas)
-   * @param {Point} point position according to object's {@link originX} {@link originY} properties in parent's coordinate plane
+   * @param {Point} point position according to object's originX originY properties in parent's coordinate plane
    * @param {TOriginX} [originX] Horizontal origin: 'left', 'center' or 'right'
    * @param {TOriginY} [originY] Vertical origin: 'top', 'center' or 'bottom'
    */
@@ -165,7 +165,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * Checks if object intersects with the scene rect formed by {@link tl} and {@link br}
+   * Checks if object intersects with the scene rect formed by tl and br
    */
   intersectsWithRect(tl, br) {
     const intersection = Intersection.intersectPolygonRectangle(this.getCoords(), tl, br);
@@ -193,7 +193,7 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * Checks if object is fully contained within the scene rect formed by {@link tl} and {@link br}
+   * Checks if object is fully contained within the scene rect formed by tl and br
    */
   isContainedWithinRect(tl, br) {
     const {
@@ -386,7 +386,7 @@ class ObjectGeometry extends CommonMethods {
   /**
    * Sets corner and controls position coordinates based on current angle, width and height, left and top.
    * aCoords are used to quickly find an object on the canvas.
-   * See {@link https://github.com/fabricjs/fabric.js/wiki/When-to-call-setCoords} and {@link http://fabricjs.com/fabric-gotchas}
+   * See {@link https://github.com/fabricjs/fabric.js/wiki/When-to-call-setCoords} and {@link http://fabric5.fabricjs.com/fabric-gotchas}
    */
   setCoords() {
     this.aCoords = this.calcACoords();
@@ -615,17 +615,26 @@ class ObjectGeometry extends CommonMethods {
   }
 
   /**
-   * Returns the position of the object as if it has a different origin.
+   * Alias of {@link getPositionByOrigin}
+   * @deprecated use {@link getPositionByOrigin} instead
+   */
+  getPointByOrigin(originX, originY) {
+    return this.getPositionByOrigin(originX, originY);
+  }
+
+  /**
+   * This function is the mirror of {@link setPositionByOrigin}
+   * Returns the position of the object based on specified origin.
    * Take an object that has left, top set to 100, 100 with origin 'left', 'top'.
    * Return the values of left top ( wrapped in a point ) that you would need to keep
-   * the same position if origin where different.
+   * the same position if origin where different ( ex: center, bottom )
    * Alternatively you can use this to also find which point in the parent plane is a specific origin
    * ( where is the bottom right corner of my object? )
    * @param {TOriginX} originX Horizontal origin: 'left', 'center' or 'right'
    * @param {TOriginY} originY Vertical origin: 'top', 'center' or 'bottom'
    * @return {Point}
    */
-  getPointByOrigin(originX, originY) {
+  getPositionByOrigin(originX, originY) {
     return this.translateToOriginPoint(this.getRelativeCenterPoint(), originX, originY);
   }
 
@@ -649,7 +658,16 @@ class ObjectGeometry extends CommonMethods {
    * @private
    */
   _getLeftTopCoords() {
-    return this.translateToOriginPoint(this.getRelativeCenterPoint(), LEFT, TOP);
+    return this.getPositionByOrigin(LEFT, TOP);
+  }
+
+  /**
+   * An utility method to position the object by its left top corner.
+   * Useful to reposition objects since now the default origin is center/center
+   * Places the left/top corner of the object bounding box in p.
+   */
+  positionByLeftTop(p) {
+    return this.setPositionByOrigin(p, LEFT, TOP);
   }
 }
 

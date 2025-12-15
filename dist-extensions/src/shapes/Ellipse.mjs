@@ -102,15 +102,11 @@ class Ellipse extends FabricObject {
 
   /**
    * List of attribute names to account for when parsing SVG element (used by {@link Ellipse.fromElement})
-   * @static
-   * @memberOf Ellipse
    * @see http://www.w3.org/TR/SVG/shapes.html#EllipseElement
    */
 
   /**
    * Returns {@link Ellipse} instance from an SVG element
-   * @static
-   * @memberOf Ellipse
    * @param {HTMLElement} element Element to parse
    * @return {Ellipse}
    */
@@ -126,12 +122,10 @@ class Ellipse extends FabricObject {
 /**
  * Horizontal radius
  * @type Number
- * @default
  */
 /**
  * Vertical radius
  * @type Number
- * @default
  */
 _defineProperty(Ellipse, "type", 'Ellipse');
 _defineProperty(Ellipse, "cacheProperties", [...cacheProperties, ...ELLIPSE_PROPS]);

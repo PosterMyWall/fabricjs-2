@@ -22,7 +22,6 @@ class Intersection {
    * Appends points of intersection
    * @param {...Point[]} points
    * @return {Intersection} thisArg
-   * @chainable
    */
   append() {
     for (var _len = arguments.length, points = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -70,7 +69,7 @@ class Intersection {
   }
 
   /**
-   * Use the ray casting algorithm to determine if {@link point} is in the polygon defined by {@link points}
+   * Use the ray casting algorithm to determine if point is in the polygon defined by points
    * @see https://en.wikipedia.org/wiki/Point_in_polygon
    * @param point
    * @param points polygon points
@@ -98,7 +97,6 @@ class Intersection {
    * Checks if a line intersects another
    * @see {@link https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection line intersection}
    * @see {@link https://en.wikipedia.org/wiki/Cramer%27s_rule Cramer's rule}
-   * @static
    * @param {Point} a1
    * @param {Point} a2
    * @param {Point} b1
@@ -140,7 +138,6 @@ class Intersection {
   /**
    * Checks if a segment intersects a line
    * @see {@link intersectLineLine} for line intersection
-   * @static
    * @param {Point} s1 boundary point of segment
    * @param {Point} s2 other boundary point of segment
    * @param {Point} l1 point on line
@@ -154,7 +151,6 @@ class Intersection {
   /**
    * Checks if a segment intersects another
    * @see {@link intersectLineLine} for line intersection
-   * @static
    * @param {Point} a1 boundary point of segment
    * @param {Point} a2 other boundary point of segment
    * @param {Point} b1 boundary point of segment
@@ -170,7 +166,6 @@ class Intersection {
    *
    * @todo account for stroke
    *
-   * @static
    * @see {@link intersectSegmentPolygon} for segment intersection
    * @param {Point} a1 point on line
    * @param {Point} a2 other point on line
@@ -199,7 +194,6 @@ class Intersection {
 
   /**
    * Checks if segment intersects polygon
-   * @static
    * @see {@link intersectLinePolygon} for line intersection
    * @param {Point} a1 boundary point of segment
    * @param {Point} a2 other boundary point of segment
@@ -215,7 +209,6 @@ class Intersection {
    *
    * @todo account for stroke
    *
-   * @static
    * @param {Point[]} points1
    * @param {Point[]} points2
    * @return {Intersection}
@@ -245,7 +238,6 @@ class Intersection {
 
   /**
    * Checks if polygon intersects rectangle
-   * @static
    * @see {@link intersectPolygonPolygon} for polygon intersection
    * @param {Point[]} points polygon points
    * @param {Point} r1 top left point of rect

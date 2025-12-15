@@ -1,6 +1,7 @@
 import type { CanvasEvents, DragEventData, ObjectEvents, TEventsExtraData, TPointerEvent, TPointerEventNames, Transform } from '../EventTypeDefs';
 import { Point } from '../Point';
 import type { FabricObject } from '../shapes/Object/FabricObject';
+import { type TToCanvasElementOptions } from '../typedefs';
 import type { CanvasOptions, TCanvasOptions } from './CanvasOptions';
 import { SelectableCanvas } from './SelectableCanvas';
 import { TextEditingManager } from './TextEditingManager';
@@ -72,7 +73,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @private
      */
     private _getEventPrefix;
-    addOrRemove(functor: any, _eventjsFunctor: 'add' | 'remove'): void;
+    addOrRemove(functor: any, forTouch?: boolean): void;
     /**
      * Removes all event listeners, used when disposing the instance
      */
@@ -89,6 +90,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
     private _onMouseOut;
     /**
      * @private
+     * Used when the mouse cursor enter the canvas from outside
      * @param {Event} e Event object fired on mouseenter
      */
     private _onMouseEnter;
@@ -118,14 +120,6 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {DragEvent} e
      */
     private _onDragProgress;
-    /**
-     * As opposed to {@link findTarget} we want the top most object to be returned w/o the active object cutting in line.
-     * Override at will
-     */
-    protected findDragTargets(e: DragEvent): {
-        target: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, ObjectEvents> | undefined;
-        targets: FabricObject<Partial<import("../..").FabricObjectProps>, import("../..").SerializedObjectProps, ObjectEvents>[];
-    };
     /**
      * prevent default to allow drop event to be fired
      * https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#specifying_drop_targets
@@ -165,6 +159,17 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      */
     private _onClick;
     /**
+     * This supports gesture event firing
+     * It is a method to keep some code organized, it exposes private methods
+     * in a way that works and still keep them private
+     * This is supposed to mirror _handleEvent
+     */
+    fireEventFromPointerEvent(e: TPointerEvent, eventName: keyof CanvasEvents, secondaryName: keyof ObjectEvents, extraData?: Record<string, unknown> | {
+        rotation: number;
+    } | {
+        ping: number;
+    }): void;
+    /**
      * Return a the id of an event.
      * returns either the pointerId or the identifier or 0 for the mouse event
      * @private
@@ -182,11 +187,6 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {Event} e Event object fired on mousedown
      */
     _onTouchStart(e: TouchEvent): void;
-    /**
-     * @private
-     * @param {Event} e Event object fired on mousedown
-     */
-    onTouchStartAfter(e: TPointerEvent): void;
     /**
      * @private
      * @param {Event} e Event object fired on mousedown
@@ -296,7 +296,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {Object} data Event object fired on dragover
      * @private
      */
-    _fireEnterLeaveEvents(target: FabricObject | undefined, data: DragEventData): void;
+    _fireEnterLeaveEvents(e: TPointerEvent, target: FabricObject | undefined, data: DragEventData): void;
     /**
      * Manage the synthetic in/out events for the fabric objects on the canvas
      * @param {Fabric.Object} target the target where the target from the supported events
@@ -314,11 +314,6 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
         oldTarget?: FabricObject;
         fireCanvas?: boolean;
     }): void;
-    /**
-     * Method that defines actions when an Event Mouse Wheel
-     * @param {Event} e Event object fired on mouseup
-     */
-    __onMouseWheel(e: TPointerEvent): void;
     /**
      * @private
      * @param {Event} e Event fired on mousemove
@@ -342,6 +337,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * ---
      * - If the active object is the active selection we add/remove `target` from it
      * - If not, add the active object and `target` to the active selection and make it the active object.
+     * @TODO rewrite this after find target is refactored
      * @private
      * @param {TPointerEvent} e Event object
      * @param {FabricObject} target target of event to select/deselect
@@ -356,6 +352,12 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * runs on mouse up after a mouse move
      */
     protected handleSelection(e: TPointerEvent): boolean;
+    /**
+     * Wraps the original toCanvasElement with a function that removes
+     * the context top for the time the function is run.
+     * So we avoid painting side effects on the upper canvas when exporting
+     */
+    toCanvasElement(multiplier?: number, options?: TToCanvasElementOptions): HTMLCanvasElement;
     /**
      * @override clear {@link textEditingManager}
      */

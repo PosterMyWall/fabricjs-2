@@ -66,8 +66,6 @@ class RemoveColor extends BaseFilter {
 }
 /**
  * Color to remove, in any format understood by {@link Color}.
- * @param {String} type
- * @default
  */
 /**
  * distance to actual color, as value up or down from each r,g,b

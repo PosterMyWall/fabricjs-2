@@ -1,8 +1,8 @@
 import type { Abortable, TCrossOrigin, TMat2D, TSize } from '../typedefs';
 import type { PatternRepeat, PatternOptions, SerializedPatternOptions } from './types';
 /**
- * @see {@link http://fabricjs.com/patterns demo}
- * @see {@link http://fabricjs.com/dynamic-patterns demo}
+ * @see {@link http://fabric5.fabricjs.com/patterns demo}
+ * @see {@link http://fabric5.fabricjs.com/dynamic-patterns demo}
  */
 export declare class Pattern {
     static type: string;
@@ -24,25 +24,21 @@ export declare class Pattern {
     /**
      * Pattern horizontal offset from object's left/top corner
      * @type Number
-     * @default
      */
     offsetX: number;
     /**
      * Pattern vertical offset from object's left/top corner
      * @type Number
-     * @default
      */
     offsetY: number;
     /**
      * @type TCrossOrigin
-     * @default
      */
     crossOrigin: TCrossOrigin;
     /**
      * transform matrix to change the pattern, imported from svgs.
      * @todo verify if using the identity matrix as default makes the rest of the code more easy
      * @type Array
-     * @default
      */
     patternTransform?: TMat2D;
     /**

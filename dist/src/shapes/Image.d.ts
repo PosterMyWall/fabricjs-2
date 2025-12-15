@@ -8,6 +8,16 @@ import type { CSSRules } from '../parser/typedefs';
 import type { Resize, ResizeSerializedProps } from '../filters/Resize';
 import type { TCachedFabricObject } from './Object/Object';
 export type ImageSource = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+export type ParsedPAROffsets = {
+    width: number;
+    height: number;
+    scaleX: number;
+    scaleY: number;
+    offsetLeft: number;
+    offsetTop: number;
+    cropX: number;
+    cropY: number;
+};
 interface UniqueImageProps {
     srcFromAttribute: boolean;
     minimumScaleTrigger: number;
@@ -29,7 +39,7 @@ export interface SerializedImageProps extends SerializedObjectProps {
 export interface ImageProps extends FabricObjectProps, UniqueImageProps {
 }
 /**
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#images}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-1#images}
  */
 export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<ImageProps>, SProps extends SerializedImageProps = SerializedImageProps, EventSpec extends ObjectEvents = ObjectEvents> extends FabricObject<Props, SProps, EventSpec> implements ImageProps {
     /**
@@ -77,21 +87,18 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * key used to retrieve the texture representing this image
      * @since 2.0.0
      * @type String
-     * @default
      */
     cacheKey: string;
     /**
      * Image crop in pixels from original image size.
      * @since 2.0.0
      * @type Number
-     * @default
      */
     cropX: number;
     /**
      * Image crop in pixels from original image size.
      * @since 2.0.0
      * @type Number
-     * @default
      */
     cropY: number;
     /**
@@ -99,7 +106,6 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * Also influence if the cacheCanvas for this image uses imageSmoothing
      * @since 4.0.0-beta.11
      * @type Boolean
-     * @default
      */
     imageSmoothing: boolean;
     preserveAspectRatio: string;
@@ -204,7 +210,6 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
     applyResizeFilters(): void;
     /**
      * Applies filters assigned to this image (from "filters" array) or from filter param
-     * @method applyFilters
      * @param {Array} filters to be applied
      * @param {Boolean} forResizing specify if the filter operation is a resize operation
      */
@@ -262,25 +267,14 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * the preserveAspectRatio attribute
      * @private
      */
-    parsePreserveAspectRatioAttribute(): {
-        width: number;
-        height: number;
-        scaleX: number;
-        scaleY: number;
-        offsetLeft: number;
-        offsetTop: number;
-        cropX: number;
-        cropY: number;
-    };
+    parsePreserveAspectRatioAttribute(): ParsedPAROffsets;
     /**
      * List of attribute names to account for when parsing SVG element (used by {@link FabricImage.fromElement})
-     * @static
      * @see {@link http://www.w3.org/TR/SVG/struct.html#ImageElement}
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Creates an instance of FabricImage from its object representation
-     * @static
      * @param {Object} object Object to create an instance from
      * @param {object} [options] Options object
      * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
@@ -293,7 +287,6 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
     }, SerializedImageProps, ObjectEvents>>;
     /**
      * Creates an instance of Image from an URL string
-     * @static
      * @param {String} url URL to create an image from
      * @param {LoadImageOptions} [options] Options object
      * @returns {Promise<FabricImage>}
@@ -301,7 +294,6 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
     static fromURL<T extends TOptions<ImageProps>>(url: string, { crossOrigin, signal }?: LoadImageOptions, imageOptions?: T): Promise<FabricImage>;
     /**
      * Returns {@link FabricImage} instance from an SVG element
-     * @static
      * @param {HTMLElement} element Element to parse
      * @param {Object} [options] Options object
      * @param {AbortSignal} [options.signal] handle aborting, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal

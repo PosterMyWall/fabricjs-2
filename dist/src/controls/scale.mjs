@@ -64,13 +64,13 @@ const scaleMap = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne', 'e'];
  * @param {FabricObject} fabricObject the fabric object that is interested in the action
  * @return {String} a valid css string for the cursor
  */
-const scaleCursorStyleHandler = (eventData, control, fabricObject) => {
+const scaleCursorStyleHandler = (eventData, control, fabricObject, coord) => {
   const scaleProportionally = scaleIsProportional(eventData, fabricObject),
     by = control.x !== 0 && control.y === 0 ? 'x' : control.x === 0 && control.y !== 0 ? 'y' : '';
   if (scalingIsForbidden(fabricObject, by, scaleProportionally)) {
     return NOT_ALLOWED_CURSOR;
   }
-  const n = findCornerQuadrant(fabricObject, control);
+  const n = findCornerQuadrant(fabricObject, control, coord);
   return `${scaleMap[n]}-resize`;
 };
 

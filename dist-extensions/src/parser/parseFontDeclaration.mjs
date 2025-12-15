@@ -1,11 +1,9 @@
+import { NORMAL } from '../constants.mjs';
 import { parseUnit } from '../util/misc/svgParsing.mjs';
 import { reFontDeclaration } from './constants.mjs';
 
 /**
  * Parses a short font declaration, building adding its properties to a style object
- * @static
- * @function
- * @memberOf fabric
  * @param {String} value font declaration
  * @param {Object} oStyle definition
  */
@@ -34,7 +32,7 @@ function parseFontDeclaration(value, oStyle) {
     oStyle.fontFamily = fontFamily;
   }
   if (lineHeight) {
-    oStyle.lineHeight = lineHeight === 'normal' ? 1 : lineHeight;
+    oStyle.lineHeight = lineHeight === NORMAL ? 1 : lineHeight;
   }
 }
 

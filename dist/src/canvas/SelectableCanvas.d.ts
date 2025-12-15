@@ -7,11 +7,25 @@ import type { TMat2D, TOriginX, TOriginY, TSize, TSVGReviver } from '../typedefs
 import type { BaseBrush } from '../brushes/BaseBrush';
 import { CanvasDOMManager } from './DOMManagers/CanvasDOMManager';
 import type { CanvasOptions } from './CanvasOptions';
+export type TargetsInfo = {
+    target?: FabricObject;
+    subTargets: FabricObject[];
+};
+export type TargetsInfoWithContainer = {
+    target?: FabricObject;
+    subTargets: FabricObject[];
+    container?: FabricObject;
+};
+export type FullTargetsInfoWithContainer = TargetsInfoWithContainer & {
+    currentTarget?: FabricObject;
+    currentContainer?: FabricObject;
+    currentSubTargets: FabricObject[];
+};
 /**
  * Canvas class
  * @class Canvas
  * @extends StaticCanvas
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#canvas}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-1#canvas}
  *
  * @fires object:modified at the end of a transform
  * @fires object:rotating while an object is being rotated from the control
@@ -130,9 +144,8 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      * When true, mouse events on canvas (mousedown/mousemove/mouseup) result in free drawing.
      * After mousedown, mousemove creates a shape,
      * and then mouseup finalizes it and adds an instance of `fabric.Path` onto canvas.
-     * @tutorial {@link http://fabricjs.com/fabric-intro-part-4#free_drawing}
+     * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-4#free_drawing}
      * @type Boolean
-     * @default
      */
     isDrawingMode: boolean;
     preserveObjectStacking: boolean;
@@ -140,18 +153,13 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
     fireRightClick: boolean;
     fireMiddleClick: boolean;
     /**
-     * Keep track of the subTargets for Mouse Events, ordered bottom up from innermost nested subTarget
-     * @type FabricObject[]
-     */
-    targets: FabricObject[];
-    /**
-     * Keep track of the hovered target
+     * Keep track of the hovered target in the previous event
      * @type FabricObject | null
      * @private
      */
     _hoveredTarget?: FabricObject;
     /**
-     * hold the list of nested targets hovered
+     * hold the list of nested targets hovered in the previous events
      * @type FabricObject[]
      * @private
      */
@@ -207,12 +215,11 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      */
     protected _viewportPoint?: Point;
     /**
-     * During a mouse event we may need the target multiple times in multiple functions.
-     * _target holds a reference to the target that is valid for the event
-     * lifespan. Every fabricJS mouse event create and delete the cache every time
-     * @type {FabricObject}
+     * Holds the informations we cache during an event lifespan
+     * This data is needed many times during an event and we want to avoid to recalculate it
+     * multuple times.
      */
-    protected _target?: FabricObject;
+    protected _targetInfo: FullTargetsInfoWithContainer | undefined;
     static ownDefaults: import("../typedefs").TOptions<CanvasOptions>;
     static getDefaults(): Record<string, any>;
     elements: CanvasDOMManager;
@@ -329,13 +336,15 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      */
     _drawSelection(ctx: CanvasRenderingContext2D): void;
     /**
-     * Method that determines what object we are clicking on
+     * This function is in charge of deciding which is the object that is the current target of an interaction event.
+     * For interaction event we mean a pointer related action on the canvas.
+     * Which is the
      * 11/09/2018 TODO: would be cool if findTarget could discern between being a full target
      * or the outside part of the corner.
      * @param {Event} e mouse event
-     * @return {FabricObject | null} the target found
+     * @return {TargetsInfoWithContainer} the target found
      */
-    findTarget(e: TPointerEvent): FabricObject | undefined;
+    findTarget(e: TPointerEvent): FullTargetsInfoWithContainer;
     /**
      * Checks if the point is inside the object selection area including padding
      * @param {FabricObject} obj Object to test against
@@ -348,27 +357,29 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      * Checks point is inside the object selection condition. Either area with padding
      * or over pixels if perPixelTargetFind is enabled
      * @param {FabricObject} obj Object to test against
-     * @param {Object} [pointer] point from viewport.
+     * @param {Point} pointer point from scene.
      * @return {Boolean} true if point is contained within an area of given object
      * @private
      */
     _checkTarget(obj: FabricObject, pointer: Point): boolean;
     /**
-     * Internal Function used to search inside objects an object that contains pointer in bounding box or that contains pointerOnCanvas when painted
-     * @param {Array} [objects] objects array to look into
-     * @param {Object} [pointer] x,y object of point coordinates we want to check.
-     * @return {FabricObject} **top most object from given `objects`** that contains pointer
+     * Given an array of objects search possible targets under the pointer position
+     * Returns an
+     * @param {Array} objects objects array to look into
+     * @param {Object} pointer x,y object of point of scene coordinates we want to check.
+     * @param {Object} subTargets If passed, subtargets will be collected inside the array
+     * @return {TargetsInfo} **top most object from given `objects`** that contains pointer
      * @private
      */
-    _searchPossibleTargets(objects: FabricObject[], pointer: Point): FabricObject | undefined;
+    _searchPossibleTargets(objects: FabricObject[], pointer: Point, subTargets: FabricObject[]): TargetsInfo;
     /**
-     * Function used to search inside objects an object that contains pointer in bounding box or that contains pointerOnCanvas when painted
-     * @see {@link _searchPossibleTargets}
-     * @param {FabricObject[]} [objects] objects array to look into
-     * @param {Point} [pointer] coordinates from viewport to check.
+     * Search inside an objects array the fiurst object that contains pointer
+     * Collect subTargets of that object inside the subTargets array passed as parameter
+     * @param {FabricObject[]} objects objects array to look into
+     * @param {Point} pointer coordinates from viewport to check.
      * @return {FabricObject} **top most object on screen** that contains pointer
      */
-    searchPossibleTargets(objects: FabricObject[], pointer: Point): FabricObject | undefined;
+    searchPossibleTargets(objects: FabricObject[], pointer: Point): TargetsInfoWithContainer;
     /**
      * @returns point existing in the same plane as the {@link HTMLCanvasElement},
      * `(0, 0)` being the top left corner of the {@link HTMLCanvasElement}.

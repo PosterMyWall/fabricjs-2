@@ -5,6 +5,7 @@ const VERSION = version;
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 function noop() {}
 const halfPI = Math.PI / 2;
+const quarterPI = Math.PI / 4;
 const twoMathPi = Math.PI * 2;
 const PiBy180 = Math.PI / 180;
 const iMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
@@ -37,6 +38,9 @@ const SKEW_Y = 'skewY';
 const FILL = 'fill';
 const STROKE = 'stroke';
 const MODIFIED = 'modified';
+const LTR = 'ltr';
+const RTL = 'rtl';
+const NORMAL = 'normal';
 
-export { ALIASING_LIMIT, BOTTOM, CENTER, CHANGED, DEFAULT_SVG_FONT_SIZE, FILL, LEFT, MODIFIED, MODIFY_PATH, MODIFY_POLY, MOVING, NONE, PiBy180, RESIZING, RIGHT, ROTATE, ROTATING, SCALE, SCALE_X, SCALE_Y, SCALING, SKEWING, SKEW_X, SKEW_Y, STROKE, TOP, VERSION, halfPI, iMatrix, kRect, noop, reNewline, twoMathPi };
+export { ALIASING_LIMIT, BOTTOM, CENTER, CHANGED, DEFAULT_SVG_FONT_SIZE, FILL, LEFT, LTR, MODIFIED, MODIFY_PATH, MODIFY_POLY, MOVING, NONE, NORMAL, PiBy180, RESIZING, RIGHT, ROTATE, ROTATING, RTL, SCALE, SCALE_X, SCALE_Y, SCALING, SKEWING, SKEW_X, SKEW_Y, STROKE, TOP, VERSION, halfPI, iMatrix, kRect, noop, quarterPI, reNewline, twoMathPi };
 //# sourceMappingURL=constants.mjs.map

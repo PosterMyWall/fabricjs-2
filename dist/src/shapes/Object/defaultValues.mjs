@@ -1,4 +1,4 @@
-import { TOP, LEFT, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y, FILL, STROKE } from '../../constants.mjs';
+import { TOP, LEFT, SCALE_X, SCALE_Y, SKEW_X, SKEW_Y, FILL, STROKE, CENTER } from '../../constants.mjs';
 
 const stateProperties = [TOP, LEFT, SCALE_X, SCALE_Y, 'flipX', 'flipY', 'originX', 'originY', 'angle', 'opacity', 'globalCompositeOperation', 'shadow', 'visible', SKEW_X, SKEW_Y];
 const cacheProperties = [FILL, STROKE, 'strokeWidth', 'strokeDashArray', 'width', 'height', 'paintFirst', 'strokeUniform', 'strokeLineCap', 'strokeDashOffset', 'strokeLineJoin', 'strokeMiterLimit', 'backgroundColor', 'clipPath'];
@@ -16,8 +16,8 @@ const fabricObjectDefaultValues = {
   minScaleLimit: 0,
   skewX: 0,
   skewY: 0,
-  originX: LEFT,
-  originY: TOP,
+  originX: CENTER,
+  originY: CENTER,
   strokeWidth: 1,
   strokeUniform: false,
   padding: 0,

@@ -33,14 +33,14 @@ const skewMap = ['ns', 'nesw', 'ew', 'nwse'];
  * @param {FabricObject} fabricObject the fabric object that is interested in the action
  * @return {String} a valid css string for the cursor
  */
-const skewCursorStyleHandler = (eventData, control, fabricObject) => {
+const skewCursorStyleHandler = (eventData, control, fabricObject, coord) => {
   if (control.x !== 0 && isLocked(fabricObject, 'lockSkewingY')) {
     return NOT_ALLOWED_CURSOR;
   }
   if (control.y !== 0 && isLocked(fabricObject, 'lockSkewingX')) {
     return NOT_ALLOWED_CURSOR;
   }
-  const n = findCornerQuadrant(fabricObject, control) % 4;
+  const n = findCornerQuadrant(fabricObject, control, coord) % 4;
   return `${skewMap[n]}-resize`;
 };
 

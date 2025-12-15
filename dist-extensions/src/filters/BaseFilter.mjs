@@ -9,8 +9,6 @@ const regex = new RegExp(highPsourceCode, 'g');
 class BaseFilter {
   /**
    * Filter type
-   * @param {String} type
-   * @default
    */
   get type() {
     return this.constructor.type;

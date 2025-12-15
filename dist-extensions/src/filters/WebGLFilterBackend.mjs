@@ -173,6 +173,8 @@ class WebGLFilterBackend {
     } else {
       gl.texImage2D(TEXTURE_2D, 0, RGBA, width, height, 0, RGBA, UNSIGNED_BYTE, null);
     }
+    // disabled because website and issues with different typescript version
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     return texture;
   }
 

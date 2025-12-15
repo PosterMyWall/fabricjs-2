@@ -1,4 +1,10 @@
 import type { FabricObject, Point } from '@postermywall/fabricjs-2';
+import type { PointMap } from '../typedefs';
 export declare function getDistance(a: number, b: number): number;
-export declare function setPositionDir(target: FabricObject, pos: Point, dir: 'x' | 'y'): void;
+export declare function getDistanceList(point: Point, list: Point[], type: 'x' | 'y'): {
+    dis: number;
+    arr: Point[];
+};
+export declare function getPointMap(target: FabricObject): PointMap;
+export declare function getContraryMap(target: FabricObject): PointMap;
 //# sourceMappingURL=basic.d.ts.map

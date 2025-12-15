@@ -297,15 +297,11 @@ class Polyline extends FabricObject {
 
   /**
    * List of attribute names to account for when parsing SVG element (used by {@link Polyline.fromElement})
-   * @static
-   * @memberOf Polyline
    * @see: http://www.w3.org/TR/SVG/shapes.html#PolylineElement
    */
 
   /**
    * Returns Polyline instance from an SVG element
-   * @static
-   * @memberOf Polyline
    * @param {HTMLElement} element Element to parser
    * @param {Object} [options] Options object
    */
@@ -328,8 +324,6 @@ class Polyline extends FabricObject {
 
   /**
    * Returns Polyline instance from an object representation
-   * @static
-   * @memberOf Polyline
    * @param {Object} object Object to create an instance from
    * @returns {Promise<Polyline>}
    */
@@ -342,7 +336,6 @@ class Polyline extends FabricObject {
 /**
  * Points array
  * @type Array
- * @default
  */
 /**
  * WARNING: Feature in progress

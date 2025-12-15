@@ -465,7 +465,6 @@ class Textbox extends IText {
 
   /**
    * Returns object representation of an instance
-   * @method toObject
    * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
    * @return {Object} object representation of an instance
    */
@@ -477,14 +476,12 @@ class Textbox extends IText {
 /**
  * Minimum width of textbox, in pixels.
  * @type Number
- * @default
  */
 /**
  * Minimum calculated width of a textbox, in pixels.
  * fixed to 2 so that an empty textbox cannot go to 0
  * and is still selectable without text.
  * @type Number
- * @default
  */
 /**
  * Use this boolean property in order to split strings that have no white space concept.

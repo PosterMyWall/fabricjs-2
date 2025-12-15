@@ -3,7 +3,6 @@ import { parseSVGDocument } from './parseSVGDocument.mjs';
 
 /**
  * Takes string corresponding to an SVG document, and parses it into a set of fabric objects
- * @memberOf fabric
  * @param {String} string representing the svg
  * @param {TSvgParsedCallback} callback Invoked when the parsing is done, with null if parsing wasn't possible with the list of svg nodes.
  * {@link TSvgParsedCallback} also receives `allElements` array as the last argument. This is the full list of svg nodes available in the document.

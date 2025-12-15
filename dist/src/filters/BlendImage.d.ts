@@ -36,7 +36,6 @@ export declare class BlendImage extends BaseFilter<'BlendImage', BlendImageOwnPr
      * alpha channel of the filter image, and apply those values to the base
      * image's alpha channel.
      * @type String
-     * @default
      **/
     mode: BlendImageOwnProps['mode'];
     /**
@@ -85,7 +84,6 @@ export declare class BlendImage extends BaseFilter<'BlendImage', BlendImageOwnPr
     } & BlendImageOwnProps;
     /**
      * Create filter instance from an object representation
-     * @static
      * @param {object} object Object to create an instance from
      * @param {object} [options]
      * @param {AbortSignal} [options.signal] handle aborting image loading, see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal

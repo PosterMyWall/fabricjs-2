@@ -25,7 +25,7 @@ import { degreesToRadians } from '../../util/misc/radiansDegreesConversion.mjs';
 
 /**
  * Root object class from which all 2d shape classes inherit from
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-1#objects}
  *
  * @fires added
  * @fires removed
@@ -123,15 +123,9 @@ class FabricObject extends ObjectGeometry {
    * and each side do not cross fabric.cacheSideLimit
    * those numbers are configurable so that you can get as much detail as you want
    * making bargain with performances.
-   * @param {Object} dims
-   * @param {Object} dims.width width of canvas
-   * @param {Object} dims.height height of canvas
-   * @param {Object} dims.zoomX zoomX zoom value to unscale the canvas before drawing cache
-   * @param {Object} dims.zoomY zoomY zoom value to unscale the canvas before drawing cache
-   * @return {Object}.width width of canvas
-   * @return {Object}.height height of canvas
-   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
-   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+   * It mutates the input object dims.
+   * @param {TCacheCanvasDimensions} dims
+   * @return {TCacheCanvasDimensions} dims
    */
   _limitCacheSize(dims) {
     const width = dims.width,
@@ -168,12 +162,7 @@ class FabricObject extends ObjectGeometry {
    * Return the dimension and the zoom level needed to create a cache canvas
    * big enough to host the object to be cached.
    * @private
-   * @return {Object}.x width of object to be cached
-   * @return {Object}.y height of object to be cached
-   * @return {Object}.width width of canvas
-   * @return {Object}.height height of canvas
-   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
-   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+   * @return {TCacheCanvasDimensions} Informations about the object to be cached
    */
   _getCacheCanvasDimensions() {
     const objectScale = this.getTotalObjectScaling(),
@@ -359,10 +348,8 @@ class FabricObject extends ObjectGeometry {
     return this;
   }
 
-  /*
-   * @private
+  /**
    * return if the object would be visible in rendering
-   * @memberOf FabricObject.prototype
    * @return {Boolean}
    */
   isNotVisible() {
@@ -899,6 +886,8 @@ class FabricObject extends ObjectGeometry {
   /**
    * This function is an helper for svg import. it returns the center of the object in the svg
    * untransformed coordinates
+   * It doesn't matter where the objects origin are, svg has left and top in the top left corner,
+   * And this method is only run once on the object after the fromElement parser.
    * @private
    * @return {Point} center point from element coordinates
    */
@@ -1099,9 +1088,18 @@ class FabricObject extends ObjectGeometry {
   }
 
   /**
-   * Returns true if any of the specified types is identical to the type of an instance
-   * @param {String} type Type to check against
-   * @return {Boolean}
+   * Checks if the instance is of any of the specified types.
+   * We use this to filter a list of objects for the `getObjects` function.
+   *
+   * For detecting an instance type `instanceOf` is a better check,
+   * but to avoid to make specific classes a dependency of generic code
+   * internally we use this.
+   *
+   * This compares both the static class `type` and the instance's own `type` property
+   * against the provided list of types.
+   *
+   * @param types - A list of type strings to check against.
+   * @returns `true` if the object's type or class type matches any in the list, otherwise `false`.
    */
   isType() {
     for (var _len = arguments.length, types = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -1152,7 +1150,7 @@ class FabricObject extends ObjectGeometry {
       const {
         x,
         y
-      } = this.translateToOriginPoint(this.getRelativeCenterPoint(), originX, originY);
+      } = this.getPositionByOrigin(originX, originY);
       this.left = x;
       this.top = y;
       this.originX = originX;
@@ -1205,7 +1203,7 @@ class FabricObject extends ObjectGeometry {
    * Animates object's properties
    * @param {Record<string, number | number[] | TColorArg>} animatable map of keys and end values
    * @param {Partial<AnimationOptions<T>>} options
-   * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#animation}
+   * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#animation}
    * @return {Record<string, TAnimation<T>>} map of animation contexts
    *
    * As object — multiple properties

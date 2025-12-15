@@ -22,7 +22,6 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
     /**
      * Array of path points
      * @type Array
-     * @default
      */
     path: TSimplePathData;
     pathOffset: Point;
@@ -115,23 +114,17 @@ export declare class Path<Props extends TOptions<PathProps> = Partial<PathProps>
     _calcDimensions(): IPathBBox;
     /**
      * List of attribute names to account for when parsing SVG element (used by `Path.fromElement`)
-     * @static
-     * @memberOf Path
      * @see http://www.w3.org/TR/SVG/paths.html#PathElement
      */
     static ATTRIBUTE_NAMES: string[];
     /**
      * Creates an instance of Path from an object
-     * @static
-     * @memberOf Path
      * @param {Object} object
      * @returns {Promise<Path>}
      */
     static fromObject<T extends TOptions<SerializedPathProps>>(object: T): Promise<Path<Partial<PathProps>, SerializedPathProps, ObjectEvents>>;
     /**
      * Creates an instance of Path from an SVG <path> element
-     * @static
-     * @memberOf Path
      * @param {HTMLElement} element to parse
      * @param {Partial<PathProps>} [options] Options object
      */

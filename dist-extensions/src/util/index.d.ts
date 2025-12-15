@@ -32,6 +32,5 @@ export * as ease from './animation/easing';
 export { requestAnimFrame, cancelAnimFrame, } from './animation/AnimationFrameProvider';
 export { removeFromArray } from './internals/removeFromArray';
 export { getRandomInt } from './internals/getRandomInt';
-export { request } from './internals/dom_request';
 export { removeTransformMatrixForSvgParsing } from './transform_matrix_removal';
 //# sourceMappingURL=index.d.ts.map

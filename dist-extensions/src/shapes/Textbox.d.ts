@@ -37,7 +37,6 @@ export declare class Textbox<Props extends TOptions<TextboxProps> = Partial<Text
     /**
      * Minimum width of textbox, in pixels.
      * @type Number
-     * @default
      */
     minWidth: number;
     /**
@@ -45,7 +44,6 @@ export declare class Textbox<Props extends TOptions<TextboxProps> = Partial<Text
      * fixed to 2 so that an empty textbox cannot go to 0
      * and is still selectable without text.
      * @type Number
-     * @default
      */
     dynamicMinWidth: number;
     /**
@@ -216,7 +214,6 @@ export declare class Textbox<Props extends TOptions<TextboxProps> = Partial<Text
     _removeExtraneousStyles(): void;
     /**
      * Returns object representation of an instance
-     * @method toObject
      * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {Object} object representation of an instance
      */

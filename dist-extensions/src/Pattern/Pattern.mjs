@@ -9,8 +9,8 @@ import { classRegistry } from '../ClassRegistry.mjs';
 import { log } from '../util/internals/console.mjs';
 
 /**
- * @see {@link http://fabricjs.com/patterns demo}
- * @see {@link http://fabricjs.com/dynamic-patterns demo}
+ * @see {@link http://fabric5.fabricjs.com/patterns demo}
+ * @see {@link http://fabric5.fabricjs.com/dynamic-patterns demo}
  */
 class Pattern {
   /**
@@ -37,7 +37,6 @@ class Pattern {
    * transform matrix to change the pattern, imported from svgs.
    * @todo verify if using the identity matrix as default makes the rest of the code more easy
    * @type Array
-   * @default
    */
 
   /**
@@ -64,18 +63,15 @@ class Pattern {
     /**
      * Pattern horizontal offset from object's left/top corner
      * @type Number
-     * @default
      */
     _defineProperty(this, "offsetX", 0);
     /**
      * Pattern vertical offset from object's left/top corner
      * @type Number
-     * @default
      */
     _defineProperty(this, "offsetY", 0);
     /**
      * @type TCrossOrigin
-     * @default
      */
     _defineProperty(this, "crossOrigin", '');
     this.id = uid();

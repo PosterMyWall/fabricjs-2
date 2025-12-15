@@ -1077,7 +1077,8 @@ export class FabricText<
    * Calculate text box height
    */
   calcTextHeight() {
-    let height = 0;
+    let lineHeight,
+      height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
       // height +=

@@ -60,7 +60,6 @@ class Noise extends BaseFilter {
 /**
  * Noise value, from
  * @param {Number} noise
- * @default
  */
 _defineProperty(Noise, "type", 'Noise');
 _defineProperty(Noise, "defaults", noiseDefaultValues);

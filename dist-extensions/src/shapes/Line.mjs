@@ -137,7 +137,6 @@ class Line extends FabricObject {
 
   /**
    * Returns object representation of an instance
-   * @method toObject
    * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
    * @return {Object} object representation of an instance
    */
@@ -215,15 +214,11 @@ class Line extends FabricObject {
 
   /**
    * List of attribute names to account for when parsing SVG element (used by {@link Line.fromElement})
-   * @static
-   * @memberOf Line
    * @see http://www.w3.org/TR/SVG/shapes.html#LineElement
    */
 
   /**
    * Returns Line instance from an SVG element
-   * @static
-   * @memberOf Line
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    * @param {Function} [callback] callback function invoked after parsing
@@ -243,8 +238,6 @@ class Line extends FabricObject {
 
   /**
    * Returns Line instance from an object representation
-   * @static
-   * @memberOf Line
    * @param {Object} object Object to create an instance from
    * @returns {Promise<Line>}
    */
@@ -267,22 +260,18 @@ class Line extends FabricObject {
 /**
  * x value or first line edge
  * @type number
- * @default
  */
 /**
  * y value or first line edge
  * @type number
- * @default
  */
 /**
  * x value or second line edge
  * @type number
- * @default
  */
 /**
  * y value or second line edge
  * @type number
- * @default
  */
 _defineProperty(Line, "type", 'Line');
 _defineProperty(Line, "cacheProperties", [...cacheProperties, ...coordProps]);

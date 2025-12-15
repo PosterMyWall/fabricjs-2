@@ -30,7 +30,6 @@ class Point {
    * Adds another point to this one
    * @param {XY} that
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   addEquals(that) {
@@ -52,7 +51,6 @@ class Point {
    * Adds value to this point
    * @param {Number} scalar
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   scalarAddEquals(scalar) {
@@ -74,7 +72,6 @@ class Point {
    * Subtracts another point from this point
    * @param {XY} that
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   subtractEquals(that) {
@@ -96,7 +93,6 @@ class Point {
    * Subtracts value from this point
    * @param {Number} scalar
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   scalarSubtractEquals(scalar) {
@@ -127,7 +123,6 @@ class Point {
    * Multiplies this point by a value
    * @param {Number} scalar
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   scalarMultiplyEquals(scalar) {
@@ -158,7 +153,6 @@ class Point {
    * Divides this point by a value
    * @param {Number} scalar
    * @return {Point} thisArg
-   * @chainable
    * @deprecated
    */
   scalarDivideEquals(scalar) {
@@ -274,7 +268,6 @@ class Point {
    * Sets x/y of this point
    * @param {Number} x
    * @param {Number} y
-   * @chainable
    */
   setXY(x, y) {
     this.x = x;
@@ -285,7 +278,6 @@ class Point {
   /**
    * Sets x of this point
    * @param {Number} x
-   * @chainable
    */
   setX(x) {
     this.x = x;
@@ -295,7 +287,6 @@ class Point {
   /**
    * Sets y of this point
    * @param {Number} y
-   * @chainable
    */
   setY(y) {
     this.y = y;
@@ -305,7 +296,6 @@ class Point {
   /**
    * Sets x/y of this point from another point
    * @param {XY} that
-   * @chainable
    */
   setFromPoint(that) {
     this.x = that.x;
@@ -336,8 +326,6 @@ class Point {
 
   /**
    * Rotates `point` around `origin` with `radians`
-   * @static
-   * @memberOf fabric.util
    * @param {XY} origin The origin of the rotation
    * @param {TRadian} radians The radians of the angle for the rotation
    * @return {Point} The new rotated point
@@ -355,8 +343,6 @@ class Point {
 
   /**
    * Apply transform t to point p
-   * @static
-   * @memberOf fabric.util
    * @param  {TMat2D} t The transform
    * @param  {Boolean} [ignoreOffset] Indicates that the offset should not be applied
    * @return {Point} The transformed point

@@ -38,7 +38,6 @@ export declare class Shadow {
     /**
      * Shadow color
      * @type String
-     * @default
      */
     color: string;
     /**
@@ -49,25 +48,21 @@ export declare class Shadow {
     /**
      * Shadow horizontal offset
      * @type Number
-     * @default
      */
     offsetX: number;
     /**
      * Shadow vertical offset
      * @type Number
-     * @default
      */
     offsetY: number;
     /**
      * Whether the shadow should affect stroke operations
      * @type Boolean
-     * @default
      */
     affectStroke: boolean;
     /**
      * Indicates whether toObject should include default values
      * @type Boolean
-     * @default
      */
     includeDefaultValues: boolean;
     /**
@@ -75,7 +70,6 @@ export declare class Shadow {
      * When `true`, the shadow's offsetX, offsetY, and blur will not be affected by the object's scale.
      * default to false
      * @type Boolean
-     * @default
      */
     nonScaling: boolean;
     id: number;
@@ -83,7 +77,7 @@ export declare class Shadow {
     static ownDefaults: Partial<TClassProperties<Shadow>>;
     static type: string;
     /**
-     * @see {@link http://fabricjs.com/shadows|Shadow demo}
+     * @see {@link http://fabric5.fabricjs.com/shadows|Shadow demo}
      * @param {Object|String} [options] Options object with any of color, blur, offsetX, offsetY properties or string (e.g. "rgba(0,0,0,0.2) 2px 2px 10px")
      */
     constructor(options?: Partial<TClassProperties<Shadow>>);

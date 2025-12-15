@@ -28,7 +28,6 @@ declare class BaseConfiguration {
      * Pixel limit for cache canvases. 1Mpx , 4Mpx should be fine.
      * @since 1.7.14
      * @type Number
-     * @default
      */
     perfLimitSizeTotal: number;
     /**
@@ -52,14 +51,12 @@ declare class BaseConfiguration {
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number
-     * @default
      */
     maxCacheSideLimit: number;
     /**
      * Lowest pixel limit for cache canvases, set at 256PX
      * @since 1.7.14
      * @type Number
-     * @default
      */
     minCacheSideLimit: number;
     /**
@@ -67,7 +64,6 @@ declare class BaseConfiguration {
      * pasted text use destination style.
      * Defaults to 'false'.
      * @type Boolean
-     * @default
      * @deprecated
      */
     disableStyleCopyPaste: boolean;
@@ -77,7 +73,6 @@ declare class BaseConfiguration {
      * time since a default 2048x2048 canvas will be created for the gl context
      * @since 2.0.0
      * @type Boolean
-     * @default
      */
     enableGLFiltering: boolean;
     /**
@@ -88,7 +83,6 @@ declare class BaseConfiguration {
      *
      * @since 2.0.0
      * @type Number
-     * @default
      */
     textureSize: number;
     /**

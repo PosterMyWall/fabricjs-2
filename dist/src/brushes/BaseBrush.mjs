@@ -2,7 +2,7 @@ import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginB
 import { Color } from '../color/Color.mjs';
 
 /**
- * @see {@link http://fabricjs.com/freedrawing|Freedrawing demo}
+ * @see {@link http://fabric5.fabricjs.com/freedrawing|Freedrawing demo}
  */
 class BaseBrush {
   /**
@@ -13,13 +13,11 @@ class BaseBrush {
     /**
      * Color of a brush
      * @type String
-     * @default
      */
     _defineProperty(this, "color", 'rgb(0, 0, 0)');
     /**
      * Width of a brush, has to be a Number, no string literals
      * @type Number
-     * @default
      */
     _defineProperty(this, "width", 1);
     /**
@@ -27,31 +25,26 @@ class BaseBrush {
      * <b>Backwards incompatibility note:</b> This property replaces "shadowColor" (String), "shadowOffsetX" (Number),
      * "shadowOffsetY" (Number) and "shadowBlur" (Number) since v1.2.12
      * @type Shadow
-     * @default
      */
     _defineProperty(this, "shadow", null);
     /**
      * Line endings style of a brush (one of "butt", "round", "square")
      * @type String
-     * @default
      */
     _defineProperty(this, "strokeLineCap", 'round');
     /**
      * Corner style of a brush (one of "bevel", "round", "miter")
      * @type String
-     * @default
      */
     _defineProperty(this, "strokeLineJoin", 'round');
     /**
      * Maximum miter length (used for strokeLineJoin = "miter") of a brush's
      * @type Number
-     * @default
      */
     _defineProperty(this, "strokeMiterLimit", 10);
     /**
      * Stroke Dash Array.
      * @type Array
-     * @default
      */
     _defineProperty(this, "strokeDashArray", null);
     /**

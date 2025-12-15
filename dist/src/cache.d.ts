@@ -1,11 +1,12 @@
 import type { TRectBounds } from './typedefs';
+type TextCouplesCache = Map</** char */ string, /** width */ number>;
+type FamilyCache = Map</** fontStyleCacheKey */ string, TextCouplesCache>;
 export declare class Cache {
     /**
      * Cache of widths of chars in text rendering.
      */
-    charWidthsCache: Record<
-    /** fontFamily */ string, Record<
-    /** fontStyleCacheKey */ string, Record</** char */ string, /** width */ number>>>;
+    charWidthsCache: Map</** fontFamily */ string, FamilyCache>;
+    constructor();
     /**
      * @return {Object} reference to cache
      */
@@ -13,7 +14,7 @@ export declare class Cache {
         fontFamily: string;
         fontStyle: string;
         fontWeight: string | number;
-    }): Record<string, number>;
+    }): TextCouplesCache;
     /**
      * Clear char widths cache for the given font family or all the cache if no
      * fontFamily is specified.
@@ -44,4 +45,5 @@ export declare class Cache {
     boundsOfCurveCache: Record<string, TRectBounds>;
 }
 export declare const cache: Cache;
+export {};
 //# sourceMappingURL=cache.d.ts.map

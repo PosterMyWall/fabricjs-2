@@ -6,7 +6,6 @@ export declare class CircleBrush extends BaseBrush {
     /**
      * Width of a brush
      * @type Number
-     * @default
      */
     width: number;
     points: CircleBrushPoint[];

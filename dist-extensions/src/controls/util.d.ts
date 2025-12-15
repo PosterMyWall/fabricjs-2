@@ -3,6 +3,7 @@ import { Point } from '../Point';
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { TOriginX, TOriginY } from '../typedefs';
 import type { Control } from './Control';
+import type { TOCoord } from '../shapes/Object/InteractiveObject';
 export declare const NOT_ALLOWED_CURSOR = "not-allowed";
 /**
  * @param {Boolean} alreadySelected true if target is already selected
@@ -27,7 +28,7 @@ export declare const commonEventInfo: TransformAction<Transform, BasicTransformE
  * @param {Control} control the control class
  * @return {Number} 0 - 7 a quadrant number
  */
-export declare function findCornerQuadrant(fabricObject: FabricObject, control: Control): number;
+export declare function findCornerQuadrant(fabricObject: FabricObject, control: Control, coord: TOCoord): number;
 /**
  * Transforms a point to the offset from the given origin
  * @param {Object} transform

@@ -19,7 +19,6 @@ export declare class Gamma extends BaseFilter<typeof GAMMA, GammaOwnProps> {
     /**
      * Gamma array value, from 0.01 to 2.2.
      * @param {Array} gamma
-     * @default
      */
     gamma: GammaOwnProps['gamma'];
     rgbValues?: {

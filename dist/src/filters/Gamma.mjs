@@ -91,7 +91,6 @@ class Gamma extends BaseFilter {
 /**
  * Gamma array value, from 0.01 to 2.2.
  * @param {Array} gamma
- * @default
  */
 _defineProperty(Gamma, "type", GAMMA);
 _defineProperty(Gamma, "defaults", gammaDefaultValues);

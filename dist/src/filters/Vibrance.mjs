@@ -66,7 +66,6 @@ class Vibrance extends BaseFilter {
  * A value of 0 has no effect.
  *
  * @param {Number} vibrance
- * @default
  */
 _defineProperty(Vibrance, "type", 'Vibrance');
 _defineProperty(Vibrance, "defaults", vibranceDefaultValues);

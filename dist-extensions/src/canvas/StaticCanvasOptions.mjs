@@ -19,7 +19,8 @@ const staticCanvasDefaults = {
    * @todo move to Canvas
    */
   allowTouchScrolling: false,
-  viewportTransform: [...iMatrix]
+  viewportTransform: [...iMatrix],
+  patternQuality: 'best'
 };
 
 export { staticCanvasDefaults };

@@ -55,6 +55,23 @@ class BaseConfiguration {
      */
     _defineProperty(this, "perfLimitSizeTotal", 2097152);
     /**
+     * *PMW* added property to allow group selection on mobile phones.
+     * @type Boolean
+     * @default
+     */
+    _defineProperty(this, "enableGroupSelection", false);
+    /**
+     * *PMW* added property to disable the drag group selection.
+     * @type Boolean
+     * @default
+     */
+    _defineProperty(this, "disableGroupSelector", false);
+    /**
+     * *PMW* added variable to mark when canvas is being two-finger panned.
+     * @type Boolean
+     */
+    _defineProperty(this, "isCanvasTwoFingerPanning", false);
+    /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number
@@ -356,7 +373,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.0.0-rc1";
+var version = "7.0.0-rc1-pmw-49";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -3090,10 +3107,20 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    */
   _setSVGObjects(markup, reviver) {
     this.forEachObject(fabricObject => {
+      // *PMW*: Attaching pmw id
+      const uid = fabricObject.__PMWID;
       if (fabricObject.excludeFromExport) {
         return;
       }
+      // *PMW*
+      if (uid) {
+        markup.push(`<g id="${uid}">\n`);
+      }
       this._setSVGObject(markup, fabricObject, reviver);
+      // *PMW*
+      if (uid) {
+        markup.push(`</g id="${uid}">\n`);
+      }
     });
   }
 
@@ -4820,10 +4847,10 @@ function getSvgRegex(arr) {
 
 const TEXT_DECORATION_THICKNESS = 'textDecorationThickness';
 const fontProperties = ['fontSize', 'fontWeight', 'fontFamily', 'fontStyle'];
-const textDecorationProperties = ['underline', 'overline', 'linethrough'];
+const textDecorationProperties = ['underline', 'overline', 'linethrough', 'squigglyline'];
 const textLayoutProperties = [...fontProperties, 'lineHeight', 'text', 'charSpacing', 'textAlign', 'styles', 'path', 'pathStartOffset', 'pathSide', 'pathAlign'];
 const additionalProps = [...textLayoutProperties, ...textDecorationProperties, 'textBackgroundColor', 'direction', TEXT_DECORATION_THICKNESS];
-const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor', TEXT_DECORATION_THICKNESS];
+const styleProperties = [...fontProperties, ...textDecorationProperties, STROKE, 'isStrokeForBold', 'strokeWidth', FILL, 'deltaY', 'textBackgroundColor', TEXT_DECORATION_THICKNESS];
 
 // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
 // regexes, list of properties that are not suppose to change by instances, magic consts.
@@ -4839,6 +4866,10 @@ const textDefaultValues = {
   underline: false,
   overline: false,
   linethrough: false,
+  squigglyline: false,
+  ignoreDelegatedSet: false,
+  squigglylineColor: '#FF0000',
+  isStrokeForBold: false,
   textAlign: LEFT,
   fontStyle: NORMAL,
   lineHeight: 1.16,
@@ -4849,6 +4880,7 @@ const textDefaultValues = {
   pathStartOffset: 0,
   pathSide: LEFT,
   pathAlign: 'baseline',
+  cacheExpansionFactor: 1,
   charSpacing: 0,
   deltaY: 0,
   direction: LTR,
@@ -4868,6 +4900,7 @@ const textDefaultValues = {
   _fontSizeFraction: 0.222,
   offsets: {
     underline: 0.1,
+    squigglyline: 0.1,
     linethrough: -0.28167,
     // added 1/30 to original number
     overline: -0.81333 // added 1/15 to original number
@@ -4948,8 +4981,15 @@ const reViewBoxAttrValue = new RegExp(String.raw`^\s*(${reNum})${viewportSeparat
 
 (?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
    */
-// eslint-disable-next-line max-len
 
+let ShadowOrGlowType = /*#__PURE__*/function (ShadowOrGlowType) {
+  ShadowOrGlowType["LIGHT_SHADOW"] = "light_shadow";
+  ShadowOrGlowType["STRONG_SHADOW"] = "strong_shadow";
+  ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
+  ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
+  ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
+  return ShadowOrGlowType;
+}({});
 const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
 const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
 const shadowDefaultValues = {
@@ -4988,6 +5028,21 @@ class Shadow {
       offsetY,
       blur
     };
+  }
+  isShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+  isCustomShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+  }
+  isGlow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
+  }
+  isLightShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW;
+  }
+  isStrongShadow() {
+    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW;
   }
 
   /**
@@ -5037,7 +5092,8 @@ class Shadow {
       offsetY: this.offsetY,
       affectStroke: this.affectStroke,
       nonScaling: this.nonScaling,
-      type: this.constructor.type
+      type: this.constructor.type,
+      shadowOrGlowType: this.shadowOrGlowType
     };
     const defaults = Shadow.ownDefaults;
     return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
@@ -5107,15 +5163,22 @@ const fabricObjectDefaultValues = {
   paintFirst: FILL,
   fill: 'rgb(0,0,0)',
   fillRule: 'nonzero',
+  __PMWID: '',
+  erasable: false,
   stroke: null,
   strokeDashArray: null,
+  leanBackground: false,
+  leanBackgroundOffset: 0,
   strokeDashOffset: 0,
   strokeLineCap: 'butt',
   strokeLineJoin: 'miter',
+  pmwBmBtnText: '',
+  pmwBmBtnIcon: '',
   strokeMiterLimit: 4,
   globalCompositeOperation: 'source-over',
   backgroundColor: '',
   shadow: null,
+  uniformScaling: true,
   visible: true,
   includeDefaultValues: true,
   excludeFromExport: false,
@@ -7263,9 +7326,25 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
     if (!this.backgroundColor) {
       return;
     }
-    const dim = this._getNonTransformedDimensions();
-    ctx.fillStyle = this.backgroundColor;
-    ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    if (this.leanBackground) {
+      ctx.save();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.beginPath();
+      const offset = this.leanBackgroundOffset / 4,
+        slant = this.leanBackgroundOffset / 2,
+        yFix = this.leanBackgroundOffset / 10;
+      ctx.moveTo(-this.width / 2 + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width + offset, -this.height / 2 - yFix);
+      ctx.lineTo(-this.width / 2 + this.width - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.lineTo(-this.width / 2 - slant + offset, -this.height / 2 + this.height - yFix);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else {
+      const dim = this._getNonTransformedDimensions();
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+    }
     // if there is background color no other shadows
     // should be casted
     this._removeShadow(ctx);
@@ -7601,6 +7680,24 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
       boundingRect = this.getBoundingRect(),
       shadow = this.shadow,
       shadowOffset = new Point();
+
+    /*________________________ *PMW* added portion start ________________________*/
+    // extends bounding box to cater to font of text objects inside group item (text/slideshow item).
+    // This is used to prevent text from getting cut off during pdf generation.
+
+    if (options.expandBoundingBoxByFont && this.isGroup()) {
+      let maxWidthToAdd = 0,
+        maxHeightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        maxWidthToAdd = boundingRect.width * 0.75;
+        maxHeightToAdd = boundingRect.height * 0.75;
+      }
+      boundingRect.width += maxWidthToAdd;
+      boundingRect.height += maxHeightToAdd;
+    }
+    /*________________________ *PMW* added portion end ________________________*/
+
     if (shadow) {
       const shadowBlur = shadow.blur;
       const scaling = shadow.nonScaling ? new Point(1, 1) : this.getObjectScaling();
@@ -7640,6 +7737,36 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
     // since render has settled it is safe to destroy canvas
     canvas.destroy();
     return canvasEl;
+  }
+  isGroup() {
+    return false;
+  }
+
+  /**
+   * *PMW*
+   */
+  getCornerPoints(center) {
+    const angle = this.angle;
+    let width = this.getScaledWidth();
+    const height = this.getScaledHeight();
+    const x = center.x;
+    const y = center.y;
+    const theta = degreesToRadians(angle);
+    if (width < 0) {
+      width = Math.abs(width);
+    }
+    const sinTh = Math.sin(theta),
+      cosTh = Math.cos(theta),
+      _angle = width > 0 ? Math.atan(height / width) : 0,
+      _hypotenuse = width / Math.cos(_angle) / 2,
+      offsetX = Math.cos(_angle + theta) * _hypotenuse,
+      offsetY = Math.sin(_angle + theta) * _hypotenuse;
+    return {
+      tl: new Point(x - offsetX, y - offsetY),
+      tr: new Point(x - offsetX + width * cosTh, y - offsetY + width * sinTh),
+      bl: new Point(x - offsetX - height * sinTh, y - offsetY + height * cosTh),
+      br: new Point(x + offsetX, y + offsetY)
+    };
   }
 
   /**
@@ -8152,6 +8279,24 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
   }
 };
 /**
+ * *PMW property added*
+ * Whether to render a rectangle background or a tilted background
+ */
+/**
+ * *PMW property added*
+ * Leanness of background
+ */
+/**
+ * *PMW* new property
+ * PosterMyWall property for the default text of the button.
+ * @default
+ */
+/**
+ * *PMW* new property
+ * An svg of the icon place in the pmw bottom-middle button
+ * @default
+ */
+/**
  * This list of properties is used to check if the state of an object is changed.
  * This state change now is only used for children of groups to understand if a group
  * needs its cache regenerated during a .set call
@@ -8336,6 +8481,12 @@ class Control {
      * @default true
      */
     _defineProperty(this, "visible", true);
+    /**
+     * *PMW* added to use in cursor styling
+     * Whether the control is disabled or not
+     * @default false
+     */
+    _defineProperty(this, "disabled", false);
     /**
      * Name of the action that the control will likely execute.
      * This is optional. FabricJS uses to identify what the user is doing for some
@@ -8676,7 +8827,10 @@ const rotationWithSnapping = wrapWithFireEvent(ROTATING, wrapWithFixedAnchor(rot
 function scaleIsProportional(eventData, fabricObject) {
   const canvas = fabricObject.canvas,
     uniformIsToggled = eventData[canvas.uniScaleKey];
-  return canvas.uniformScaling && !uniformIsToggled || !canvas.uniformScaling && uniformIsToggled;
+
+  // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
+  // *PMW* changed canvas.uniScaleKey behaviour to not set unform scaling false in case of true but only to true in case of false
+  return fabricObject.uniformScaling || !fabricObject.uniformScaling && uniformIsToggled;
 }
 
 /**
@@ -9430,6 +9584,9 @@ class InteractiveFabricObject extends FabricObject$1 {
    */
   _renderControls(ctx) {
     let styleOverride = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
     const {
       hasBorders,
       hasControls
@@ -9771,7 +9928,8 @@ const isTransparent = (ctx, x, y, tolerance) => {
   // Split image data - for tolerance > 1, pixelDataSize = 4;
   for (let i = 3; i < data.length; i += 4) {
     const alphaChannel = data[i];
-    if (alphaChannel > 0) {
+    //*PMW* changing transparent pixel threshold value
+    if (alphaChannel > 2) {
       return false;
     }
   }
@@ -10816,6 +10974,7 @@ function parseAttributes(element, attributes, cssRules) {
 }
 
 const rectDefaultValues = {
+  uniformRoundness: false,
   rx: 0,
   ry: 0
 };
@@ -10838,6 +10997,7 @@ class Rect extends FabricObject {
     this.setOptions(options);
     this._initRxRy();
   }
+
   /**
    * Initializes rx/ry attributes
    * @private
@@ -10865,9 +11025,16 @@ class Rect extends FabricObject {
     } = this;
     const x = -w / 2;
     const y = -h / 2;
-    const rx = this.rx ? Math.min(this.rx, w / 2) : 0;
-    const ry = this.ry ? Math.min(this.ry, h / 2) : 0;
+    let rx = this.rx ? this.rx : 0;
+    let ry = this.ry ? this.ry : 0;
     const isRounded = rx !== 0 || ry !== 0;
+    if (this.uniformRoundness) {
+      const scaling = this.getObjectScaling();
+      rx = rx / scaling.x;
+      ry = ry / scaling.y;
+    }
+    rx = Math.min(rx, w / 2);
+    ry = Math.min(ry, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rx, y);
     ctx.lineTo(x + w - rx, y);
@@ -11357,6 +11524,9 @@ class NoopLayoutManager extends LayoutManager {
 const groupDefaultValues = {
   strokeWidth: 0,
   subTargetCheck: false,
+  caterCacheForTextChildren: false,
+  selected: false,
+  useSelectedFlag: false,
   interactive: false
 };
 
@@ -11390,6 +11560,20 @@ class Group extends createCollectionMixin(FabricObject) {
      * @type boolean
      */
     /**
+     * *PMW property added*
+     * Whether to cater to the text children objects for caching.
+     */
+    /**
+     * *PMW property added*
+     * Whether the object is currently selected.
+     * This is being used in GraphicItemSlideshowMediator to handle text editing.
+     * The editing mode is entered on single click when the item is selected. So we use this flag to determine if the item is selected.
+     */
+    /**
+     * *PMW property added*
+     * Whether the PMW added selected flag should be used.
+     */
+    /**
      * Used to allow targeting of object inside groups.
      * set to true if you want to select an object inside a group.\
      * **REQUIRES** `subTargetCheck` set to true
@@ -11412,6 +11596,71 @@ class Group extends createCollectionMixin(FabricObject) {
     Object.assign(this, Group.ownDefaults);
     this.setOptions(options);
     this.groupInit(objects, options);
+  }
+
+  /**
+   * *PMW function added*
+   * Called everytime a group object is deselected. The useSelectedFlag is used and only true when the group object is slideshow item. See docs of 'selected' property.
+   */
+  onDeselect(options) {
+    if (this.useSelectedFlag) {
+      this.selected = false;
+    }
+    return super.onDeselect(options);
+  }
+
+  /**
+   * *PMW* function added
+   * Expands cache dimensions to cater to any text children objects present inside the group.
+   * This is to prevent any part of the font rendering outside the selector box getting cut.
+   * @private
+   * @return {Object}.x width of object to be cached
+   * @return {Object}.y height of object to be cached
+   * @return {Object}.width width of canvas
+   * @return {Object}.height height of canvas
+   * @return {Object}.zoomX zoomX zoom value to unscale the canvas before drawing cache
+   * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
+   */
+  _getCacheCanvasDimensions() {
+    if (this.caterCacheForTextChildren) {
+      const dims = super._getCacheCanvasDimensions();
+      let widthToAdd = 0;
+      let heightToAdd = 0;
+      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      if (maxFontSize > 0) {
+        widthToAdd = maxFontSize * dims.zoomX;
+        heightToAdd = maxFontSize * dims.zoomY;
+      }
+      dims.width += widthToAdd;
+      dims.height += heightToAdd;
+      return dims;
+    }
+    return super._getCacheCanvasDimensions();
+  }
+
+  /**
+   * *PMW funtion added*
+   * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+   * @private
+   */
+  _getMaxExpandedFontSizeFromTextChildren() {
+    const groupObjects = this.getObjects();
+    let maxFontSize = 0;
+    for (const groupObject of groupObjects) {
+      if ('fontSize' in groupObject) {
+        const fontSize = groupObject.fontSize;
+        if (fontSize > maxFontSize) {
+          // @ts-ignore
+          maxFontSize = fontSize * groupObject.cacheExpansionFactor;
+        }
+      } else if (groupObject instanceof Group) {
+        const maxFontSizeInGroup = groupObject._getMaxExpandedFontSizeFromTextChildren();
+        if (maxFontSizeInGroup > maxFontSize) {
+          maxFontSize = maxFontSizeInGroup;
+        }
+      }
+    }
+    return maxFontSize;
   }
 
   /**
@@ -11723,6 +11972,9 @@ class Group extends createCollectionMixin(FabricObject) {
     }
     return false;
   }
+  isGroup() {
+    return true;
+  }
 
   /**
    * Check if instance or its group are caching, recursively up
@@ -11779,6 +12031,9 @@ class Group extends createCollectionMixin(FabricObject) {
     this._transformDone = true;
     super.render(ctx);
     this._transformDone = false;
+  }
+  isTable() {
+    return false;
   }
 
   /**
@@ -11888,6 +12143,105 @@ class Group extends createCollectionMixin(FabricObject) {
     }
     return this._createBaseClipPathSVGMarkup(svgString, {
       reviver
+    });
+  }
+
+  /**
+   * *PMW*
+   * Aligns the items in the group horizontally.
+   * @param {String} type Must be either 'left', 'right' or 'center'
+   */
+  horizontalAlignment(type) {
+    var _this$canvas2;
+    const groupWidth = this.width,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetX;
+    switch (type) {
+      case 'left':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const minX = Math.min(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = minX < tl ? tl - minX : 0;
+          objects[i].set('left', -groupWidth / 2 + padding + offsetX);
+        }
+        break;
+      case 'right':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.x;
+          const maxX = Math.max(tl, corners.tr.x, corners.bl.x, corners.br.x);
+          offsetX = maxX > tl ? maxX - tl : 0;
+          objects[i].set('left', groupWidth / 2 - offsetX - padding);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: 0,
+            y: objects[i].top
+          });
+          objects[i].set('left', corners.tl.x);
+        }
+        break;
+      default:
+        return;
+    }
+    (_this$canvas2 = this.canvas) === null || _this$canvas2 === void 0 || _this$canvas2.fire('object:modified', {
+      target: this
+    });
+  }
+
+  /**
+   * *PMW* Aligns the items in the group vertically.
+   * @param {String} type Must be either 'top', 'bottom' or 'center'
+   */
+  verticalAlignment(type) {
+    var _this$canvas3;
+    const groupHeight = this.height,
+      objects = this._objects,
+      padding = this.padding;
+    let i = 0,
+      corners,
+      tl,
+      offsetY;
+    switch (type) {
+      case 'top':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const minY = Math.min(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = minY < tl ? tl - minY : 0;
+          objects[i].set('top', -groupHeight / 2 + padding + offsetY);
+        }
+        break;
+      case 'bottom':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints(objects[i].getCenterPoint());
+          tl = corners.tl.y;
+          const maxY = Math.max(tl, corners.tr.y, corners.bl.y, corners.br.y);
+          offsetY = maxY > tl ? maxY - tl : 0;
+          objects[i].set('top', groupHeight / 2 - padding - offsetY);
+        }
+        break;
+      case 'center':
+        for (i = 0; i < objects.length; i++) {
+          corners = objects[i].getCornerPoints({
+            x: objects[i].left,
+            y: 0
+          });
+          objects[i].set('top', corners.tl.y);
+        }
+        break;
+      default:
+        return;
+    }
+    (_this$canvas3 = this.canvas) === null || _this$canvas3 === void 0 || _this$canvas3.fire('object:modified', {
+      target: this
     });
   }
 
@@ -12968,6 +13322,7 @@ var index$1 = /*#__PURE__*/Object.freeze({
   invertTransform: invertTransform,
   isBetweenVectors: isBetweenVectors,
   isIdentityMatrix: isIdentityMatrix,
+  isSerializableFiller: isSerializableFiller,
   isTouchEvent: isTouchEvent,
   isTransparent: isTransparent,
   joinPath: joinPath,
@@ -13508,7 +13863,9 @@ class SelectableCanvas extends StaticCanvas {
   _shouldClearSelection(e, target) {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
-    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
+    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target &&
+    // *PMW* added code: (&& !fabric.enableGroupSelection)
+    !config.enableGroupSelection && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
   }
 
   /**
@@ -14442,27 +14799,13 @@ class Canvas extends SelectableCanvas {
      * @private
      */
     /**
-     * Holds a reference to a setTimeout timer for event synchronization
-     * @type number
-     * @private
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
      */
+    _defineProperty(this, "touchProps", void 0);
     /**
-     * Holds a reference to an object on the canvas that is receiving the drag over event.
-     * @type FabricObject
-     * @private
+     * *PMW* added property to handle drift deviance for better experience on highly pixelated devices.
      */
-    /**
-     * Holds a reference to an object on the canvas from where the drag operation started
-     * @type FabricObject
-     * @private
-     */
-    /**
-     * Holds a reference to an object on the canvas that is the current drop target
-     * May differ from {@link _draggedoverTarget}
-     * @todo inspect whether {@link _draggedoverTarget} and {@link _dropTarget} should be merged somehow
-     * @type FabricObject
-     * @private
-     */
+    _defineProperty(this, "allowedTouchDriftDeviance", 5);
     /**
      * a boolean that keeps track of the click state during a cycle of mouse down/up.
      * If a mouse move occurs it becomes false.
@@ -14471,7 +14814,9 @@ class Canvas extends SelectableCanvas {
      */
     _defineProperty(this, "_isClick", void 0);
     _defineProperty(this, "textEditingManager", new TextEditingManager(this));
-    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp', '_onTouchEnd', '_onResize',
+    ['_onMouseDown', '_onTouchStart', '_onMouseMove', '_onMouseUp',
+    //*PMW* Added support for drift deviance
+    '_onTouchMove', '_onTouchEnd', '_onResize',
     // '_onGesture',
     // '_onDrag',
     // '_onShake',
@@ -14531,7 +14876,8 @@ class Canvas extends SelectableCanvas {
     removeListener(doc, `${eventTypePrefix}up`, this._onMouseUp);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
     removeListener(doc, `${eventTypePrefix}move`, this._onMouseMove, addEventOptions);
-    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     clearTimeout(this._willAddMouseDown);
   }
 
@@ -14961,8 +15307,8 @@ class Canvas extends SelectableCanvas {
       eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(canvasElement);
     addListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    // if we scroll don't register the touch move event
-    shouldPreventScrolling && addListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    addListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(canvasElement, `${eventTypePrefix}down`, this._onMouseDown);
     this._resetTransformEventData();
@@ -15001,7 +15347,8 @@ class Canvas extends SelectableCanvas {
     const eventTypePrefix = this._getEventPrefix();
     const doc = getDocumentFromElement(this.upperCanvasEl);
     removeListener(doc, 'touchend', this._onTouchEnd, addEventOptions);
-    removeListener(doc, 'touchmove', this._onMouseMove, addEventOptions);
+    // *PMW* modified code. calling onTouchMove instead of _onMouseMove to handle drift deviance
+    removeListener(doc, 'touchmove', this._onTouchMove, addEventOptions);
     if (this._willAddMouseDown) {
       clearTimeout(this._willAddMouseDown);
     }
@@ -15044,6 +15391,25 @@ class Canvas extends SelectableCanvas {
     !activeObject.shouldStartDragging(e)) && e.preventDefault && e.preventDefault();
     this.__onMouseMove(e);
     this._resetTransformEventData();
+  }
+
+  /**
+   * *PMW* added function. Calculates drift deviance since touch start. If total number of touches is one, and totalDrift is less than allowedTouchDriftDeviance, then we don't skip the onMouseMove call.
+   * @param {Event} e Event object fired on touchmove
+   */
+  _onTouchMove(e) {
+    if (this.touchProps && this.touchProps.numOfTouches === 1) {
+      const event = e;
+      const dx = event.touches[0].pageX - this.touchProps.x;
+      const dy = event.touches[0].pageY - this.touchProps.y;
+      this.touchProps.totalDrift += Math.sqrt(dx * dx + dy * dy);
+      this.touchProps.x = event.touches[0].pageX;
+      this.touchProps.y = event.touches[0].pageY;
+      if (this.touchProps.totalDrift < this.allowedTouchDriftDeviance) {
+        return;
+      }
+    }
+    this._onMouseMove(e);
   }
 
   /**
@@ -15149,6 +15515,9 @@ class Canvas extends SelectableCanvas {
       this.requestRenderAll();
     } else if (!isClick && !((_this$_activeObject = this._activeObject) !== null && _this$_activeObject !== void 0 && _this$_activeObject.isEditing)) {
       this.renderTop();
+    }
+    if (config.isCanvasTwoFingerPanning) {
+      config.isCanvasTwoFingerPanning = false;
     }
   }
   _basicEventHandler(eventType, options) {
@@ -15259,6 +15628,10 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e) {
+    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
+    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
+      return;
+    }
     this._isClick = true;
     this._handleEvent(e, 'down:before');
     let {
@@ -15303,7 +15676,7 @@ class Canvas extends SelectableCanvas {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
-    if (this.selection && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
+    if (this.selection && !config.disableGroupSelector && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,
@@ -15320,7 +15693,8 @@ class Canvas extends SelectableCanvas {
         this.setActiveObject(target, e);
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
-      if (target === this._activeObject && (handle || !grouped)) {
+      // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
+      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
@@ -15373,6 +15747,9 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousemove
    */
   __onMouseMove(e) {
+    if (config.isCanvasTwoFingerPanning) {
+      return;
+    }
     this._isClick = false;
     this._handleEvent(e, 'move:before');
     if (this.isDrawingMode) {
@@ -15613,7 +15990,9 @@ class Canvas extends SelectableCanvas {
     const isAS = isActiveSelection(activeObject);
     if (
     // check if an active object exists on canvas and if the user is pressing the `selectionKey` while canvas supports multi selection.
-    !!activeObject && this._isSelectionKeyPressed(e) && this.selection &&
+    !!activeObject && (
+    // *PMW*
+    config.enableGroupSelection || this._isSelectionKeyPressed(e)) && this.selection &&
     // on top of that the user also has to hit a target that is selectable.
     !!target && target.selectable && (
     // group target and active object only if they are different objects
@@ -15650,6 +16029,11 @@ class Canvas extends SelectableCanvas {
           }
         }
         if (target.group === activeObject) {
+          // *PMW* . Use of custom variable. Preventing unselection of object tapped on, from active selection to enable drag. We have written custom code for unselection of object on mouse up instead of mouse down to enable dragging.
+          if (config.enableGroupSelection) {
+            return;
+          }
+
           // `target` is part of active selection => remove it
           activeObject.remove(target);
           this._hoveredTarget = target;
@@ -18460,6 +18844,333 @@ _defineProperty(Polygon, "type", 'Polygon');
 classRegistry.setClass(Polygon);
 classRegistry.setSVGClass(Polygon);
 
+class Tabs extends Group {
+  static async fromObject(object) {
+    return FabricObject$1._fromObject({
+      type: 'tabs',
+      ...object
+    });
+  }
+}
+/**
+ * Type of an object
+ * @type String
+ * @default
+ */
+_defineProperty(Tabs, "type", 'tabs');
+classRegistry.setClass(Tabs);
+classRegistry.setClass(Tabs, 'tabs');
+
+class Table extends Group {
+  constructor() {
+    let objects = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    super(objects, options);
+    /**
+     * Number of table rows
+     */
+    _defineProperty(this, "rows", 0);
+    /**
+     * Number of table columns
+     */
+    _defineProperty(this, "columns", 0);
+    /**
+     * Layout style
+     */
+    _defineProperty(this, "layoutType", '');
+    /**
+     * Background color 1 for alternate table background
+     */
+    _defineProperty(this, "alternateBackgroundColor1", null);
+    /**
+     * Background color 2 for alternate table background
+     */
+    _defineProperty(this, "alternateBackgroundColor2", null);
+    /**
+     * Background color for highlighted rows
+     */
+    _defineProperty(this, "highlightedRowsBackgroundColor", null);
+    /**
+     * Array containing indices of highlighted rows
+     */
+    _defineProperty(this, "highlightedRows", []);
+    /**
+     * 2D array containing table data
+     */
+    _defineProperty(this, "tableArray", [[]]);
+    /**
+     * Spacing Between rows of table
+     */
+    _defineProperty(this, "ySpacing", 0);
+    /**
+     * Spacing Between column of table
+     */
+    _defineProperty(this, "xSpacing", 0);
+    _defineProperty(this, "fontSize", 0);
+    /**
+     * Property used for showing the 'edit content' button
+     */
+    _defineProperty(this, "hasButton", true);
+  }
+  render(ctx) {
+    this._transformDone = true;
+    super.render(ctx);
+    ctx.save();
+    this.transform(ctx);
+    this.renderTableBorders(ctx);
+    ctx.restore();
+    this._transformDone = false;
+  }
+
+  /**
+   * Draws the table/schedule border
+   * @param {CanvasRenderingContext2D} ctx context to draw on
+   */
+  renderTableBorders(ctx) {
+    if (!this.stroke || this.strokeWidth === 0) {
+      return;
+    }
+    ctx.save();
+    this._setStrokeStyles(ctx, this);
+    ctx.strokeRect(-(this.width / 2), -(this.height / 2), this.width, this.height);
+
+    // if custom table layout them draw rows and column border too
+    if (this.isTableLayout()) {
+      this.drawColumnBorders(ctx);
+      this.drawRowBorders(ctx);
+    }
+    ctx.restore();
+  }
+  isTable() {
+    return true;
+  }
+
+  /**
+   * This function is responsible for rendering the background of table.
+   * It loops over all the rows in the table and draws the appropriate color rectangle for each row.
+   * If more then one consecutive rows have background of same color then it draws a one big rectangle of that color.
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  _renderBackground(ctx) {
+    if (this.highlightedRows.length == 0 && !(this.alternateBackgroundColor1 && this.alternateBackgroundColor2) || !this.isTableLayout()) {
+      super._renderBackground(ctx);
+      return;
+    }
+    const backgroundData = this.getTableBackGroundData();
+    ctx.save();
+    const objects = this.getObjects();
+    let top = null;
+    let height = null;
+    let renderBackground = false;
+    for (let i = 0; i < backgroundData.length; i++) {
+      renderBackground = false;
+      if (backgroundData[i] != 'none') {
+        if (top == null) {
+          if (i == 0) {
+            top = -this.height / 2;
+          } else {
+            top = objects[i].top - this.ySpacing / 2;
+          }
+        }
+        if (backgroundData[i] != backgroundData[i + 1]) {
+          // set height of rectangle to render
+          height = Math.abs(top - objects[i].top) + this.getHeightOfRow(i) + this.ySpacing / 2;
+          renderBackground = true;
+          switch (backgroundData[i]) {
+            case 'highlight':
+              // @ts-ignore
+              ctx.fillStyle = this.highlightedRowsBackgroundColor;
+              break;
+            case 'color':
+              ctx.fillStyle = this.backgroundColor;
+              break;
+            case 'alternate1':
+              // @ts-ignore
+              ctx.fillStyle = this.alternateBackgroundColor1;
+              break;
+            case 'alternate2':
+              // @ts-ignore
+              ctx.fillStyle = this.alternateBackgroundColor2;
+              break;
+          }
+        } else {
+          renderBackground = false;
+        }
+        if (renderBackground) {
+          ctx.fillRect(-this.width / 2, top, this.width, height !== null && height !== void 0 ? height : 0);
+          top = null;
+          height = null;
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Returns an array containing string values corresponding to rows background color.
+   * 'highlight' for selected rows
+   * 'color' for when colored background is selected by user
+   * 'alternate1' for even rows when alternate background is selected
+   * 'alternate2' for odd rows when alternate background is selected
+   * 'none' for transparent background
+   * @returns {Array}
+   */
+  getTableBackGroundData() {
+    const data = [];
+    for (let i = 0; i < this.rows; i++) {
+      if (this.highlightedRows.indexOf(i) != -1) {
+        data.push('highlight');
+      } else if (this.backgroundColor != null) {
+        data.push('color');
+      } else if (this.alternateBackgroundColor1 && this.alternateBackgroundColor2) {
+        if (i % 2 == 0) {
+          data.push('alternate1');
+        } else {
+          data.push('alternate2');
+        }
+      } else {
+        data.push('none');
+      }
+    }
+    return data;
+  }
+
+  /**
+   * Returns the height of an item in a given row with max height,
+   * this value is basically the minimum space in y-axis needed by this row in a table.
+   * @param {Number} row
+   * @returns {Number}
+   */
+  getHeightOfRow(row) {
+    let height = 0,
+      h;
+    for (let i = 0; i < this.columns; i++) {
+      h = this.tableArray[i][row].calcTextHeight();
+      if (h > height) {
+        height = h;
+      }
+    }
+    return height;
+  }
+
+  /**
+   * Returns the width of an item in a given column with max width,
+   * this value is basically the minimum space in x-axis needed by this column in a table.
+   * @param {Number} column column index
+   * @returns {Number} minimum width required by this column
+   */
+  getWidthOfColumn(column) {
+    let width = 0,
+      w;
+    for (let i = 0; i < this.rows; i++) {
+      w = this.tableArray[column][i].calcTextWidth();
+      if (w > width) {
+        width = w;
+      }
+    }
+    return width;
+  }
+
+  /**
+   * renders border for table columns
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawColumnBorders(ctx) {
+    const objects = this.getObjects();
+    let x = this.rows,
+      maxWidth,
+      w,
+      itemIndex;
+    for (let i = 2; i <= this.columns; i++) {
+      maxWidth = 0;
+      while (objects[x] && objects[x].column == i) {
+        w = objects[x].width;
+        if (w > maxWidth) {
+          maxWidth = w;
+          itemIndex = x;
+        }
+        x++;
+      }
+      if (itemIndex) {
+        ctx.beginPath();
+        ctx.moveTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2));
+        ctx.lineTo(objects[itemIndex].left - this.xSpacing / 2, -(this.height / 2) + this.height);
+        ctx.stroke();
+      }
+    }
+  }
+
+  /**
+   * renders border for table rows
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawRowBorders(ctx) {
+    const objects = this.getObjects();
+    for (let i = 1; i < this.rows; i++) {
+      const startX = -this.width / 2,
+        startY = objects[i].top - this.ySpacing / 2,
+        endX = startX + this.width,
+        endY = startY;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+  }
+
+  /**
+   * Returns true if design is simple table structure('custom-table' or 'layout-1'), false otherwise
+   * @returns {boolean}
+   */
+  isTableLayout() {
+    return this.layoutType == 'layout-1' || this.layoutType == 'custom-table';
+  }
+}
+/**
+ * Type of an object
+ * @type String
+ * @default
+ */
+_defineProperty(Table, "type", 'table');
+classRegistry.setClass(Table);
+classRegistry.setClass(Table, 'table');
+
+//*PMW* class addded for menu
+class CustomBorderTable extends Table {
+  /**
+   * Renders vertical borders for table Style Menu Layouts
+   * @param {CanvasRenderingContext2D} ctx context to render on
+   */
+  drawColumnBorders(ctx) {
+    const groups = this.getObjects();
+    let w,
+      maxWidth = 0,
+      left = 0;
+    for (let i = 0; i < groups.length; i++) {
+      // @ts-ignore
+      const items = groups[i].getObjects();
+      w = items[1].width;
+      if (w > maxWidth) {
+        maxWidth = w;
+        left = this.width / 2 - maxWidth;
+      }
+    }
+    const oldPadding = 11;
+    ctx.beginPath();
+    ctx.moveTo(left - oldPadding * 2, -(this.height / 2));
+    ctx.lineTo(left - oldPadding * 2, -(this.height / 2) + this.height);
+    ctx.stroke();
+  }
+
+  /**
+   * Returns true if design is simple table structure('layout-13'), false otherwise
+   * @returns {boolean}
+   */
+  isTableLayout() {
+    return this.layoutType == 'layout-13';
+  }
+}
+
 class StyledText extends FabricObject {
   /**
    * Returns true if object has no styling or no styling in a line
@@ -19167,7 +19878,7 @@ class FabricText extends StyledText {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY;
+    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
     return dims;
   }
 
@@ -19184,6 +19895,7 @@ class FabricText extends StyledText {
     this._renderText(ctx);
     this._renderTextDecoration(ctx, 'overline');
     this._renderTextDecoration(ctx, 'linethrough');
+    this._renderTextDecoration(ctx, 'squigglyline'); // *PMW*
   }
 
   /**
@@ -19558,9 +20270,16 @@ class FabricText extends StyledText {
    * Calculate text box height
    */
   calcTextHeight() {
-    let height = 0;
+    let lineHeight,
+      height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
-      height += i === len - 1 ? this.getHeightOfLineImpl(i) : this.getHeightOfLine(i);
+      // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
+      // height +=
+      //   i === len - 1 ? this.getHeightOfLineImpl(i) : this.getHeightOfLine(i);
+
+      // *PMW* preventing height to be smaller than selector size.
+      lineHeight = this.getHeightOfLine(i);
+      height += i === len - 1 && this.lineHeight < 1 ? lineHeight / this.lineHeight : lineHeight;
     }
     return height;
   }
@@ -19948,10 +20667,11 @@ class FabricText extends StyledText {
     return width;
   }
   _getWidthOfCharSpacing() {
-    if (this.charSpacing !== 0) {
-      return this.fontSize * this.charSpacing / 1000;
-    }
-    return 0;
+    //*PMW* change char spacing to be applied the same on every size
+    // if (this.charSpacing !== 0) {
+    //   return this.fontSize * this.charSpacing / 1000;
+    // }
+    return this.charSpacing;
   }
 
   /**
@@ -20012,10 +20732,10 @@ class FabricText extends StyledText {
           const finalTickness = this.fontSize * currentTickness / 1000;
           ctx.save();
           // bug? verify lastFill is a valid fill here.
-          ctx.fillStyle = lastFill;
+          ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
-          ctx.fillRect(-charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
+          this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
           ctx.restore();
         } else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentSize !== size || currentTickness !== lastTickness || currentDy !== dy) && boxWidth > 0) {
           const finalTickness = this.fontSize * lastTickness / 1000;
@@ -20025,8 +20745,8 @@ class FabricText extends StyledText {
           }
           if (lastDecoration && lastFill && lastTickness) {
             // bug? verify lastFill is a valid fill here.
-            ctx.fillStyle = lastFill;
-            ctx.fillRect(drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
+            ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
+            this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
           }
           boxStart = charBox.left;
           boxWidth = charBox.width;
@@ -20043,14 +20763,144 @@ class FabricText extends StyledText {
       if (this.direction === RTL) {
         drawStart = this.width - drawStart - boxWidth;
       }
-      ctx.fillStyle = currentFill;
+      ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
       const finalTickness = this.fontSize * currentTickness / 1000;
-      currentDecoration && currentFill && currentTickness && ctx.fillRect(drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
+      currentDecoration && currentFill && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
       topOffset += heightOfLine;
     }
+
     // if there is text background color no
     // other shadows should be casted
+    // *PMW* need shadow to be applied on text with styles as well,
+    // this._removeShadow(ctx);
+  }
+
+  /**
+   *  *PMW*
+   * Handle squigglyline
+   * @private
+   */
+  fillTextDecorationRect(ctx, type, x, y, w, h) {
+    if (type === 'squigglyline') {
+      const polyPoints = [],
+        scaleX = 0.35,
+        scaleY = 0.45,
+        funct = function (x) {
+          const g = x % 6;
+          if (g <= 3) {
+            return g * 5;
+          }
+          return (6 - g) * 5;
+        };
+      for (let x = 0; x < w; x += 0.5) {
+        polyPoints.push({
+          x: x - 10,
+          y: funct(x * scaleX) * scaleY
+        });
+      }
+      for (let j = 0; j < polyPoints.length; j++) {
+        ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
+      }
+    } else {
+      ctx.fillRect(x, y, w, h);
+    }
+  }
+
+  /**
+   *  *PMW*
+   * Handle squigglyline, gradient fill and pattern fill for text decoration
+   * @private
+   */
+  getFillForTextDecoration(ctx, type, fill) {
+    if (type === 'squigglyline') {
+      return this.squigglylineColor;
+    }
+    if (fill && typeof fill !== 'string' && 'colorStops' in fill && fill.colorStops.length) {
+      return fill.colorStops[0].color;
+    } else if (fill && typeof fill !== 'string' && 'source' in fill) {
+      //Use pattern for underline, linethrough on text mask
+      const pattern = ctx.createPattern(fill.source, 'repeat');
+      if (pattern) {
+        return pattern;
+      }
+    }
+    return fill;
+  }
+
+  /**
+   * *PMW*
+   * Draws a background for the object big as its untrasformed dimensions
+   * @private
+   * @param {CanvasRenderingContext2D} ctx Context to render on
+   */
+  _renderBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    const dim = this._getNonTransformedDimensions();
+    let scaleX = this.scaleX,
+      scaleY = this.scaleY;
+    ctx.fillStyle = this.backgroundColor;
+    if (this.group) {
+      scaleX *= this.group.scaleX;
+      scaleY *= this.group.scaleY;
+    }
+    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
+    // if there is background color no other shadows
+    // should be casted
     this._removeShadow(ctx);
+  }
+  getCharOffset(position) {
+    let topOffset = 0,
+      leftOffset = 0;
+    const cursorPosition = this.get2DCursorLocation(position),
+      charIndex = cursorPosition.charIndex,
+      lineIndex = cursorPosition.lineIndex;
+    for (let i = 0; i < lineIndex; i++) {
+      topOffset += this.getHeightOfLine(i);
+    }
+    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
+    const bound = this.__charBounds[lineIndex][charIndex];
+    bound && (leftOffset = bound.left);
+    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
+      leftOffset -= this._getWidthOfCharSpacing();
+    }
+    return {
+      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
+      y: topOffset
+    };
+  }
+
+  /**
+   * *PMW*
+   * Find new selection index representing start of current word according to current selection index
+   * @param {Number} startFrom Current selection index
+   * @return {Number} selection start index
+   */
+  findSelectedWordLeft(startFrom) {
+    let offset = 0,
+      index = startFrom - 1;
+    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index > -1) {
+      offset++;
+      index--;
+    }
+    return startFrom - offset;
+  }
+
+  /**
+   * *PMW*
+   * Find new selection index representing end of current word according to current selection index
+   * @param {Number} startFrom Current selection index
+   * @return {Number} selection end index
+   */
+  findSelectedWordRight(startFrom) {
+    let offset = 0,
+      index = startFrom;
+    while (/[^\n -&(-/:-@[-`{-~0-9]/.test(this._text[index]) && index < this._text.length) {
+      offset++;
+      index++;
+    }
+    return startFrom + offset;
   }
 
   /**
@@ -20211,6 +21061,8 @@ class FabricText extends StyledText {
         underline: textDecoration.includes('underline'),
         overline: textDecoration.includes('overline'),
         linethrough: textDecoration.includes('line-through'),
+        /*PMW*/
+        squigglyline: textDecoration.includes('squiggly-line'),
         // we initialize this as 0
         strokeWidth: 0,
         fontSize,
@@ -20250,7 +21102,7 @@ class FabricText extends StyledText {
   static fromObject(object) {
     return this._fromObject({
       ...object,
-      styles: stylesFromArray(object.styles || {}, object.text)
+      styles: stylesFromArray(object.styles || {}, object.text || '')
     }, {
       extraParam: 'text'
     });
@@ -22416,6 +23268,8 @@ const iTextDefaultValues = {
   selectionColor: 'rgba(17,119,255,0.3)',
   isEditing: false,
   editable: true,
+  column: 0,
+  dataType: '',
   editingBorderColor: 'rgba(102,153,255,0.25)',
   cursorWidth: 2,
   cursorColor: '',
@@ -22552,6 +23406,54 @@ class IText extends ITextClickBehavior {
   }
 
   /**
+   * *PMW*
+   * Returns location of cursor on canvas
+   */
+  getCharOffset(position) {
+    let topOffset = 0,
+      leftOffset = 0;
+    const cursorPosition = this.get2DCursorLocation(position),
+      charIndex = cursorPosition.charIndex,
+      lineIndex = cursorPosition.lineIndex;
+    for (let i = 0; i < lineIndex; i++) {
+      topOffset += this.getHeightOfLine(i);
+    }
+    const lineLeftOffset = this._getLineLeftOffset(lineIndex);
+    const bound = this.__charBounds[lineIndex][charIndex];
+    bound && (leftOffset = bound.left);
+    if (this.charSpacing !== 0 && charIndex === this._textLines[lineIndex].length) {
+      leftOffset -= this._getWidthOfCharSpacing();
+    }
+    return {
+      x: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
+      y: topOffset
+    };
+  }
+
+  /**
+   * *PMW*
+   * Draws a background for the object big as its untrasformed dimensions
+   * @private
+   */
+  _renderBackground(ctx) {
+    if (!this.backgroundColor) {
+      return;
+    }
+    const dim = this._getNonTransformedDimensions();
+    let scaleX = this.scaleX,
+      scaleY = this.scaleY;
+    ctx.fillStyle = this.backgroundColor;
+    if (this.group) {
+      scaleX *= this.group.scaleX;
+      scaleY *= this.group.scaleY;
+    }
+    ctx.fillRect(-dim.x / 2 - this.padding / scaleX, -dim.y / 2 - this.padding / scaleY, dim.x + this.padding / scaleX * 2, dim.y + this.padding / scaleY * 2);
+    // if there is background color no other shadows
+    // should be casted
+    this._removeShadow(ctx);
+  }
+
+  /**
    * Fires the even of selection changed
    * @private
    */
@@ -22587,6 +23489,9 @@ class IText extends ITextClickBehavior {
     let endIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.selectionEnd;
     let complete = arguments.length > 2 ? arguments[2] : undefined;
     return super.getSelectionStyles(startIndex, endIndex, complete);
+  }
+  getStylesForSelection() {
+    return this.selectionStart === this.selectionEnd ? [this.getStyleAtPosition(Math.max(0, this.selectionStart - 1), true)] : this.getSelectionStyles(this.selectionStart, this.selectionEnd, true);
   }
 
   /**
@@ -24655,6 +25560,11 @@ class FabricImage extends FabricObject {
     const imgElement = this._originalElement,
       sourceWidth = imgElement.naturalWidth || imgElement.width,
       sourceHeight = imgElement.naturalHeight || imgElement.height;
+
+    //*PMW* Return here because filters need to be applied on each frame render for videos
+    if (imgElement.nodeName === 'VIDEO') {
+      return this;
+    }
     if (this._element === this._originalElement) {
       // if the _element a reference to _originalElement
       // we need to create a new element to host the filtered pixels
@@ -24720,7 +25630,7 @@ class FabricImage extends FabricObject {
     return this.needsItsOwnCache();
   }
   _renderFill(ctx) {
-    const elementToDraw = this._element;
+    let elementToDraw = this._element;
     if (!elementToDraw) {
       return;
     }
@@ -24742,7 +25652,57 @@ class FabricImage extends FabricObject {
       y = -h / 2,
       maxDestW = Math.min(w, elWidth / scaleX - cropX),
       maxDestH = Math.min(h, elHeight / scaleY - cropY);
+
+    //*PMW* if video apply filter on each frame draw
+    if (this._element.nodeName === 'VIDEO') {
+      elementToDraw = this._applyVideoFilter(this._element);
+    }
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
+  }
+
+  /**
+   * *PMW* function added
+   * Applies filter of video element using webgl backend
+   * @param elementToDraw
+   * @return {*|CanvasElement}
+   * @private
+   */
+  _applyVideoFilter(elementToDraw) {
+    let filters = this.filters || [];
+    filters = filters.filter(function (filter) {
+      return filter;
+    });
+    if (filters.length === 0) {
+      this._element = this._originalElement;
+      this._filteredEl = undefined;
+      this._filterScalingX = 1;
+      this._filterScalingY = 1;
+      return this._element;
+    }
+    const videoEl = elementToDraw,
+      sourceWidth = videoEl.width,
+      sourceHeight = videoEl.height;
+    if (this._element === videoEl) {
+      // if the element is the same we need to create a new element
+      const canvasEl = createCanvasElementFor({
+        width: sourceWidth,
+        height: sourceHeight
+      });
+      this._element = canvasEl;
+      this._filteredEl = canvasEl;
+    } else {
+      var _getContext;
+      // clear the existing element to get new filter data
+      (_getContext = this._element.getContext('2d')) === null || _getContext === void 0 || _getContext.clearRect(0, 0, sourceWidth, sourceHeight);
+    }
+    getFilterBackend().applyFilters(filters, this._originalElement, sourceWidth, sourceHeight, this._element);
+    if (this._originalElement.width !== this._element.width || this._originalElement.height !== this._element.height) {
+      this._filterScalingX = this._element.width / this._originalElement.width;
+      this._filterScalingY = this._element.height / this._originalElement.height;
+    }
+    const modifiedElementToDraw = this._element;
+    this._element = videoEl;
+    return modifiedElementToDraw;
   }
 
   /**
@@ -28657,5 +29617,5 @@ var filters = /*#__PURE__*/Object.freeze({
   Vintage: Vintage
 });
 
-export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, SprayBrush, StaticCanvas, StaticCanvasDOMManager, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseSVGDocument, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
+export { ActiveSelection, BaseBrush, FabricObject$1 as BaseFabricObject, Canvas, Canvas2dFilterBackend, CanvasDOMManager, Circle, CircleBrush, ClipPathLayout, Color, Control, CustomBorderTable, Ellipse, FabricImage, FabricObject, FabricText, FitContentLayout, FixedLayout, Gradient, Group, IText, FabricImage as Image, InteractiveFabricObject, Intersection, LayoutManager, LayoutStrategy, Line, FabricObject as Object, Observable, Path, Pattern, PatternBrush, PencilBrush, Point, Polygon, Polyline, Rect, Shadow, ShadowOrGlowType, SprayBrush, StaticCanvas, StaticCanvasDOMManager, Table, Tabs, FabricText as Text, Textbox, Triangle, WebGLFilterBackend, cache, classRegistry, config, index as controlsUtils, createCollectionMixin, filters, getEnv, getFabricDocument, getFabricWindow, getFilterBackend, iMatrix, initFilterBackend, isPutImageFaster, isWebGLPipelineState, loadSVGFromString, loadSVGFromURL, parseSVGDocument, runningAnimations, setEnv, setFilterBackend, index$1 as util, VERSION as version };
 //# sourceMappingURL=index.mjs.map

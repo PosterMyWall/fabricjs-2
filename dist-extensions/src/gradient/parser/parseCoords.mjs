@@ -8,15 +8,16 @@ function convertPercentUnitsToValues(valuesToConvert, _ref) {
     gradientUnits
   } = _ref;
   let finalValue;
-  return Object.keys(valuesToConvert).reduce((acc, prop) => {
-    const propValue = valuesToConvert[prop];
+  return Object.entries(valuesToConvert).reduce((acc, _ref2) => {
+    let [prop, propValue] = _ref2;
     if (propValue === 'Infinity') {
       finalValue = 1;
     } else if (propValue === '-Infinity') {
       finalValue = 0;
     } else {
-      finalValue = typeof propValue === 'string' ? parseFloat(propValue) : propValue;
-      if (typeof propValue === 'string' && isPercent(propValue)) {
+      const isString = typeof propValue === 'string';
+      finalValue = isString ? parseFloat(propValue) : propValue;
+      if (isString && isPercent(propValue)) {
         finalValue *= 0.01;
         if (gradientUnits === 'pixels') {
           // then we need to fix those percentages here in svg parsing

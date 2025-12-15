@@ -32,7 +32,6 @@ class ITextKeyBehavior extends ITextBehavior {
    * Useful to reduce laggish redraw of the full document.body tree and
    * also with modals event capturing that won't let the textarea take focus.
    * @type HTMLElement
-   * @default
    */
 
   /**
@@ -47,7 +46,8 @@ class ITextKeyBehavior extends ITextBehavior {
       autocomplete: 'off',
       spellcheck: 'false',
       'data-fabric': 'textarea',
-      wrap: 'off'
+      wrap: 'off',
+      name: 'fabricTextarea'
     }).map(_ref => {
       let [attribute, value] = _ref;
       return textarea.setAttribute(attribute, value);

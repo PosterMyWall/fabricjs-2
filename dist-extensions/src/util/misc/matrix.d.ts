@@ -43,7 +43,7 @@ export declare const invertTransform: (t: TMat2D) => TMat2D;
  */
 export declare const multiplyTransformMatrices: (a: TMat2D, b: TMat2D, is2x2?: boolean) => TMat2D;
 /**
- * Multiplies {@link matrices} such that a matrix defines the plane for the rest of the matrices **after** it
+ * Multiplies the matrices array such that a matrix defines the plane for the rest of the matrices **after** it
  *
  * `multiplyTransformMatrixArray([A, B, C, D])` is equivalent to `A(B(C(D)))`
  *
@@ -67,7 +67,7 @@ export declare const qrDecompose: (a: TMat2D) => TQrDecomposeOut;
  * [ 0 1 y ]
  * [ 0 0 1 ]
  *
- * See @link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#translate for more details
+ * See {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#translate} for more details
  *
  * @param {number} x translation on X axis
  * @param {number} [y] translation on Y axis
@@ -96,7 +96,7 @@ export declare function createRotateMatrix({ angle }?: TRotateMatrixArgs, { x, y
  * [0 y 0]
  * [0 0 1]
  *
- * @link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#scale
+ * {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#scale}
  *
  * @param {number} x scale on X axis
  * @param {number} [y] scale on Y axis
@@ -113,7 +113,7 @@ export declare const skewToAngle: (value: TRadian) => TDegree;
  * [0 1 0]
  * [0 0 1]
  *
- * @link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#skewx
+ * {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#skewx}
  *
  * @param {TDegree} skewValue translation on X axis
  * @returns {TMat2D} matrix
@@ -127,7 +127,7 @@ export declare const createSkewXMatrix: (skewValue: TDegree) => TMat2D;
  * [y 1 0]
  * [0 0 1]
  *
- * @link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#skewy
+ * {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#skewy}
  *
  * @param {TDegree} skewValue translation on Y axis
  * @returns {TMat2D} matrix

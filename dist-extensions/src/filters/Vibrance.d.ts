@@ -20,7 +20,6 @@ export declare class Vibrance extends BaseFilter<'Vibrance', VibranceOwnProps> {
      * A value of 0 has no effect.
      *
      * @param {Number} vibrance
-     * @default
      */
     vibrance: VibranceOwnProps['vibrance'];
     static type: string;

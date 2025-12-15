@@ -33,8 +33,8 @@ const scaleOrSkewActionName = (eventData, control, fabricObject) => {
  * @param {FabricObject} fabricObject the fabric object that is interested in the action
  * @return {String} a valid css string for the cursor
  */
-const scaleSkewCursorStyleHandler = (eventData, control, fabricObject) => {
-  return isAltAction(eventData, fabricObject) ? skewCursorStyleHandler(eventData, control, fabricObject) : scaleCursorStyleHandler(eventData, control, fabricObject);
+const scaleSkewCursorStyleHandler = (eventData, control, fabricObject, coord) => {
+  return isAltAction(eventData, fabricObject) ? skewCursorStyleHandler(eventData, control, fabricObject, coord) : scaleCursorStyleHandler(eventData, control, fabricObject, coord);
 };
 /**
  * Composed action handler to either scale X or skew Y

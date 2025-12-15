@@ -1,3 +1,4 @@
+import type { ParsedPAROffsets } from '../shapes/Image';
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { TMat2D } from '../typedefs';
 type FabricObjectWithTransformMatrix = FabricObject & {
@@ -9,6 +10,6 @@ type FabricObjectWithTransformMatrix = FabricObject & {
  * @private
  * @param {Object} preserveAspectRatioOptions
  */
-export declare const removeTransformMatrixForSvgParsing: (object: FabricObjectWithTransformMatrix, preserveAspectRatioOptions?: any) => void;
+export declare const removeTransformMatrixForSvgParsing: (object: FabricObjectWithTransformMatrix, preserveAspectRatioOptions?: ParsedPAROffsets) => void;
 export {};
 //# sourceMappingURL=transform_matrix_removal.d.ts.map

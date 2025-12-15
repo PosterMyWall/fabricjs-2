@@ -30,26 +30,22 @@ export interface FabricObjectProps extends ObjectProps, ControlProps, BorderProp
      * does not mix good with globalCompositeOperation methods.
      * @type String
      * @deprecated
-     * @default
      */
     selectionBackgroundColor: string;
     /**
      * When set to `true`, objects are "found" on canvas on per-pixel basis rather than according to bounding box
      * @type Boolean
-     * @default
      */
     perPixelTargetFind: boolean;
     /**
      * When set to `false`, an object can not be selected for modification (using either point-click-based or group-based selection).
      * But events still fire on it.
      * @type Boolean
-     * @default
      */
     selectable: boolean;
     /**
      * When set to `false`, an object can not be a target of events. All events propagate through it. Introduced in v1.3.4
      * @type Boolean
-     * @default
      */
     evented: boolean;
     /**

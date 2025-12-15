@@ -26,7 +26,7 @@ import { getDevicePixelRatio } from '../env/index.mjs';
 
 /**
  * Static canvas class
- * @see {@link http://fabricjs.com/static_canvas|StaticCanvas demo}
+ * @see {@link http://fabric5.fabricjs.com/static_canvas|StaticCanvas demo}
  * @fires before:render
  * @fires after:render
  * @fires canvas:cleared
@@ -85,6 +85,11 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * Usage of this boolean to build up other flows and features is not supported
    * @type Boolean
    * @default false
+   */
+
+  /**
+   * Controls the rendering of images under node-canvas.
+   * Has no effects on the browser context.
    */
 
   // reference to
@@ -421,7 +426,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
     this.clearContext(ctx);
     ctx.imageSmoothingEnabled = this.imageSmoothingEnabled;
     // @ts-expect-error node-canvas stuff
-    ctx.patternQuality = 'best';
+    ctx.patternQuality = this.patternQuality;
     this.fire('before:render', {
       ctx
     });
@@ -652,7 +657,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * Having a toJSON method means you can do JSON.stringify(myCanvas)
    * JSON does not support additional properties because toJSON has its own signature
    * @return {Object} JSON compatible object
-   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#serialization}
+   * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-3#serialization}
    * @see {@link http://jsfiddle.net/fabricjs/pec86/|jsFiddle demo}
    * @example <caption>JSON representation of canvas </caption>
    * const json = canvas.toJSON();
@@ -741,7 +746,6 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
 
   /**
    * Returns SVG representation of canvas
-   * @function
    * @param {Object} [options] Options object for SVG output
    * @param {Boolean} [options.suppressPreamble=false] If true xml tag is not included
    * @param {Object} [options.viewBox] SVG viewbox object
@@ -754,7 +758,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @param {String} [options.height] desired height of svg with or without units
    * @param {Function} [reviver] Method for further parsing of svg elements, called after each fabric object converted into svg representation.
    * @return {String} SVG string
-   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#serialization}
+   * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-3#serialization}
    * @see {@link http://jsfiddle.net/fabricjs/jQ3ZZ/|jsFiddle demo}
    * @example <caption>Normal SVG output</caption>
    * var svg = canvas.toSVG();
@@ -982,7 +986,7 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
    * @param {Object} [options] options
    * @param {AbortSignal} [options.signal] see https://developer.mozilla.org/en-US/docs/Web/API/AbortController/signal
    * @return {Promise<Canvas | StaticCanvas>} instance
-   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#deserialization}
+   * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-3#deserialization}
    * @see {@link http://jsfiddle.net/fabricjs/fmgXt/|jsFiddle demo}
    * @example <caption>loadFromJSON</caption>
    * canvas.loadFromJSON(json).then((canvas) => canvas.requestRenderAll());
@@ -1005,9 +1009,11 @@ class StaticCanvas extends createCollectionMixin(CommonMethods) {
     }
 
     // parse json if it wasn't already
-    const serialized = typeof json === 'string' ? JSON.parse(json) : json;
     const {
       objects = [],
+      ...serialized
+    } = typeof json === 'string' ? JSON.parse(json) : json;
+    const {
       backgroundImage,
       background,
       overlayImage,
