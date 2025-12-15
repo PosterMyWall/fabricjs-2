@@ -49,7 +49,7 @@ Object.assign(Canvas.prototype, {
     }
     // *PMW* added code end
 
-    const target = this.findTarget(e);
+    const { target } = this.findTarget(e);
     if ('undefined' !== typeof target) {
       this.__gesturesParams = {
         e: e,

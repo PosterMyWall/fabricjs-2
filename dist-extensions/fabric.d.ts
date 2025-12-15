@@ -32,7 +32,7 @@ export { CircleBrush } from './src/brushes/CircleBrush';
 export { SprayBrush } from './src/brushes/SprayBrush';
 export { PatternBrush } from './src/brushes/PatternBrush';
 export type * from './src/util/path/typedefs';
-export { FabricObject, 
+export { FabricObject,
 /**
  * @deprecated Due to a naming conflict with the
  * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object JS API},
@@ -72,7 +72,7 @@ export type { TableProps } from './src/shapes/Table';
 export { Table } from './src/shapes/Table';
 export { CustomBorderTable } from './src/shapes/Menu';
 export type { GraphemeBBox, SerializedTextProps, TPathAlign, TPathSide, TextProps, } from './src/shapes/Text/Text';
-export { FabricText, 
+export { FabricText,
 /**
  * @deprecated Due to a naming conflict with the
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Text/Text Web API},
@@ -95,7 +95,7 @@ export * from './src/LayoutManager';
 export type { SerializedLayoutManager } from './src/LayoutManager';
 export type { ActiveSelectionOptions, MultiSelectionStacking, } from './src/shapes/ActiveSelection';
 export { ActiveSelection } from './src/shapes/ActiveSelection';
-export { FabricImage, 
+export { FabricImage,
 /**
  * @deprecated Due to a naming conflict with the
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/Image Web API},

@@ -16,7 +16,7 @@ import {
   JUSTIFY_LEFT,
   JUSTIFY_RIGHT,
 } from '../Text/constants';
-import { CENTER, FILL, LEFT, RIGHT } from '../../constants';
+import { CENTER, FILL, LEFT, RIGHT, RTL } from '../../constants';
 import type { ObjectToCanvasElementOptions } from '../Object/Object';
 import type { FabricObject } from '../Object/FabricObject';
 import { createCanvasElementFor } from '../../util/misc/dom';
@@ -134,14 +134,12 @@ export class IText<
   /**
    * Index where text selection starts (or where cursor is when there is no selection)
    * @type Number
-   * @default
    */
   declare selectionStart: number;
 
   /**
    * Index where text selection ends
    * @type Number
-   * @default
    */
   declare selectionEnd: number;
 
@@ -152,7 +150,6 @@ export class IText<
   /**
    * Color of text selection
    * @type String
-   * @default
    */
   declare selectionColor: string;
 
@@ -162,28 +159,24 @@ export class IText<
   /**
    * Indicates whether text is in editing mode
    * @type Boolean
-   * @default
    */
   declare isEditing: boolean;
 
   /**
    * Indicates whether a text can be edited
    * @type Boolean
-   * @default
    */
   declare editable: boolean;
 
   /**
    * Border color of text object while it's in editing mode
    * @type String
-   * @default
    */
   declare editingBorderColor: string;
 
   /**
    * Width of cursor (in px)
    * @type Number
-   * @default
    */
   declare cursorWidth: number;
 
@@ -193,21 +186,18 @@ export class IText<
    * if set to a color value that fabric can understand, it will
    * be used instead of the color of the text at the current position.
    * @type String
-   * @default
    */
   declare cursorColor: string;
 
   /**
    * Delay between cursor blink (in ms)
    * @type Number
-   * @default
    */
   declare cursorDelay: number;
 
   /**
    * Duration of cursor fade in (in ms)
    * @type Number
-   * @default
    */
   declare cursorDuration: number;
 
@@ -216,7 +206,6 @@ export class IText<
   /**
    * Indicates whether internal text char widths can be cached
    * @type Boolean
-   * @default
    */
   declare caching: boolean;
 
@@ -584,7 +573,7 @@ export class IText<
     let topOffset = 0,
       leftOffset = 0;
     const { charIndex, lineIndex } = this.get2DCursorLocation(index);
-
+    const { textAlign, direction } = this;
     for (let i = 0; i < lineIndex; i++) {
       topOffset += this.getHeightOfLine(i);
     }
@@ -597,27 +586,25 @@ export class IText<
     ) {
       leftOffset -= this._getWidthOfCharSpacing();
     }
-    const boundaries = {
-      top: topOffset,
-      left: lineLeftOffset + (leftOffset > 0 ? leftOffset : 0),
-    };
-    if (this.direction === 'rtl') {
+    let left = lineLeftOffset + (leftOffset > 0 ? leftOffset : 0);
+
+    if (direction === RTL) {
       if (
-        this.textAlign === RIGHT ||
-        this.textAlign === JUSTIFY ||
-        this.textAlign === JUSTIFY_RIGHT
+        textAlign === RIGHT ||
+        textAlign === JUSTIFY ||
+        textAlign === JUSTIFY_RIGHT
       ) {
-        boundaries.left *= -1;
-      } else if (this.textAlign === LEFT || this.textAlign === JUSTIFY_LEFT) {
-        boundaries.left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
-      } else if (
-        this.textAlign === CENTER ||
-        this.textAlign === JUSTIFY_CENTER
-      ) {
-        boundaries.left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
+        left *= -1;
+      } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
+        left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
+      } else if (textAlign === CENTER || textAlign === JUSTIFY_CENTER) {
+        left = lineLeftOffset - (leftOffset > 0 ? leftOffset : 0);
       }
     }
-    return boundaries;
+    return {
+      top: topOffset,
+      left,
+    };
   }
 
   /**
@@ -741,9 +728,10 @@ export class IText<
     selection: { selectionStart: number; selectionEnd: number },
     boundaries: CursorBoundaries,
   ) {
+    const { textAlign, direction } = this;
     const selectionStart = selection.selectionStart,
       selectionEnd = selection.selectionEnd,
-      isJustify = this.textAlign.includes(JUSTIFY),
+      isJustify = textAlign.includes(JUSTIFY),
       start = this.get2DCursorLocation(selectionStart),
       end = this.get2DCursorLocation(selectionEnd),
       startLine = start.lineIndex,
@@ -792,19 +780,16 @@ export class IText<
       } else {
         ctx.fillStyle = this.selectionColor;
       }
-      if (this.direction === 'rtl') {
+      if (direction === RTL) {
         if (
-          this.textAlign === RIGHT ||
-          this.textAlign === JUSTIFY ||
-          this.textAlign === JUSTIFY_RIGHT
+          textAlign === RIGHT ||
+          textAlign === JUSTIFY ||
+          textAlign === JUSTIFY_RIGHT
         ) {
           drawStart = this.width - drawStart - drawWidth;
-        } else if (this.textAlign === LEFT || this.textAlign === JUSTIFY_LEFT) {
+        } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
           drawStart = boundaries.left + lineOffset - boxEnd;
-        } else if (
-          this.textAlign === CENTER ||
-          this.textAlign === JUSTIFY_CENTER
-        ) {
+        } else if (textAlign === CENTER || textAlign === JUSTIFY_CENTER) {
           drawStart = boundaries.left + lineOffset - boxEnd;
         }
       }

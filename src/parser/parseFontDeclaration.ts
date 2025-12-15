@@ -1,11 +1,9 @@
+import { NORMAL } from '../constants';
 import { parseUnit } from '../util/misc/svgParsing';
 import { reFontDeclaration } from './constants';
 
 /**
  * Parses a short font declaration, building adding its properties to a style object
- * @static
- * @function
- * @memberOf fabric
  * @param {String} value font declaration
  * @param {Object} oStyle definition
  */
@@ -41,6 +39,6 @@ export function parseFontDeclaration(
     oStyle.fontFamily = fontFamily;
   }
   if (lineHeight) {
-    oStyle.lineHeight = lineHeight === 'normal' ? 1 : lineHeight;
+    oStyle.lineHeight = lineHeight === NORMAL ? 1 : lineHeight;
   }
 }

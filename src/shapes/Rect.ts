@@ -41,14 +41,12 @@ export class Rect<
   /**
    * Horizontal border radius
    * @type Number
-   * @default
    */
   declare rx: number;
 
   /**
    * Vertical border radius
    * @type Number
-   * @default
    */
   declare ry: number;
 
@@ -185,8 +183,6 @@ export class Rect<
 
   /**
    * List of attribute names to account for when parsing SVG element (used by `Rect.fromElement`)
-   * @static
-   * @memberOf Rect
    * @see: http://www.w3.org/TR/SVG/shapes.html#RectElement
    */
   static ATTRIBUTE_NAMES = [
@@ -203,8 +199,6 @@ export class Rect<
 
   /**
    * Returns {@link Rect} instance from an SVG element
-   * @static
-   * @memberOf Rect
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    */

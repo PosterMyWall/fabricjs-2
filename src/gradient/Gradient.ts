@@ -24,7 +24,7 @@ import { isPath } from '../util/typeAssertions';
 /**
  * Gradient class
  * @class Gradient
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#gradients}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#gradients}
  */
 export class Gradient<
   S,
@@ -326,8 +326,6 @@ export class Gradient<
   /* _FROM_SVG_START_ */
   /**
    * Returns {@link Gradient} instance from an SVG element
-   * @static
-   * @memberOf Gradient
    * @param {SVGGradientElement} el SVG gradient element
    * @param {FabricObject} instance
    * @param {String} opacity A fill-opacity or stroke-opacity attribute to multiply to each stop's opacity.

@@ -1,4 +1,4 @@
-import { FILL, LEFT, STROKE, reNewline } from '../../constants';
+import { FILL, LEFT, LTR, NORMAL, STROKE, reNewline } from '../../constants';
 import type { TClassProperties } from '../../typedefs';
 import type { FabricText } from './Text';
 
@@ -77,7 +77,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   _reSpaceAndTab: /[ \t\r]/,
   _reWords: /\S+/g,
   fontSize: 40,
-  fontWeight: 'normal',
+  fontWeight: NORMAL,
   fontFamily: 'Times New Roman',
   underline: false,
   overline: false,
@@ -87,7 +87,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   squigglylineColor: '#FF0000',
   isStrokeForBold: false,
   textAlign: LEFT,
-  fontStyle: 'normal',
+  fontStyle: NORMAL,
   lineHeight: 1.16,
   textBackgroundColor: '',
   stroke: null,
@@ -99,7 +99,7 @@ export const textDefaultValues: Partial<TClassProperties<FabricText>> = {
   cacheExpansionFactor: 1,
   charSpacing: 0,
   deltaY: 0,
-  direction: 'ltr',
+  direction: LTR,
   CACHE_FONT_SIZE: 400,
   MIN_TEXT_WIDTH: 2,
   // Text magic numbers

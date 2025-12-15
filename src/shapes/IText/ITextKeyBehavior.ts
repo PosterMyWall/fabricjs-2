@@ -49,7 +49,6 @@ export abstract class ITextKeyBehavior<
    * Useful to reduce laggish redraw of the full document.body tree and
    * also with modals event capturing that won't let the textarea take focus.
    * @type HTMLElement
-   * @default
    */
   declare hiddenTextareaContainer?: HTMLElement | null;
 
@@ -72,6 +71,7 @@ export abstract class ITextKeyBehavior<
       spellcheck: 'false',
       'data-fabric': 'textarea',
       wrap: 'off',
+      name: 'fabricTextarea',
     }).map(([attribute, value]) => textarea.setAttribute(attribute, value));
     const { top, left, fontSize } = this._calcTextareaPosition();
     // line-height: 1px; was removed from the style to fix this:

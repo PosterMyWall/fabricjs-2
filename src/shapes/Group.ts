@@ -100,7 +100,6 @@ export class Group
   /**
    * Used to optimize performance
    * set to `false` if you don't need contained objects to be targets of events
-   * @default
    * @type boolean
    */
   declare subTargetCheck: boolean;
@@ -133,7 +132,6 @@ export class Group
    * that will take care of enabling subTargetCheck and necessary object events.
    * There is too much attached to group interactivity to just be evaluated by a
    * boolean in the code
-   * @default
    * @deprecated
    * @type boolean
    */
@@ -882,8 +880,6 @@ export class Group
   /**
    * @todo support loading from svg
    * @private
-   * @static
-   * @memberOf Group
    * @param {Object} object Object to create a group from
    * @returns {Promise<Group>}
    */

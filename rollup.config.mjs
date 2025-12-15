@@ -3,7 +3,7 @@ import terser from '@rollup/plugin-terser';
 import ts from '@rollup/plugin-typescript';
 import { babel } from '@rollup/plugin-babel';
 import path from 'path';
-import chalk from 'chalk';
+import { redBright } from './scripts/colors.mjs';
 // import dts from "rollup-plugin-dts";
 
 const splitter = /\n|\s|,/g;
@@ -17,7 +17,13 @@ const plugins = [
   ts({
     noForceEmit: true,
     tsconfig: './tsconfig.json',
-    exclude: ['dist', 'dist-extensions', '**/**.spec.ts', '**/**.test.ts'],
+    exclude: [
+      'dist',
+      'dist-extensions',
+      '**/**.spec.ts',
+      '**/**.test.ts',
+      '**/**.fixtures.ts',
+    ],
   }),
   babel({
     extensions: ['.ts', '.js'],
@@ -52,7 +58,7 @@ function onwarn(warning, warn) {
       !warning.message.includes('sourcemap')) ||
     warning.code === 'CIRCULAR_DEPENDENCY'
   ) {
-    console.error(chalk.redBright(warning));
+    console.error(redBright(warning));
     if (process.env.CI) {
       throw Object.assign(new Error(), warning);
     }
@@ -152,7 +158,7 @@ export default [
 
   {
     input: ['./extensions/index.ts'],
-    external: ['@postermywall/fabricjs-2'],
+    external: ['@postermywall/fabricjs-2', 'westures'],
     output: [
       // es modules in files
       {
@@ -170,6 +176,7 @@ export default [
         sourcemap: true,
         globals: {
           '@postermywall/fabricjs-2': '@postermywall/fabricjs-2',
+          westures: 'westures',
         },
         plugins: [terser()],
       },

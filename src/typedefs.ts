@@ -59,7 +59,7 @@ export type SupportedSVGUnit = 'mm' | 'cm' | 'in' | 'pt' | 'pc' | 'em';
  * [ a c e ]
  * [ b d f ]
  * [ 0 0 1 ]
- * For more details, see @link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#matrix
+ * For more details, see {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#matrix}
  */
 export type TMat2D = [
   a: number,
@@ -90,11 +90,13 @@ export type TSVGReviver = (markup: string) => string;
 
 export type TValidToObjectMethod = 'toDatalessObject' | 'toObject';
 
-export type TCacheCanvasDimensions = {
-  width: number;
-  height: number;
+export type TCacheCanvasDimensions = TSize & {
+  /* width and height in `TCacheCanvasDimensions` include a small ALIASING_LIMIT of 1 or 2 px.
+  /* zoomX X scaling value of the object (including parents and viewport scaling) */
   zoomX: number;
+  /* zoomY Y scaling value of the object (including parents and viewport scaling) */
   zoomY: number;
+  /* Similar to width and height, but they take care of the real size including non scaling stroke */
   x: number;
   y: number;
 };

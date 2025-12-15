@@ -99,6 +99,7 @@ export const scaleCursorStyleHandler: ControlCursorCallback = (
   eventData,
   control,
   fabricObject,
+  coord,
 ) => {
   const scaleProportionally = scaleIsProportional(eventData, fabricObject),
     by =
@@ -110,7 +111,7 @@ export const scaleCursorStyleHandler: ControlCursorCallback = (
   if (scalingIsForbidden(fabricObject, by, scaleProportionally)) {
     return NOT_ALLOWED_CURSOR;
   }
-  const n = findCornerQuadrant(fabricObject, control);
+  const n = findCornerQuadrant(fabricObject, control, coord);
   return `${scaleMap[n]}-resize`;
 };
 

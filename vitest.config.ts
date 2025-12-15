@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { playwright } from '@vitest/browser-playwright';
 
 const fixturesPath = resolve(__dirname, 'test/fixtures');
 let fixturesUrl = pathToFileURL(fixturesPath).href;
@@ -22,7 +23,7 @@ export default defineConfig({
       'test/snapshot-serializers/canvas-rendering-context.ts',
     ],
     setupFiles: ['./vitest.setup.ts'],
-    workspace: [
+    projects: [
       {
         extends: true,
         test: {
@@ -40,7 +41,7 @@ export default defineConfig({
         extends: true,
         test: {
           browser: {
-            provider: 'playwright',
+            provider: playwright(),
             enabled: true,
             headless: true,
             instances: [{ browser: 'chromium' }],
@@ -52,15 +53,16 @@ export default defineConfig({
         extends: true,
         test: {
           browser: {
-            provider: 'playwright',
+            provider: playwright({
+              contextOptions: {
+                hasTouch: true,
+              },
+            }),
             enabled: true,
-            headless: true,
+            headless: false,
             instances: [
               {
                 browser: 'firefox',
-                context: {
-                  hasTouch: true,
-                },
               },
             ],
           },

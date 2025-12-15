@@ -1,5 +1,6 @@
 import { cache } from '../../cache';
-import { DEFAULT_SVG_FONT_SIZE, FILL, STROKE } from '../../constants';
+import type { NORMAL } from '../../constants';
+import { DEFAULT_SVG_FONT_SIZE, FILL, LTR, RTL, STROKE } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type {
   CompleteTextStyleDeclaration,
@@ -47,6 +48,7 @@ import { isFiller } from '../../util/typeAssertions';
 import type { Gradient } from '../../gradient/Gradient';
 import type { Pattern } from '../../Pattern';
 import type { CSSRules } from '../../parser/typedefs';
+import { normalizeWs } from '../../util/internals/normalizeWhiteSpace';
 
 let measuringContext: CanvasRenderingContext2D | null;
 
@@ -76,6 +78,17 @@ export type TextLinesInfo = {
   _unwrappedLines: string[][];
 };
 
+export type TextAlign =
+  | typeof LEFT
+  | typeof CENTER
+  | typeof RIGHT
+  | typeof JUSTIFY
+  | typeof JUSTIFY_LEFT
+  | typeof JUSTIFY_CENTER
+  | typeof JUSTIFY_RIGHT;
+
+export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
+
 /**
  * Measure and return the info of a single grapheme.
  * needs the the info of previous graphemes already filled
@@ -100,18 +113,17 @@ interface UniqueTextProps {
   cacheExpansionFactor: number;
   fontWeight: string | number;
   fontFamily: string;
-  fontStyle: string;
+  fontStyle: FontStyle;
   pathSide: TPathSide;
   pathAlign: TPathAlign;
   underline: boolean;
   overline: boolean;
   linethrough: boolean;
+  textAlign: TextAlign;
   squigglyline: boolean;
   ignoreDelegatedSet: boolean;
   squigglylineColor: string;
   isStrokeForBold: boolean;
-  text: string;
-  textAlign: string;
   direction: CanvasDirection;
   path?: Path;
   textDecorationThickness: number;
@@ -129,7 +141,7 @@ export interface TextProps extends FabricObjectProps, UniqueTextProps {
 
 /**
  * Text class
- * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#text}
+ * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
 export class FabricText<
     Props extends TOptions<TextProps> = Partial<TextProps>,
@@ -177,7 +189,6 @@ export class FabricText<
   /**
    * Font size (in pixels)
    * @type Number
-   * @default
    */
   declare fontSize: number;
 
@@ -190,35 +201,30 @@ export class FabricText<
   /**
    * Font weight (e.g. bold, normal, 400, 600, 800)
    * @type {(Number|String)}
-   * @default
    */
   declare fontWeight: string | number;
 
   /**
    * Font family
    * @type String
-   * @default
    */
   declare fontFamily: string;
 
   /**
    * Text decoration underline.
    * @type Boolean
-   * @default
    */
   declare underline: boolean;
 
   /**
    * Text decoration overline.
    * @type Boolean
-   * @default
    */
   declare overline: boolean;
 
   /**
    * Text decoration linethrough.
    * @type Boolean
-   * @default
    */
   declare linethrough: boolean;
 
@@ -235,22 +241,19 @@ export class FabricText<
   /**
    * Text alignment. Possible values: "left", "center", "right", "justify",
    * "justify-left", "justify-center" or "justify-right".
-   * @type String
-   * @default
+   * @type TextAlign
    */
-  declare textAlign: string;
+  declare textAlign: TextAlign;
 
   /**
    * Font style . Possible values: "", "normal", "italic" or "oblique".
-   * @type String
-   * @default
+   * @type FontStyle
    */
-  declare fontStyle: string;
+  declare fontStyle: FontStyle;
 
   /**
    * Line height
    * @type Number
-   * @default
    */
   declare lineHeight: number;
 
@@ -289,7 +292,6 @@ export class FabricText<
   /**
    * Background color of text lines
    * @type String
-   * @default
    */
   declare textBackgroundColor: string;
 
@@ -315,7 +317,6 @@ export class FabricText<
    *     pathSide: 'left',
    *     pathStartOffset: 0
    * });
-   * @default
    */
   declare path?: Path;
 
@@ -336,7 +337,6 @@ export class FabricText<
   /**
    * Offset amount for text path starting position
    * Only used when text has a path
-   * @default
    */
   declare pathStartOffset: number;
 
@@ -344,7 +344,6 @@ export class FabricText<
    * Which side of the path the text should be drawn on.
    * Only used when text has a path
    * @type {TPathSide} 'left|right'
-   * @default
    */
   declare pathSide: TPathSide;
 
@@ -354,7 +353,6 @@ export class FabricText<
    * (one of "baseline", "center", "ascender", "descender")
    * This feature is in BETA, and its behavior may change
    * @type TPathAlign
-   * @default
    */
   declare pathAlign: TPathAlign;
 
@@ -376,7 +374,6 @@ export class FabricText<
   /**
    * Text Line proportion to font Size (in pixels)
    * @type Number
-   * @default
    */
   declare _fontSizeMult: number;
 
@@ -384,14 +381,12 @@ export class FabricText<
    * additional space between characters
    * expressed in thousands of em unit
    * @type Number
-   * @default
    */
   declare charSpacing: number;
 
   /**
    * Baseline shift, styles only, keep at 0 for the main text object
    * @type {Number}
-   * @default
    */
   declare deltaY: number;
 
@@ -404,7 +399,6 @@ export class FabricText<
    * https://www.w3.org/International/questions/qa-bidi-unicode-controls
    * @since 4.5.0
    * @type {CanvasDirection} 'ltr|rtl'
-   * @default
    */
   declare direction: CanvasDirection;
 
@@ -419,7 +413,6 @@ export class FabricText<
   /**
    * use this size when measuring text. To avoid IE11 rounding errors
    * @type {Number}
-   * @default
    * @readonly
    * @private
    */
@@ -428,7 +421,6 @@ export class FabricText<
   /**
    * contains the min text width to avoid getting 0
    * @type {Number}
-   * @default
    */
   declare MIN_TEXT_WIDTH: number;
 
@@ -436,14 +428,12 @@ export class FabricText<
    * contains the the text of the object, divided in lines as they are displayed
    * on screen. Wrapping will divide the text independently of line breaks
    * @type {string[]}
-   * @default
    */
   declare textLines: string[];
 
   /**
    * same as textlines, but each line is an array of graphemes as split by splitByGrapheme
    * @type {string[]}
-   * @default
    */
   declare _textLines: string[][];
 
@@ -774,6 +764,7 @@ export class FabricText<
       let drawStart;
       let currentColor;
       let lastColor = this.getValueOfPropertyAt(i, 0, 'textBackgroundColor');
+      const bgHeight = this.getHeightOfLineImpl(i);
       for (let j = 0; j < jlen; j++) {
         // at this point charbox are either standard or full with pathInfo if there is a path.
         const charBox = this.__charBounds[i][j] as Required<GraphemeBBox>;
@@ -786,24 +777,19 @@ export class FabricText<
           currentColor &&
             ctx.fillRect(
               -charBox.width / 2,
-              (-heightOfLine / this.lineHeight) * (1 - this._fontSizeFraction),
+              -bgHeight * (1 - this._fontSizeFraction),
               charBox.width,
-              heightOfLine / this.lineHeight,
+              bgHeight,
             );
           ctx.restore();
         } else if (currentColor !== lastColor) {
           drawStart = leftOffset + lineLeftOffset + boxStart;
-          if (this.direction === 'rtl') {
+          if (this.direction === RTL) {
             drawStart = this.width - drawStart - boxWidth;
           }
           ctx.fillStyle = lastColor;
           lastColor &&
-            ctx.fillRect(
-              drawStart,
-              lineTopOffset,
-              boxWidth,
-              heightOfLine / this.lineHeight,
-            );
+            ctx.fillRect(drawStart, lineTopOffset, boxWidth, bgHeight);
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastColor = currentColor;
@@ -813,16 +799,11 @@ export class FabricText<
       }
       if (currentColor && !this.path) {
         drawStart = leftOffset + lineLeftOffset + boxStart;
-        if (this.direction === 'rtl') {
+        if (this.direction === RTL) {
           drawStart = this.width - drawStart - boxWidth;
         }
         ctx.fillStyle = currentColor;
-        ctx.fillRect(
-          drawStart,
-          lineTopOffset,
-          boxWidth,
-          heightOfLine / this.lineHeight,
-        );
+        ctx.fillRect(drawStart, lineTopOffset, boxWidth, bgHeight);
       }
       lineTopOffset += heightOfLine;
     }
@@ -850,7 +831,7 @@ export class FabricText<
   ) {
     const fontCache = cache.getFontCache(charStyle),
       fontDeclaration = this._getFontDeclaration(charStyle),
-      couple = previousChar + _char,
+      couple = previousChar ? previousChar + _char : _char,
       stylesAreEqual =
         previousChar &&
         fontDeclaration === this._getFontDeclaration(prevCharStyle),
@@ -860,14 +841,14 @@ export class FabricText<
       previousWidth: number | undefined,
       kernedWidth: number | undefined;
 
-    if (previousChar && fontCache[previousChar] !== undefined) {
-      previousWidth = fontCache[previousChar];
+    if (previousChar && fontCache.has(previousChar)) {
+      previousWidth = fontCache.get(previousChar);
     }
-    if (fontCache[_char] !== undefined) {
-      kernedWidth = width = fontCache[_char];
+    if (fontCache.has(_char)) {
+      kernedWidth = width = fontCache.get(_char);
     }
-    if (stylesAreEqual && fontCache[couple] !== undefined) {
-      coupleWidth = fontCache[couple];
+    if (stylesAreEqual && fontCache.has(couple)) {
+      coupleWidth = fontCache.get(couple)!;
       kernedWidth = coupleWidth - previousWidth!;
     }
     if (
@@ -880,16 +861,16 @@ export class FabricText<
       this._setTextStyles(ctx, charStyle, true);
       if (width === undefined) {
         kernedWidth = width = ctx.measureText(_char).width;
-        fontCache[_char] = width;
+        fontCache.set(_char, width);
       }
       if (previousWidth === undefined && stylesAreEqual && previousChar) {
         previousWidth = ctx.measureText(previousChar).width;
-        fontCache[previousChar] = previousWidth;
+        fontCache.set(previousChar, previousWidth);
       }
       if (stylesAreEqual && coupleWidth === undefined) {
         // we can measure the kerning couple and subtract the width of the previous character
         coupleWidth = ctx.measureText(couple).width;
-        fontCache[couple] = coupleWidth;
+        fontCache.set(couple, coupleWidth);
         // safe to use the non-null since if undefined we defined it before.
         kernedWidth = coupleWidth - previousWidth!;
       }
@@ -1061,13 +1042,16 @@ export class FabricText<
   }
 
   /**
-   * Calculate height of line at 'lineIndex'
+   * Calculate height of line at 'lineIndex',
+   * without the lineHeigth multiplication factor
+   * @private
    * @param {Number} lineIndex index of line to calculate
    * @return {Number}
    */
-  getHeightOfLine(lineIndex: number): number {
-    if (this.__lineHeights[lineIndex]) {
-      return this.__lineHeights[lineIndex];
+  private getHeightOfLineImpl(lineIndex: number): number {
+    const lh = this.__lineHeights;
+    if (lh[lineIndex]) {
+      return lh[lineIndex];
     }
 
     // char 0 is measured before the line cycle because it needs to char
@@ -1077,25 +1061,35 @@ export class FabricText<
       maxHeight = Math.max(this.getHeightOfChar(lineIndex, i), maxHeight);
     }
 
-    return (this.__lineHeights[lineIndex] =
-      maxHeight * this.lineHeight * this._fontSizeMult);
+    return (lh[lineIndex] = maxHeight * this._fontSizeMult);
+  }
+
+  /**
+   * Calculate height of line at 'lineIndex'
+   * @param {Number} lineIndex index of line to calculate
+   * @return {Number}
+   */
+  getHeightOfLine(lineIndex: number): number {
+    return this.getHeightOfLineImpl(lineIndex) * this.lineHeight;
   }
 
   /**
    * Calculate text box height
    */
   calcTextHeight() {
-    let lineHeight,
-      height = 0;
+    let height = 0;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
-      lineHeight = this.getHeightOfLine(i);
       // //*PMW* commenting out the code that prevent text box from applying line height on the last line. This caused line height to not work in table and menus
-      // height += lineHeight;//(i === len - 1 ? lineHeight / this.lineHeight : lineHeight);
+      // height +=
+      //   i === len - 1 ? this.getHeightOfLineImpl(i) : this.getHeightOfLine(i);
+
       // *PMW* preventing height to be smaller than selector size.
+      lineHeight = this.getHeightOfLine(i);
       height +=
         i === len - 1 && this.lineHeight < 1
           ? lineHeight / this.lineHeight
           : lineHeight;
+
     }
     return height;
   }
@@ -1105,7 +1099,7 @@ export class FabricText<
    * @return {Number} Left offset
    */
   _getLeftOffset(): number {
-    return this.direction === 'ltr' ? -this.width / 2 : this.width / 2;
+    return this.direction === LTR ? -this.width / 2 : this.width / 2;
   }
 
   /**
@@ -1130,18 +1124,15 @@ export class FabricText<
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
     for (let i = 0, len = this._textLines.length; i < len; i++) {
-      const heightOfLine = this.getHeightOfLine(i),
-        maxHeight = heightOfLine / this.lineHeight,
-        leftOffset = this._getLineLeftOffset(i);
       this._renderTextLine(
         method,
         ctx,
         this._textLines[i],
-        left + leftOffset,
-        top + lineHeights + maxHeight,
+        left + this._getLineLeftOffset(i),
+        top + lineHeights + this.getHeightOfLineImpl(i),
         i,
       );
-      lineHeights += heightOfLine;
+      lineHeights += this.getHeightOfLine(i);
     }
     ctx.restore();
   }
@@ -1196,16 +1187,15 @@ export class FabricText<
     top: number,
     lineIndex: number,
   ) {
-    const lineHeight = this.getHeightOfLine(lineIndex),
-      isJustify = this.textAlign.includes(JUSTIFY),
+    const isJustify = this.textAlign.includes(JUSTIFY),
       path = this.path,
       shortCut =
         !isJustify &&
         this.charSpacing === 0 &&
         this.isEmptyStyles(lineIndex) &&
         !path,
-      isLtr = this.direction === 'ltr',
-      sign = this.direction === 'ltr' ? 1 : -1,
+      isLtr = this.direction === LTR,
+      sign = this.direction === LTR ? 1 : -1,
       // this was changed in the PR #7674
       // currentDirection = ctx.canvas.getAttribute('dir');
       currentDirection = ctx.direction;
@@ -1220,11 +1210,11 @@ export class FabricText<
 
     ctx.save();
     if (currentDirection !== this.direction) {
-      ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
-      ctx.direction = isLtr ? 'ltr' : 'rtl';
+      ctx.canvas.setAttribute('dir', isLtr ? LTR : RTL);
+      ctx.direction = isLtr ? LTR : RTL;
       ctx.textAlign = isLtr ? LEFT : RIGHT;
     }
-    top -= (lineHeight * this._fontSizeFraction) / this.lineHeight;
+    top -= this.getHeightOfLineImpl(lineIndex) * this._fontSizeFraction;
     if (shortCut) {
       // render all the line in one pass without checking
       // drawingLeft = isLtr ? left : left - this.getLineWidth(lineIndex);
@@ -1531,12 +1521,8 @@ export class FabricText<
     if (textAlign === JUSTIFY_RIGHT) {
       leftOffset = lineDiff;
     }
-    if (direction === 'rtl') {
-      if (
-        textAlign === RIGHT ||
-        textAlign === JUSTIFY ||
-        textAlign === JUSTIFY_RIGHT
-      ) {
+    if (direction === RTL) {
+      if (textAlign === RIGHT || textAlign === JUSTIFY_RIGHT) {
         leftOffset = 0;
       } else if (textAlign === LEFT || textAlign === JUSTIFY_LEFT) {
         leftOffset = -lineDiff;
@@ -1681,7 +1667,7 @@ export class FabricText<
         ) {
           const finalTickness = (this.fontSize * lastTickness) / 1000;
           let drawStart = leftOffset + lineLeftOffset + boxStart;
-          if (this.direction === 'rtl') {
+          if (this.direction === RTL) {
             drawStart = this.width - drawStart - boxWidth;
           }
           if (lastDecoration && lastFill && lastTickness) {
@@ -1712,7 +1698,7 @@ export class FabricText<
         }
       }
       let drawStart = leftOffset + lineLeftOffset + boxStart;
-      if (this.direction === 'rtl') {
+      if (this.direction === RTL) {
         drawStart = this.width - drawStart - boxWidth;
       }
       ctx.fillStyle = this.getFillForTextDecoration(
@@ -2075,8 +2061,6 @@ export class FabricText<
 
   /**
    * List of attribute names to account for when parsing SVG element (used by {@link FabricText.fromElement})
-   * @static
-   * @memberOf Text
    * @see: http://www.w3.org/TR/SVG/text.html#TextElement
    */
   static ATTRIBUTE_NAMES = SHARED_ATTRIBUTES.concat(
@@ -2095,8 +2079,6 @@ export class FabricText<
 
   /**
    * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
-   * @static
-   * @memberOf Text
    * @param {HTMLElement} element Element to parse
    * @param {Object} [options] Options object
    */
@@ -2123,9 +2105,7 @@ export class FabricText<
       ...restOfOptions
     } = { ...options, ...parsedAttributes };
 
-    const textContent = (element.textContent || '')
-      .replace(/^\s+|\s+$|\n+/g, '')
-      .replace(/\s+/g, ' ');
+    const textContent = normalizeWs(element.textContent || '').trim();
 
     // this code here is probably the usual issue for SVG center find
     // this can later looked at again and probably removed.

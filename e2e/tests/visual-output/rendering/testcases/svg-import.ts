@@ -23,8 +23,8 @@ const createTestFromSVG = (svgName: string): renderTestType => {
       const group = fabric.util.groupSVGElements(nonNullObj, options);
       const dims = group._getTransformedDimensions();
       canvas.setDimensions({
-        width: dims.x + group.left,
-        height: dims.y + group.top,
+        width: dims.x / 2 + group.left,
+        height: dims.y / 2 + group.top,
       });
       group.includeDefaultValues = false;
       canvas.includeDefaultValues = false;
@@ -100,6 +100,7 @@ const svgFiles = [
   'use-and-style',
   'use-svg-style-2',
   'svg_text_underline_thick',
+  'coords-viewattr-02-b',
 ];
 
 export const svgImportTests: renderTestType[] = svgFiles.map(createTestFromSVG);

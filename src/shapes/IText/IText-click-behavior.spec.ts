@@ -16,6 +16,7 @@ import type {
   TPointerEvent,
   TPointerEventInfo,
 } from '../../EventTypeDefs';
+import { Point } from '../../Point';
 
 describe('iText click interaction', () => {
   let canvas: Canvas;
@@ -35,6 +36,7 @@ describe('iText click interaction', () => {
 
   test('doubleClickHandler', async () => {
     const iText = new IText('test need some word\nsecond line');
+    iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
 
     iText.canvas = canvas;
 
@@ -91,6 +93,7 @@ describe('iText click interaction', () => {
 
   test('tripleClickHandler', async () => {
     const iText = new IText('test need some word\nsecond line');
+    iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
 
     iText.canvas = canvas;
 
@@ -162,7 +165,7 @@ describe('iText click interaction', () => {
       scaleY: 2,
       canvas,
     });
-
+    iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
     expect(iText.getSelectionStartFromPointer(eventData), 'index').toBe(2);
     expect(
       iText.getSelectionStartFromPointer({ ...eventData, clientY: 20 }),
@@ -170,6 +173,7 @@ describe('iText click interaction', () => {
     ).toBe(2);
 
     iText.set({ scaleX: 0.5, scaleY: 0.25 });
+    iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
 
     expect(iText.getSelectionStartFromPointer(eventData), 'index').toBe(9);
     expect(
@@ -178,6 +182,7 @@ describe('iText click interaction', () => {
     ).toBe(29);
 
     iText.set({ scaleX: 1, scaleY: 1 });
+    iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
 
     expect(iText.getSelectionStartFromPointer(eventData), 'index').toBe(5);
     expect(
@@ -270,17 +275,21 @@ describe('iText click interaction', () => {
     canvas.add(group);
     // @ts-expect-error -- protected member
     iText.selected = true;
-
-    canvas.__onMouseUp({
+    const evt = {
       clientX: 1,
       clientY: 1,
       target: canvas.upperCanvasEl,
-    } as unknown as TPointerEvent);
+    } as unknown as TPointerEvent;
+    canvas._cacheTransformEventData(evt);
+    canvas.__onMouseUp(evt);
     // @ts-expect-error -- protected member
-    expect(canvas._target, 'group should be found as target').toBe(group);
+    expect(canvas._targetInfo.target, 'group should be found as target').toBe(
+      group,
+    );
     expect(iText.isEditing, 'iText should not enter editing').toBe(false);
 
     iText.exitEditing();
+    canvas._resetTransformEventData();
   });
 
   test('_mouseUpHandler on a text in a group', () => {
@@ -300,7 +309,7 @@ describe('iText click interaction', () => {
     // @ts-expect-error -- protected member
     iText.selected = true;
 
-    canvas.__onMouseUp({
+    canvas._onMouseUp({
       clientX: 1,
       clientY: 1,
       target: canvas.upperCanvasEl,
@@ -313,7 +322,7 @@ describe('iText click interaction', () => {
     // @ts-expect-error -- protected member
     iText.selected = true;
 
-    canvas.__onMouseUp({
+    canvas._onMouseUp({
       clientX: 1,
       clientY: 1,
       target: canvas.upperCanvasEl,
@@ -385,7 +394,7 @@ describe('iText click interaction', () => {
         countCanvas = 0;
 
         iText = new IText('test test');
-
+        iText.setPositionByOrigin(new Point(0, 0), 'left', 'top');
         testCanvas.add(iText);
 
         testCanvas.on('text:selection:changed', () => {

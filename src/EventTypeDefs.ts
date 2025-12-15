@@ -21,6 +21,7 @@ import type {
   SCALING,
   SKEWING,
 } from './constants';
+import type { TOCoord } from './shapes/Object/InteractiveObject';
 
 export type ModifierKey = keyof Pick<
   MouseEvent | PointerEvent | TouchEvent,
@@ -57,7 +58,12 @@ export type ControlCallback<R = void> = (
   fabricObject: FabricObject,
 ) => R;
 
-export type ControlCursorCallback = ControlCallback<string>;
+export type ControlCursorCallback<R = string> = (
+  eventData: TPointerEvent,
+  control: Control,
+  fabricObject: FabricObject,
+  coord: TOCoord,
+) => R;
 
 /**
  * relative to target's containing coordinate plane
@@ -259,21 +265,13 @@ type TPointerEvents<Prefix extends string> = Record<
     `${Prefix}${WithBeforeSuffix<'up'>}`,
     TPointerEventInfo & {
       isClick: boolean;
-      /**
-       * The targets at the moment of mouseup that could be different from the
-       * target at the moment of mouse down in case of a drag action for example
-       */
-      currentTarget?: FabricObject;
-      /**
-       * The subtargets at the moment of mouseup that could be different from the
-       * target at the moment of mouse down in case of a drag action for example
-       */
-      currentSubTargets: FabricObject[];
     }
   > &
   Record<`${Prefix}wheel`, TPointerEventInfo<WheelEvent>> &
   Record<`${Prefix}over`, TPointerEventInfo & InEvent> &
-  Record<`${Prefix}out`, TPointerEventInfo & OutEvent>;
+  Record<`${Prefix}out`, TPointerEventInfo & OutEvent> &
+  Record<'pinch', TPointerEventInfo & { scale: number }> &
+  Record<'rotate', TPointerEventInfo & { rotation: number }>;
 
 export type TPointerEventNames =
   | WithBeforeSuffix<'down'>
@@ -303,7 +301,6 @@ export interface ObjectEvents
   deselected: Partial<TEvent> & {
     target: FabricObject;
   };
-
   // tree
   added: { target: Group | Canvas | StaticCanvas };
   removed: { target: Group | Canvas | StaticCanvas };

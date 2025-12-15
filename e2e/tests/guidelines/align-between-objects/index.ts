@@ -4,7 +4,7 @@
  */
 
 import { Rect } from 'fabric';
-import { initAligningGuidelines } from 'fabric/extensions';
+import { AligningGuidelines } from 'fabric/extensions';
 import { beforeAll } from '../../test';
 import type { AligningLineConfig } from 'fabric/extensions';
 
@@ -16,22 +16,19 @@ beforeAll(async (canvas) => {
     top: 30,
     width: 50,
     height: 50,
-    originX: 'center',
-    originY: 'center',
     fill: 'green',
   });
+
   const rect2 = new Rect({
     strokeWidth: 0,
     left: 200,
     top: 30,
     width: 60,
     height: 60,
-    originX: 'center',
-    originY: 'center',
     fill: 'yellow',
   });
 
-  initAligningGuidelines(canvas, {
+  new AligningGuidelines(canvas, {
     width: 2,
     margin: 60,
   } as AligningLineConfig);

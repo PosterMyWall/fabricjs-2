@@ -1,7 +1,73 @@
 # Changelog
 
-## [next]
+## [7.0.0]
 
+- fix(): Fix toDataUrl writing on contextTop [#10820](https://github.com/fabricjs/fabric.js/pull/10820)
+- feat(): Multi touch gesture support with module westures [#10813](https://github.com/fabricjs/fabric.js/pull/10813)
+- fix(): Fix the situation where undefined + char exists when calculating couple [#10816](https://github.com/fabricjs/fabric.js/pull/10816)
+- feat(): Add configuration parameter for patternQuality in node [#10804](https://github.com/fabricjs/fabric.js/pull/10804)
+- fix(): BREAKING Fix text positioning [#10803](https://github.com/fabricjs/fabric.js/pull/10803)
+- fix(AligningGuidelines): Guidelines features updates [#10120] (https://github.com/fabricjs/fabric.js/pull/10120)
+- chore(deps-dev): bump inquirer from 12.9.6 to 12.10.0 [#10789](https://github.com/fabricjs/fabric.js/pull/10789)
+- chore(deps-dev): bump @types/micromatch from 4.0.9 to 4.0.10 [#10788](https://github.com/fabricjs/fabric.js/pull/10788)
+- chore(): update major version of vitest [#10786](https://github.com/fabricjs/fabric.js/pull/10786)
+- fix(): Prototype pollution risk on text char cache [#10782](https://github.com/fabricjs/fabric.js/pull/10782)
+- fix(): fix rendering of text when line height is set to 0 [#10785](https://github.com/fabricjs/fabric.js/pull/10785)
+- chore(): update playwright [#10780](https://github.com/fabricjs/fabric.js/pull/10780)
+- chore(deps-dev): bump es-toolkit from 1.39.10 to 1.40.0 [#10777](https://github.com/fabricjs/fabric.js/pull/10777)
+- BREAKING chore(): Deprecate originX and originY and change their default to center/center [#10715](https://github.com/fabricjs/fabric.js/pull/10715)
+- chore(deps-dev): bump @types/node from 24.7.0 to 24.7.2 [#10778](https://github.com/fabricjs/fabric.js/pull/10778)
+- chore(deps-dev): bump @rollup/plugin-babel from 6.0.4 to 6.1.0 [#10776](https://github.com/fabricjs/fabric.js/pull/10776)
+- chore(): up dev deps [#10773](https://github.com/fabricjs/fabric.js/pull/10773)
+- chore(): up deps [#10771](https://github.com/fabricjs/fabric.js/pull/10771)
+- chore(): remove moment dev dependency [#10770](https://github.com/fabricjs/fabric.js/pull/10770)
+- ci(): Move firefox to headless: false to see if improves passing rate. Renamed config because of deprecation warning [#10769](https://github.com/fabricjs/fabric.js/pull/10769)
+- chore(): remove fs-extra dev dependency [#10767](https://github.com/fabricjs/fabric.js/pull/10767)
+- chore(deps-dev): bump @playwright/test from 1.55.0 to 1.55.1 [#10761](https://github.com/fabricjs/fabric.js/pull/10761)
+- test(): Add new e2e import test for svg preserve aspect ratio [#10766](https://github.com/fabricjs/fabric.js/pull/10766)
+- chore() Revisit and reduce contribution guidelines, try to streamline things [#10759](https://github.com/fabricjs/fabric.js/pull/10759)
+- chore(deps): bump the npm_and_yarn group across 2 directories with 2 updates [#10734](https://github.com/fabricjs/fabric.js/pull/10734)
+- chore(deps-dev): bump @babel/core from 7.28.3 to 7.28.4 [#10753](https://github.com/fabricjs/fabric.js/pull/10753)
+- chore(): remove chalk [#10758](https://github.com/fabricjs/fabric.js/pull/10758)
+- chore(deps-dev): bump commander from 14.0.0 to 14.0.1 [#10754](https://github.com/fabricjs/fabric.js/pull/10754)
+- chore(deps-dev): bump chalk from 5.6.0 to 5.6.2 [#10752](https://github.com/fabricjs/fabric.js/pull/10752)
+- fix(): Fix some weaknesses in the changelog-update action ( various CWE ) [#10747](https://github.com/fabricjs/fabric.js/pull/10747)
+- fix(): CWE-1333 CWE-400 CWE-730 Simplify some regexes in order to avoid slowness with craft bad string [#10746](https://github.com/fabricjs/fabric.js/pull/10746)
+- fix(): CWE-1333 CWE-400 CWE-730 in Text.ts regex [#10745](https://github.com/fabricjs/fabric.js/pull/10745)
+- ci(): fix CWE-829 in action build-stats [#10744](https://github.com/fabricjs/fabric.js/pull/10744)
+- ci(): Fix CWE-829 in the coverage report action [#10743](https://github.com/fabricjs/fabric.js/pull/10743)
+- ci(): Foked the action find-create-update-comment in order to pin sha(s) [#10742](https://github.com/fabricjs/fabric.js/pull/10742)
+- fix(): After executing loadFromJSON, it unexpectedly adds an objects property to the canvas.
+- fix(): Incorrect sha for commenting action
+- fix(IText): A form field element has neither an id nor a name attribute. [#10172](https://github.com/fabricjs/fabric.js/pull/10172)
+- docs(): change CN comment to EN [#10727](https://github.com/fabricjs/fabric.js/pull/10727)
+- chore(): Remove paths for codeQL let it scan all the repo [#10738](https://github.com/fabricjs/fabric.js/pull/10738)
+- chore(): Pin all GitHub Actions to commit SHAs for security compliance [#10739](https://github.com/fabricjs/fabric.js/pull/10739)
+- chore(deps-dev): bump es-toolkit from 1.39.7 to 1.39.10 [#10731](https://github.com/fabricjs/fabric.js/pull/10731)
+- chore(deps-dev): bump serve from 14.2.4 to 14.2.5 [#10730](https://github.com/fabricjs/fabric.js/pull/10730)
+- Update license to include 2016–2025 Fabric.js contributors [#10726](https://github.com/fabricjs/fabric.js/pull/10726)
+- chore(deps-dev): bump @eslint/js from 9.34.0 to 9.35.0 [#10729](https://github.com/fabricjs/fabric.js/pull/10729)
+- chore(): Format dependabot.yml with Prettier to ensure consistent code style [#10733](https://github.com/fabricjs/fabric.js/pull/10733)
+- doc: Repair broken link in docs by targeting all demo and samples pages in old fabric docs. [#10723](https://github.com/fabricjs/fabric.js/pull/10723)
+- Clarify MIT License [#10725](https://github.com/fabricjs/fabric.js/pull/10725)
+- BREAKING(): Deprecate fireRightClick, fireMiddleClick, stopContextMenu and change their default value. [#10720](https://github.com/fabricjs/fabric.js/pull/10720)
+- BREAKING: chore(): Update min node version to 20, add 24 [#10716](https://github.com/fabricjs/fabric.js/pull/10716)
+- fix(): The mouse enter and leave events of child elements will be executed twice. [10698](https://github.com/fabricjs/fabric.js/issues/10698)
+- chore(): Remove mouse wheel console warning by setting default explicitly. [#10712](https://github.com/fabricjs/fabric.js/pull/10712)
+- chore(): Fixes to TypeDoc for compilation [#10709](https://github.com/fabricjs/fabric.js/pull/10709)
+- chore(): Update typescript 5.9, eslint, babel and rollup to latest [#10708](https://github.com/fabricjs/fabric.js/pull/10708)
+
+## [7.0.0-beta1]
+
+- refactor(): BREAKING Refactor find target [#10587](https://github.com/fabricjs/fabric.js/pull/10587)
+- chore(): Reduce noise in inline docs [#10694](https://github.com/fabricjs/fabric.js/pull/10694)
+- chore(): Reduce noise in unit tests [#10693](https://github.com/fabricjs/fabric.js/pull/10693)
+- Fix Next.js compatibility by removing node export restriction [#10687](https://github.com/fabricjs/fabric.js/pull/10687)
+- chore(): BREAKING: remove request util [#10690](https://github.com/fabricjs/fabric.js/pull/10690)
+- chore(): update dev deps [#10685](https://github.com/fabricjs/fabric.js/pull/10685)
+- fix(SVGParser): Corrected CSS rule parsing for multiple style tags. [#10683](https://github.com/fabricjs/fabric.js/issues/10683)
+- fix(): Refactor findCornerQuadrant to fix the flip + cursor issue. [#10654](https://github.com/fabricjs/fabric.js/issues/10654)
+- chore(): A simple npm-update [#10674](https://github.com/fabricjs/fabric.js/pull/10674)
 - chore(): update playwright [#10657](https://github.com/fabricjs/fabric.js/pull/10657)
 - refactor(): swap lodash with es-toolkit [#10651](https://github.com/fabricjs/fabric.js/pull/10651)
 - chore(): update vitest [#10648](https://github.com/fabricjs/fabric.js/pull/10648)
@@ -100,6 +166,35 @@
 - chore(): BREAKING: Update browser versions and some dependencies [#10488](https://github.com/fabricjs/fabric.js/pull/10488)
 - ci(): Switch from Jest to Vitest [#10420](https://github.com/fabricjs/fabric.js/pull/10420)
 - chore(): BREAKING: drop node 16 support. Update canvas and jsdom [#10417](https://github.com/fabricjs/fabric.js/pull/10417)
+
+## [6.7.1]
+
+- fix(SVGParser): Corrected CSS rule parsing for multiple style tags. [#10688](https://github.com/fabricjs/fabric.js/issues/10683)
+
+## [6.7.0]
+
+- feat(Text): Add support for text decoration tickness [#10643](https://github.com/fabricjs/fabric.js/pull/10643)
+
+## [6.6.7]
+
+- fix(): Fix regex to parse the viewbox attribute to be more strict [#10636](https://github.com/fabricjs/fabric.js/pull/10636)
+
+## [6.6.6]
+
+- fix(): Polygon controls util should invalidate cache [#10628](https://github.com/fabricjs/fabric.js/pull/10628)
+- fix(): Remove black border in blur and also align JS with WEBGL blur filtering [#10623](https://github.com/fabricjs/fabric.js/pull/10623)
+
+## [6.6.5]
+
+- feat(Text): Support for intl.segmenter in fabric.Text [#10595](https://github.com/fabricjs/fabric.js/pull/10595)
+
+## [6.6.4]
+
+- chore(): properly updated version number
+
+## [6.6.3]
+
+- docs(): Fixed JSDOCS for astro and typedoc
 
 ## [6.6.2]
 

@@ -10,8 +10,8 @@ describe('Selectable Canvas', () => {
   describe('_pointIsInObjectSelectionArea', () => {
     it('points and selection area', () => {
       const object = new FabricObject({
-        left: 40,
-        top: 40,
+        left: 60,
+        top: 65,
         width: 40,
         height: 50,
         angle: 0,
@@ -275,8 +275,8 @@ describe('Selectable Canvas', () => {
     });
     it('points and selection area, group transformation and padding', () => {
       const object = new FabricObject({
-        left: 5,
-        top: 5,
+        left: 10,
+        top: 10,
         width: 10,
         height: 10,
         padding: 5,
@@ -284,8 +284,8 @@ describe('Selectable Canvas', () => {
       });
 
       const object2 = new FabricObject({
-        left: 35,
-        top: 35,
+        left: 40,
+        top: 40,
         width: 10,
         height: 10,
         padding: 5,
@@ -294,6 +294,7 @@ describe('Selectable Canvas', () => {
 
       const canvas = new Canvas(undefined, { renderOnAddRemove: false });
       const group = new Group([object, object2], { scaleX: 2, scaleY: 2 });
+      group.setPositionByOrigin(new Point(5, 5), 'left', 'top');
       canvas.add(group);
 
       for (let y = -1; y <= 31; y++) {
@@ -334,12 +335,12 @@ describe('Selectable Canvas', () => {
       });
       const canvas = new Canvas(undefined, { renderOnAddRemove: false });
       canvas.add(groupD);
-      const target = canvas.searchPossibleTargets(
+      const { target, subTargets } = canvas.searchPossibleTargets(
         canvas.getObjects(),
         groupD.getCenterPoint(),
       );
       expect(target).toBe(groupC);
-      expect(canvas.targets.map((obj) => obj.id)).toEqual(['a', 'b', 'c']);
+      expect(subTargets.map((obj) => obj.id)).toEqual(['a', 'b', 'c']);
     });
     test('a interactive group covered by a non interactive group wont be selected', () => {
       const object = new FabricObject({
@@ -373,12 +374,12 @@ describe('Selectable Canvas', () => {
       });
       const canvas = new Canvas(undefined, { renderOnAddRemove: false });
       canvas.add(groupE);
-      const target = canvas.searchPossibleTargets(
+      const { target, subTargets } = canvas.searchPossibleTargets(
         canvas.getObjects(),
         groupD.getCenterPoint(),
       );
       expect(target).toBe(groupC);
-      expect(canvas.targets.map((obj) => obj.id)).toEqual(['a', 'b', 'c', 'd']);
+      expect(subTargets.map((obj) => obj.id)).toEqual(['a', 'b', 'c', 'd']);
     });
 
     test('nested non interactive groups with subTargetCheck', () => {
@@ -422,14 +423,14 @@ describe('Selectable Canvas', () => {
       canvas.add(group);
 
       const object2Position = object2.getCenterPoint();
-      const target = canvas.searchPossibleTargets(
+      const { target } = canvas.searchPossibleTargets(
         canvas.getObjects(),
         object2Position,
       );
       expect(target).toBe(nestedGroup);
 
       nestedGroup.set({ interactive: true });
-      const nestedTarget = canvas.searchPossibleTargets(
+      const { target: nestedTarget } = canvas.searchPossibleTargets(
         canvas.getObjects(),
         object2Position,
       );

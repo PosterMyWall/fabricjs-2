@@ -7,6 +7,7 @@ import { stylesFromArray } from '../util';
 import { FabricText } from './Text/Text';
 import { IText } from './IText/IText';
 import type { TPointerEvent } from '../EventTypeDefs';
+import { Point } from '../Point';
 
 describe('Textbox', () => {
   let canvas: Canvas;
@@ -559,7 +560,7 @@ describe('Textbox', () => {
 
   it('texbox will change width from the mr corner', () => {
     const text = new Textbox('xa xb xc xd xe ya yb id', { strokeWidth: 0 });
-
+    text.setPositionByOrigin(new Point(0, 0), 'left', 'top');
     canvas.add(text);
     canvas.setActiveObject(text);
 
@@ -572,14 +573,14 @@ describe('Textbox', () => {
 
     const originalWidth = text.width;
 
-    canvas.__onMouseDown(eventStub);
-    canvas.__onMouseMove({
+    canvas._onMouseDown(eventStub);
+    canvas._onMouseMove({
       ...eventStub,
       clientX: eventStub.clientX + 20,
       clientY: eventStub.clientY,
       type: 'mousemove',
     });
-    canvas.__onMouseUp({
+    canvas._onMouseUp({
       ...eventStub,
       clientX: eventStub.clientX + 20,
       clientY: eventStub.clientY,
@@ -594,12 +595,12 @@ describe('Textbox', () => {
       strokeWidth: 0,
       left: 40,
     });
-
+    text.setPositionByOrigin(new Point(40, 0), 'left', 'top');
     canvas.add(text);
     canvas.setActiveObject(text);
 
     const eventStub = {
-      clientX: text.left,
+      clientX: text.left - text.width / 2,
       clientY: text.oCoords.ml.corner.tl.y + 2,
       type: 'mousedown',
       target: canvas.upperCanvasEl,
@@ -607,14 +608,14 @@ describe('Textbox', () => {
 
     const originalWidth = text.width;
 
-    canvas.__onMouseDown(eventStub);
-    canvas.__onMouseMove({
+    canvas._onMouseDown(eventStub);
+    canvas._onMouseMove({
       ...eventStub,
       clientX: eventStub.clientX - 20,
       clientY: eventStub.clientY,
       type: 'mousemove',
     });
-    canvas.__onMouseUp({
+    canvas._onMouseUp({
       ...eventStub,
       clientX: eventStub.clientX + 20,
       clientY: eventStub.clientY,
