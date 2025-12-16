@@ -30,6 +30,8 @@
     // "baseUrl": "./",
     "paths": {
       "@postermywall/fabricjs-2": ["./index"],
+      "@postermywall/fabricjs-2/extensions": ["./extensions/index"],
+      "@postermywall/fabricjs-2/node": ["./index.node"],
       "fabric": ["./index"],
       "fabric/node": ["./index.node"],
       "fabric/extensions": ["./extensions/index"]

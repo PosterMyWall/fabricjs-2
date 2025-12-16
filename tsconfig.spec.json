@@ -5,6 +5,9 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
+      "@postermywall/fabricjs-2": ["./index"],
+      "@postermywall/fabricjs-2/extensions": ["./extensions/index"],
+      "@postermywall/fabricjs-2/node": ["./index.node"],
       "fabric": ["./src"],
       "fabric/node": ["./src/node"],
       "fabric/extensions": ["./extensions"]
