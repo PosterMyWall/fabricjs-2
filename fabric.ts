@@ -183,5 +183,6 @@ export type {SVGParsingOutput} from './src/parser/typedefs';
 
 export { Control } from './src/controls/Control';
 export * as controlsUtils from './src/controls';
+export type { ControlRenderingStyleOverride } from './src/controls';
 
 export * from './src/filters';
