@@ -1,6 +1,19 @@
 import { getFabricWindow } from '../env/index.mjs';
 
 /**
+ * Capitalizes a string
+ * @param {String} string String to capitalize
+ * @param {Boolean} [firstLetterOnly] If true only first letter is capitalized
+ * and other letters stay untouched, if false first letter is capitalized
+ * and other letters are converted to lowercase.
+ * @return {String} Capitalized version of a string
+ */
+const capitalize = function (string) {
+  let firstLetterOnly = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  return `${string.charAt(0).toUpperCase()}${firstLetterOnly ? string.slice(1) : string.slice(1).toLowerCase()}`;
+};
+
+/**
  * Escapes XML in a string
  * @param {String} string String to escape
  * @return {String} Escaped version of a string
@@ -85,5 +98,5 @@ const getWholeChar = (str, i) => {
   return false;
 };
 
-export { escapeXml, graphemeSplit };
+export { capitalize, escapeXml, graphemeSplit };
 //# sourceMappingURL=lang_string.mjs.map

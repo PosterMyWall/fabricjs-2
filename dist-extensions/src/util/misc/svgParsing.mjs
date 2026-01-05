@@ -4,6 +4,24 @@ import { DEFAULT_SVG_FONT_SIZE, FILL, NONE } from '../../constants.mjs';
 import { toFixed } from './toFixed.mjs';
 
 /**
+ * Returns array of attributes for given svg that fabric parses
+ * @param {SVGElementName} type Type of svg element (eg. 'circle')
+ * @return {Array} string names of supported attributes
+ */
+const getSvgAttributes = type => {
+  const commonAttributes = ['instantiated_by_use', 'style', 'id', 'class'];
+  switch (type) {
+    case 'linearGradient':
+      return commonAttributes.concat(['x1', 'y1', 'x2', 'y2', 'gradientUnits', 'gradientTransform']);
+    case 'radialGradient':
+      return commonAttributes.concat(['gradientUnits', 'gradientTransform', 'cx', 'cy', 'r', 'fx', 'fy', 'fr']);
+    case 'stop':
+      return commonAttributes.concat(['offset', 'stop-color', 'stop-opacity']);
+  }
+  return commonAttributes;
+};
+
+/**
  * Converts from attribute value to pixel value if applicable.
  * Returns converted pixels or original value not converted.
  * @param {string} value number to operate on
@@ -106,5 +124,5 @@ const createSVGRect = function (color, _ref) {
   return `<rect ${svgColor} x="${x}" y="${y}" width="${w}" height="${h}"></rect>`;
 };
 
-export { colorPropToSVG, createSVGRect, parsePreserveAspectRatioAttribute, parseUnit };
+export { colorPropToSVG, createSVGRect, getSvgAttributes, parsePreserveAspectRatioAttribute, parseUnit };
 //# sourceMappingURL=svgParsing.mjs.map

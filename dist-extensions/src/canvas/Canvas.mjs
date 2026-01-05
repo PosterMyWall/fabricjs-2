@@ -579,6 +579,17 @@ class Canvas extends SelectableCanvas {
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(canvasElement, `${eventTypePrefix}down`, this._onMouseDown);
     this._resetTransformEventData();
+    //*PMW* added line
+    this.onTouchStartAfter(e);
+  }
+  onTouchStartAfter(e) {
+    this.fire('after:touchstart');
+    this.touchProps = {
+      numOfTouches: e.touches.length,
+      totalDrift: 0,
+      x: e.touches[0].pageX,
+      y: e.touches[0].pageY
+    };
   }
 
   /**
@@ -783,9 +794,6 @@ class Canvas extends SelectableCanvas {
     } else if (!isClick && !((_this$_activeObject = this._activeObject) !== null && _this$_activeObject !== void 0 && _this$_activeObject.isEditing)) {
       this.renderTop();
     }
-    if (config.isCanvasTwoFingerPanning) {
-      config.isCanvasTwoFingerPanning = false;
-    }
   }
   _basicEventHandler(eventType, options) {
     const {
@@ -895,10 +903,6 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e) {
-    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
-    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
-      return;
-    }
     this._isClick = true;
     this._handleEvent(e, 'down:before');
     let {
@@ -1014,9 +1018,6 @@ class Canvas extends SelectableCanvas {
    * @param {Event} e Event object fired on mousemove
    */
   __onMouseMove(e) {
-    if (config.isCanvasTwoFingerPanning) {
-      return;
-    }
     this._isClick = false;
     this._handleEvent(e, 'move:before');
     if (this.isDrawingMode) {

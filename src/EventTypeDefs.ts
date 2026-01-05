@@ -213,7 +213,7 @@ interface DnDEvents {
 }
 
 interface CanvasTouchEvents {
-  'after:touchstart': TEvent & { target: FabricObject };
+  'after:touchstart': void;
 }
 
 interface CanvasDnDEvents extends DnDEvents {

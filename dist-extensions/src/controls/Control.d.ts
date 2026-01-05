@@ -219,6 +219,19 @@ export declare class Control {
         bl: Point;
     };
     /**
+     * This is an helper method to prepare the canvas to render a control
+     * It detectes common control properties and sets the correct fill and
+     * stroke styles on the context. It does not execute translations or
+     * rotations since different controls need differnt combination of these.
+     */
+    commonRenderProps(ctx: CanvasRenderingContext2D, left: number, top: number, fabricObject: InteractiveFabricObject, styleOverride?: ControlRenderingStyleOverride): {
+        stroke: boolean;
+        xSize: number;
+        ySize: number;
+        transparentCorners: boolean;
+        opName: 'stroke' | 'fill';
+    };
+    /**
      * Render function for the control.
      * When this function runs the context is unscaled. unrotate. Just retina scaled.
      * all the functions will have to translate to the point left,top before starting Drawing

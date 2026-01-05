@@ -43,11 +43,6 @@ declare class BaseConfiguration {
      */
     disableGroupSelector: boolean;
     /**
-     * *PMW* added variable to mark when canvas is being two-finger panned.
-     * @type Boolean
-     */
-    isCanvasTwoFingerPanning: boolean;
-    /**
      * Pixel limit for cache canvases width or height. IE fixes the maximum at 5000
      * @since 1.7.14
      * @type Number

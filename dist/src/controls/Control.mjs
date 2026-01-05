@@ -1,8 +1,9 @@
 import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
 import { Intersection } from '../Intersection.mjs';
 import { Point } from '../Point.mjs';
-import { SCALE } from '../constants.mjs';
+import { SCALE, STROKE, FILL } from '../constants.mjs';
 import { multiplyTransformMatrixArray, createTranslateMatrix, createRotateMatrix, createScaleMatrix } from '../util/misc/matrix.mjs';
+import { degreesToRadians } from '../util/misc/radiansDegreesConversion.mjs';
 import { renderSquareControl, renderCircleControl } from './controlRendering.mjs';
 
 class Control {
@@ -261,6 +262,41 @@ class Control {
       tr: new Point(0.5, -0.5).transform(t),
       br: new Point(0.5, 0.5).transform(t),
       bl: new Point(-0.5, 0.5).transform(t)
+    };
+  }
+
+  /**
+   * This is an helper method to prepare the canvas to render a control
+   * It detectes common control properties and sets the correct fill and
+   * stroke styles on the context. It does not execute translations or
+   * rotations since different controls need differnt combination of these.
+   */
+  commonRenderProps(ctx, left, top, fabricObject) {
+    let styleOverride = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+    const {
+        cornerSize,
+        cornerColor,
+        transparentCorners,
+        cornerStrokeColor
+      } = styleOverride,
+      sizeFromProps = cornerSize || fabricObject.cornerSize,
+      xSize = this.sizeX || sizeFromProps,
+      ySize = this.sizeY || sizeFromProps,
+      transparent = typeof transparentCorners !== 'undefined' ? transparentCorners : fabricObject.transparentCorners,
+      opName = transparent ? STROKE : FILL,
+      strokeColor = cornerStrokeColor || fabricObject.cornerStrokeColor,
+      stroke = !transparent && !!strokeColor;
+    ctx.fillStyle = cornerColor || fabricObject.cornerColor || '';
+    ctx.strokeStyle = strokeColor || '';
+    ctx.translate(left, top);
+    //  angle is relative to canvas plane
+    ctx.rotate(degreesToRadians(fabricObject.getTotalAngle()));
+    return {
+      stroke,
+      xSize,
+      ySize,
+      transparentCorners: transparent,
+      opName
     };
   }
 

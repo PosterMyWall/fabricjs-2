@@ -15,6 +15,7 @@ export declare const TOP = "top";
 export declare const BOTTOM = "bottom";
 export declare const RIGHT = "right";
 export declare const NONE = "none";
+export declare const HEIGHT = "height";
 export declare const reNewline: RegExp;
 export declare const MOVING = "moving";
 export declare const SCALING = "scaling";

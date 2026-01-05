@@ -1,5 +1,4 @@
 import { defineProperty as _defineProperty } from '../../_virtual/_rollupPluginBabelHelpers.mjs';
-import { dragHandler } from '../controls/drag.mjs';
 import { getActionFromCorner } from '../controls/util.mjs';
 import { Point } from '../Point.mjs';
 import { FabricObject } from '../shapes/Object/FabricObject.mjs';
@@ -17,7 +16,7 @@ import '../util/misc/vectors.mjs';
 import { isActiveSelection } from '../util/typeAssertions.mjs';
 import '../util/misc/projectStroke/StrokeLineJoinProjections.mjs';
 import { SCALE, SCALE_X, SCALE_Y, RESIZING, ROTATE, RIGHT, LEFT, BOTTOM, TOP, CENTER, MODIFIED, SKEW_X, SKEW_Y } from '../constants.mjs';
-import { config } from '../config.mjs';
+import '../config.mjs';
 import { createCanvasElement } from '../util/misc/dom.mjs';
 import '../shapes/Group.mjs';
 import '../cache.mjs';
@@ -26,6 +25,7 @@ import '../util/animation/AnimationRegistry.mjs';
 import { CanvasDOMManager } from './DOMManagers/CanvasDOMManager.mjs';
 import { canvasDefaults } from './CanvasOptions.mjs';
 import { Intersection } from '../Intersection.mjs';
+import { dragHandler } from '../controls/drag.mjs';
 
 /**
  * Canvas class
@@ -364,9 +364,7 @@ class SelectableCanvas extends StaticCanvas {
   _shouldClearSelection(e, target) {
     const activeObjects = this.getActiveObjects(),
       activeObject = this._activeObject;
-    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target &&
-    // *PMW* added code: (&& !fabric.enableGroupSelection)
-    !config.enableGroupSelection && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
+    return !!(!target || target && activeObject && activeObjects.length > 1 && activeObjects.indexOf(target) === -1 && activeObject !== target && !this._isSelectionKeyPressed(e) || target && !target.evented || target && !target.selectable && activeObject && activeObject !== target);
   }
 
   /**
@@ -450,37 +448,52 @@ class SelectableCanvas extends StaticCanvas {
         x: CENTER,
         y: CENTER
       } : this._getOriginFromCorner(target, corner),
+      {
+        scaleX,
+        scaleY,
+        skewX,
+        skewY,
+        left,
+        top,
+        angle,
+        width,
+        height,
+        cropX,
+        cropY
+      } = target,
       /**
        * relative to target's containing coordinate plane
        * both agree on every point
        **/
       transform = {
-        target: target,
+        target,
         action,
         actionHandler,
         actionPerformed: false,
         corner,
-        scaleX: target.scaleX,
-        scaleY: target.scaleY,
-        skewX: target.skewX,
-        skewY: target.skewY,
-        offsetX: pointer.x - target.left,
-        offsetY: pointer.y - target.top,
+        scaleX,
+        scaleY,
+        skewX,
+        skewY,
+        offsetX: pointer.x - left,
+        offsetY: pointer.y - top,
         originX: origin.x,
         originY: origin.y,
         ex: pointer.x,
         ey: pointer.y,
         lastX: pointer.x,
         lastY: pointer.y,
-        theta: degreesToRadians(target.angle),
-        width: target.width,
-        height: target.height,
+        theta: degreesToRadians(angle),
+        width,
+        height,
         shiftKey: e.shiftKey,
         altKey,
         original: {
           ...saveObjectTransform(target),
           originX: origin.x,
-          originY: origin.y
+          originY: origin.y,
+          cropX,
+          cropY
         }
       };
     this._currentTransform = transform;

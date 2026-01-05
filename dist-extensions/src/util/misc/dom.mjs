@@ -20,6 +20,18 @@ const createCanvasElement = () => {
 const createImage = () => getFabricDocument().createElement('img');
 
 /**
+ * Creates a canvas element that is a copy of another and is also painted
+ * @param {CanvasElement} canvas to copy size and content of
+ * @return {CanvasElement} initialized canvas element
+ */
+const copyCanvasElement = canvas => {
+  var _newCanvas$getContext;
+  const newCanvas = createCanvasElementFor(canvas);
+  (_newCanvas$getContext = newCanvas.getContext('2d')) === null || _newCanvas$getContext === void 0 || _newCanvas$getContext.drawImage(canvas, 0, 0);
+  return newCanvas;
+};
+
+/**
  * Creates a canvas element as big as another
  * @param {CanvasElement} canvas to copy size and content of
  * @return {CanvasElement} initialized canvas element
@@ -47,5 +59,5 @@ const toBlob = (canvasEl, format, quality) => new Promise((resolve, _) => {
   canvasEl.toBlob(resolve, `image/${format}`, quality);
 });
 
-export { createCanvasElement, createCanvasElementFor, createImage, isHTMLCanvas, toBlob, toDataURL };
+export { copyCanvasElement, createCanvasElement, createCanvasElementFor, createImage, isHTMLCanvas, toBlob, toDataURL };
 //# sourceMappingURL=dom.mjs.map

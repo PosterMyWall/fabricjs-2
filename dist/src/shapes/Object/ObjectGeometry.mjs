@@ -437,7 +437,7 @@ class ObjectGeometry extends CommonMethods {
   calcOwnMatrix() {
     const key = this.transformMatrixKey(true),
       cache = this.ownMatrixCache;
-    if (cache && cache.key === key) {
+    if (cache && cache.key.every((x, i) => x === key[i])) {
       return cache.value;
     }
     const center = this.getRelativeCenterPoint(),

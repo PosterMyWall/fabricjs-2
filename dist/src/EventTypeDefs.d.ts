@@ -55,6 +55,8 @@ export type Transform = {
     original: ReturnType<typeof saveObjectTransform> & {
         originX: TOriginX;
         originY: TOriginY;
+        cropX?: number;
+        cropY?: number;
     };
     actionPerformed: boolean;
 };
@@ -157,9 +159,7 @@ interface DnDEvents {
     'drop:after': DropEventData;
 }
 interface CanvasTouchEvents {
-    'after:touchstart': TEvent & {
-        target: FabricObject;
-    };
+    'after:touchstart': void;
 }
 interface CanvasDnDEvents extends DnDEvents {
     'drag:enter': DragEventData & InEvent;

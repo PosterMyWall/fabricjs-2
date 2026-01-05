@@ -1,10 +1,11 @@
 import { cache } from '../../cache.mjs';
 import { config } from '../../config.mjs';
-import { PiBy180 } from '../../constants.mjs';
+import { halfPI, PiBy180 } from '../../constants.mjs';
 import { cos } from '../misc/cos.mjs';
-import { Point } from '../../Point.mjs';
+import { multiplyTransformMatrices, transformPoint } from '../misc/matrix.mjs';
 import { sin } from '../misc/sin.mjs';
 import { toFixed } from '../misc/toFixed.mjs';
+import { Point } from '../../Point.mjs';
 import { rePathCommand, reArcCommandPoints } from './regex.mjs';
 import { reNum } from '../../parser/constants.mjs';
 
@@ -708,6 +709,107 @@ const parsePath = pathString => {
 };
 
 /**
+ *
+ * Converts points to a smooth SVG path
+ * @param {XY[]} points Array of points
+ * @param {number} [correction] Apply a correction to the path (usually we use `width / 1000`). If value is undefined 0 is used as the correction value.
+ * @return {(string|number)[][]} An array of SVG path commands
+ */
+const getSmoothPathFromPoints = function (points) {
+  let correction = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  let p1 = new Point(points[0]),
+    p2 = new Point(points[1]),
+    multSignX = 1,
+    multSignY = 0;
+  const path = [],
+    len = points.length,
+    manyPoints = len > 2;
+  if (manyPoints) {
+    multSignX = points[2].x < p2.x ? -1 : points[2].x === p2.x ? 0 : 1;
+    multSignY = points[2].y < p2.y ? -1 : points[2].y === p2.y ? 0 : 1;
+  }
+  path.push(['M', p1.x - multSignX * correction, p1.y - multSignY * correction]);
+  let i;
+  for (i = 1; i < len; i++) {
+    if (!p1.eq(p2)) {
+      const midPoint = p1.midPointFrom(p2);
+      // p1 is our bezier control point
+      // midpoint is our endpoint
+      // start point is p(i-1) value.
+      path.push(['Q', p1.x, p1.y, midPoint.x, midPoint.y]);
+    }
+    p1 = points[i];
+    if (i + 1 < points.length) {
+      p2 = points[i + 1];
+    }
+  }
+  if (manyPoints) {
+    multSignX = p1.x > points[i - 2].x ? 1 : p1.x === points[i - 2].x ? 0 : -1;
+    multSignY = p1.y > points[i - 2].y ? 1 : p1.y === points[i - 2].y ? 0 : -1;
+  }
+  path.push(['L', p1.x + multSignX * correction, p1.y + multSignY * correction]);
+  return path;
+};
+
+/**
+ * Transform a path by transforming each segment.
+ * it has to be a simplified path or it won't work.
+ * WARNING: this depends from pathOffset for correct operation
+ * @param {TSimplePathData} path fabricJS parsed and simplified path commands
+ * @param {TMat2D} transform matrix that represent the transformation
+ * @param {Point} [pathOffset] `Path.pathOffset`
+ * @returns {TSimplePathData} the transformed path
+ */
+const transformPath = (path, transform, pathOffset) => {
+  if (pathOffset) {
+    transform = multiplyTransformMatrices(transform, [1, 0, 0, 1, -pathOffset.x, -pathOffset.y]);
+  }
+  return path.map(pathSegment => {
+    const newSegment = [...pathSegment];
+    for (let i = 1; i < pathSegment.length - 1; i += 2) {
+      // TODO: is there a way to get around casting to any?
+      const {
+        x,
+        y
+      } = transformPoint({
+        x: pathSegment[i],
+        y: pathSegment[i + 1]
+      }, transform);
+      newSegment[i] = x;
+      newSegment[i + 1] = y;
+    }
+    return newSegment;
+  });
+};
+
+/**
+ * Returns an array of path commands to create a regular polygon
+ * @param {number} numVertexes
+ * @param {number} radius
+ * @returns {TSimplePathData} An array of SVG path commands
+ */
+const getRegularPolygonPath = (numVertexes, radius) => {
+  const interiorAngle = Math.PI * 2 / numVertexes;
+  // rotationAdjustment rotates the path by 1/2 the interior angle so that the polygon always has a flat side on the bottom
+  // This isn't strictly necessary, but it's how we tend to think of and expect polygons to be drawn
+  let rotationAdjustment = -halfPI;
+  if (numVertexes % 2 === 0) {
+    rotationAdjustment += interiorAngle / 2;
+  }
+  const d = new Array(numVertexes + 1);
+  for (let i = 0; i < numVertexes; i++) {
+    const rad = i * interiorAngle + rotationAdjustment;
+    const {
+      x,
+      y
+    } = new Point(cos(rad), sin(rad)).scalarMultiply(radius);
+    d[i] = [i === 0 ? 'M' : 'L', x, y];
+  }
+  d[numVertexes] = ['Z'];
+  return d;
+};
+
+/**
  * Join path commands to go back to svg format
  * @param {TSimplePathData} pathData fabricJS parsed path commands
  * @param {number} fractionDigits number of fraction digits to "leave"
@@ -720,5 +822,5 @@ const joinPath = (pathData, fractionDigits) => pathData.map(segment => {
   }).join(' ');
 }).join(' ');
 
-export { fromArcToBeziers, getBoundsOfCurve, getPathSegmentsInfo, getPointOnPath, joinPath, makePathSimpler, parsePath };
+export { fromArcToBeziers, getBoundsOfCurve, getPathSegmentsInfo, getPointOnPath, getRegularPolygonPath, getSmoothPathFromPoints, joinPath, makePathSimpler, parsePath, transformPath };
 //# sourceMappingURL=index.mjs.map

@@ -437,10 +437,6 @@ export class InteractiveFabricObject<
     ctx: CanvasRenderingContext2D,
     styleOverride: TStyleOverride = {},
   ) {
-    if (config.isCanvasTwoFingerPanning) {
-      return;
-    }
-
     const { hasBorders, hasControls } = this;
     const styleOptions = {
       hasBorders,

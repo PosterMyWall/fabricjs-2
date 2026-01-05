@@ -1,7 +1,24 @@
 import { Point } from '../../Point.mjs';
 import { CENTER } from '../../constants.mjs';
 import { makeBoundingBoxFromPoints } from './boundingBoxFromPoints.mjs';
-import { qrDecompose, multiplyTransformMatrices } from './matrix.mjs';
+import { qrDecompose, multiplyTransformMatrices, invertTransform } from './matrix.mjs';
+
+/**
+ * given an object and a transform, apply the inverse transform to the object,
+ * this is equivalent to remove from that object that transformation, so that
+ * added in a space with the removed transform, the object will be the same as before.
+ * Removing from an object a transform that scale by 2 is like scaling it by 1/2.
+ * Removing from an object a transform that rotate by 30deg is like rotating by 30deg
+ * in the opposite direction.
+ * This util is used to add objects inside transformed groups or nested groups.
+ * @param {FabricObject} object the object you want to transform
+ * @param {TMat2D} transform the destination transform
+ */
+const removeTransformFromObject = (object, transform) => {
+  const inverted = invertTransform(transform),
+    finalTransform = multiplyTransformMatrices(inverted, object.calcOwnMatrix());
+  applyTransformToObject(object, finalTransform);
+};
 
 /**
  * given an object and a transform, apply the transform to the object.
@@ -84,5 +101,5 @@ const sizeAfterTransform = (width, height, t) => {
   return new Point(bbox.width, bbox.height);
 };
 
-export { addTransformToObject, applyTransformToObject, resetObjectTransform, saveObjectTransform, sizeAfterTransform };
+export { addTransformToObject, applyTransformToObject, removeTransformFromObject, resetObjectTransform, saveObjectTransform, sizeAfterTransform };
 //# sourceMappingURL=objectTransforms.mjs.map

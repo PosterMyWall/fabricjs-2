@@ -1,8 +1,8 @@
 {
-  "name": "fabric",
+  "name": "@postermywall/fabricjs-2",
   "description": "Object model for HTML5 canvas, and SVG-to-canvas parser. Backed by jsdom and node-canvas.",
   "homepage": "http://fabricjs.com/",
-  "version": "7.1.0",
+  "version": "7.1.0-pmw-54",
   "author": "Juriy Zaytsev <kangax@gmail.com>",
   "contributors": [
     {
@@ -33,13 +33,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/fabricjs/fabric.js"
+    "url": "https://github.com/PosterMyWall/fabricjs-2"
   },
   "bugs": {
     "url": "https://github.com/fabricjs/fabric.js/issues"
   },
   "license": "MIT",
   "scripts": {
+    "release": "npm publish --access public --tag pmw",
     "docs": "typedoc",
     "cli": "node ./scripts/index.mjs",
     "sandboxscript": "node ./scripts/sandbox.mjs",

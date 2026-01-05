@@ -677,7 +677,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       doc,
       'touchmove',
       this._onTouchMove as EventListener,
-      addEventOptions
+      addEventOptions,
     );
     // Unbind mousedown to prevent double triggers from touch devices
     removeListener(
@@ -686,6 +686,19 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this._onMouseDown as EventListener,
     );
     this._resetTransformEventData();
+    //*PMW* added line
+    this.onTouchStartAfter(e);
+  }
+
+  onTouchStartAfter(e: TPointerEvent) {
+    this.fire('after:touchstart');
+
+    this.touchProps = {
+      numOfTouches: (e as TouchEvent).touches.length,
+      totalDrift: 0,
+      x: (e as TouchEvent).touches[0].pageX,
+      y: (e as TouchEvent).touches[0].pageY,
+    };
   }
 
   /**
@@ -821,7 +834,6 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       this.touchProps.totalDrift += Math.sqrt(dx * dx + dy * dy);
       this.touchProps.x = event.touches[0].pageX;
       this.touchProps.y = event.touches[0].pageY;
-
       if (this.touchProps.totalDrift < this.allowedTouchDriftDeviance) {
         return;
       }
@@ -959,10 +971,6 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     } else if (!isClick && !(this._activeObject as IText)?.isEditing) {
       this.renderTop();
     }
-
-    if (config.isCanvasTwoFingerPanning) {
-      config.isCanvasTwoFingerPanning = false;
-    }
   }
 
   _basicEventHandler<T extends keyof (CanvasEvents | ObjectEvents)>(
@@ -1078,11 +1086,6 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @param {Event} e Event object fired on mousedown
    */
   __onMouseDown(e: TPointerEvent) {
-    // *PMW* added condition. Skip the object transformation while the canvas is being two-finger panned.
-    if ('touches' in e && e.touches.length === 2 || config.isCanvasTwoFingerPanning) {
-      return;
-    }
-
     this._isClick = true;
     this._handleEvent(e, 'down:before');
 
@@ -1157,7 +1160,10 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
         isTouchEvent(e),
       );
       // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
-      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
+      if (
+        target === this._activeObject &&
+        (handle || !grouped || config.enableGroupSelection)
+      ) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
@@ -1220,9 +1226,6 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @param {Event} e Event object fired on mousemove
    */
   __onMouseMove(e: TPointerEvent) {
-    if(config.isCanvasTwoFingerPanning){
-      return;
-    }
     this._isClick = false;
     this._handleEvent(e, 'move:before');
 

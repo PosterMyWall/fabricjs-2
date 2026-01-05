@@ -196,11 +196,9 @@ export class FabricObject<
   declare minScaleLimit: number;
 
   declare opacity: number;
-  declare __PMWTESTPROPERTY: string;
   declare __PMWID: string;
   declare uniformScaling: boolean
   declare erasable: boolean | 'deep';
-  declare bindedObjectPmwId: string;
 
   declare paintFirst: 'fill' | 'stroke';
   declare fill: string | TFiller | null;
@@ -1685,8 +1683,8 @@ export class FabricObject<
           return deep[key];
         }, this);
         onChange &&
-        // @ts-expect-error generic callback arg0 is wrong
-        onChange(value, valueProgress, durationProgress);
+          // @ts-expect-error generic callback arg0 is wrong
+          onChange(value, valueProgress, durationProgress);
       },
       onComplete: (
         value: number | number[] | string,
@@ -1695,8 +1693,8 @@ export class FabricObject<
       ) => {
         this.setCoords();
         onComplete &&
-        // @ts-expect-error generic callback arg0 is wrong
-        onComplete(value, valueProgress, durationProgress);
+          // @ts-expect-error generic callback arg0 is wrong
+          onComplete(value, valueProgress, durationProgress);
       },
     } as AnimationOptions<T>;
 
@@ -1704,8 +1702,8 @@ export class FabricObject<
       propIsColor
         ? animateColor(animationOptions as ColorAnimationOptions)
         : animate(
-          animationOptions as ValueAnimationOptions | ArrayAnimationOptions,
-        )
+            animationOptions as ValueAnimationOptions | ArrayAnimationOptions,
+          )
     ) as TAnimation<T>;
   }
 

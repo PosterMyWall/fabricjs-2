@@ -104,11 +104,9 @@ interface GetCornerPointsResponse {
 export declare class FabricObject<Props extends TOptions<ObjectProps> = Partial<ObjectProps>, SProps extends SerializedObjectProps = SerializedObjectProps, EventSpec extends ObjectEvents = ObjectEvents> extends ObjectGeometry<EventSpec> implements ObjectProps {
     minScaleLimit: number;
     opacity: number;
-    __PMWTESTPROPERTY: string;
     __PMWID: string;
     uniformScaling: boolean;
     erasable: boolean | 'deep';
-    bindedObjectPmwId: string;
     paintFirst: 'fill' | 'stroke';
     fill: string | TFiller | null;
     fillRule: CanvasFillRule;

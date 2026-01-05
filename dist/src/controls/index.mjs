@@ -1,4 +1,4 @@
-export { changeWidth } from './changeWidth.mjs';
+export { changeHeight, changeObjectHeight, changeObjectWidth, changeWidth } from './changeWidth.mjs';
 export { renderCircleControl, renderSquareControl } from './controlRendering.mjs';
 export { createObjectDefaultControls, createResizeControls, createTextboxDefaultControls } from './commonControls.mjs';
 export { dragHandler } from './drag.mjs';
