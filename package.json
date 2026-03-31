@@ -2,7 +2,7 @@
   "name": "@postermywall/fabricjs-2",
   "description": "Object model for HTML5 canvas, and SVG-to-canvas parser. Backed by jsdom and node-canvas.",
   "homepage": "http://fabricjs.com/",
-  "version": "7.1.0-pmw-55",
+  "version": "7.1.0-pmw-56",
   "author": "Juriy Zaytsev <kangax@gmail.com>",
   "contributors": [
     {
@@ -99,8 +99,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.0",
     "v8-to-istanbul": "^9.3.0",
-    "vitest": "^4.0.2",
-    "westures": "^1.1.1"
+    "vitest": "^4.0.2"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -150,6 +149,9 @@
       "require": null,
       "default": "./dist-extensions/fabric-extensions.min.js"
     }
+  },
+  "dependencies": {
+    "westures": "^1.1.1"
   },
   "optionalDependencies": {
     "canvas": "^3.2.0",

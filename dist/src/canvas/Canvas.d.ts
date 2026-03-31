@@ -187,6 +187,7 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {Event} e Event object fired on mousedown
      */
     _onTouchStart(e: TouchEvent): void;
+    onTouchStartAfter(e: TPointerEvent): void;
     /**
      * @private
      * @param {Event} e Event object fired on mousedown
