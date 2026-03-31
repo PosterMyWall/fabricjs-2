@@ -33,10 +33,11 @@ const originUpdaterWrapper = function (originalFn) {
 
 /**
  * Wraps and override the current fabricJS fromObject static functions
- * Used to upgrade from fabric 6 to fabric 7
- * @param defaultOriginX optional default value for non exported originX,
- * @param defaultOriginY optional default value for non exported originY,
- * @returns a wrapped fromObject function for the object
+ * Used to upgrade from fabric 7 to fabric 8
+ * If you used to export with includeDefaultValues = false, you have to specify
+ * which were yours default origins values
+ * @param originX optional default value for non exported originX,
+ * @param originY optional default value for non exported originY,
  */
 const installOriginWrapperUpdater = (originX, originY) => {
   // @ts-expect-error the _fromObject parameter could be instantiated differently

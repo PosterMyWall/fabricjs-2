@@ -1,5 +1,5 @@
 import wes from 'westures';
-import { type Canvas, type CanvasEvents, type XY, util } from 'fabric';
+import { type Canvas, type CanvasEvents, type XY, util } from '@postermywall/fabricjs-2';
 
 type PinchEventData = {
   centroid: XY;

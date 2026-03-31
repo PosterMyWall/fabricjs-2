@@ -1,5 +1,5 @@
-import type { GradientOptions, ColorStop } from 'fabric';
-import { Color, Gradient } from 'fabric';
+import type { GradientOptions, ColorStop } from '@postermywall/fabricjs-2';
+import { Color, Gradient } from '@postermywall/fabricjs-2';
 
 /**
  * Updates the fromObject function of a Gradient to return a version that can restore old data

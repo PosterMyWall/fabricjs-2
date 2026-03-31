@@ -1,4 +1,4 @@
-import { type FabricImage, type TPointerEventInfo } from 'fabric';
+import { type FabricImage, type TPointerEventInfo } from '@postermywall/fabricjs-2';
 import { createImageCroppingControls } from './croppingControls';
 import { cropPanMoveHandler } from './croppingHandlers';
 /**

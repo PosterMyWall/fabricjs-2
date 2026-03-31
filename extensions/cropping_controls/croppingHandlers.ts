@@ -4,8 +4,8 @@ import type {
   TransformActionHandler,
   FabricImage,
   ObjectEvents,
-} from 'fabric';
-import { controlsUtils, Point, util } from 'fabric';
+} from '@postermywall/fabricjs-2';
+import { controlsUtils, Point, util } from '@postermywall/fabricjs-2';
 
 const { wrapWithFixedAnchor, wrapWithFireEvent } = controlsUtils;
 

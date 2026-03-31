@@ -1,4 +1,4 @@
-import { Control, controlsUtils } from 'fabric';
+import { Control, controlsUtils } from '@postermywall/fabricjs-2';
 import {
   changeCropHeight,
   changeCropWidth,

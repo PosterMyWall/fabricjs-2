@@ -3,7 +3,7 @@ import {
   type InteractiveFabricObject,
   util,
   type Control,
-} from 'fabric';
+} from '@postermywall/fabricjs-2';
 
 const { degreesToRadians } = util;
 
