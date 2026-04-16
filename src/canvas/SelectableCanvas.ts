@@ -302,6 +302,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   declare protected _targetInfo: FullTargetsInfoWithContainer | undefined;
 
+  declare protected _touchOverlapTarget: FabricObject | undefined;
+
   static ownDefaults = canvasDefaults;
 
   static getDefaults(): Record<string, any> {
@@ -824,6 +826,11 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         e[this.altSelectionKey as ModifierKey]
       ) {
         // TODO Verify if we need to override target with container
+        return activeObjectTargetInfo;
+      }
+
+      if (this.preserveObjectStacking && isTouchEvent(e)) {
+        this._touchOverlapTarget = fullTargetInfo.target;
         return activeObjectTargetInfo;
       }
     }
@@ -1373,6 +1380,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     }
 
     delete this._activeObject;
+    delete this._touchOverlapTarget;
 
     super.destroy();
 

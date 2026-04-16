@@ -220,6 +220,7 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      * multuple times.
      */
     protected _targetInfo: FullTargetsInfoWithContainer | undefined;
+    protected _touchOverlapTarget: FabricObject | undefined;
     static ownDefaults: import("../typedefs").TOptions<CanvasOptions>;
     static getDefaults(): Record<string, any>;
     elements: CanvasDOMManager;

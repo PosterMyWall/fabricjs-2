@@ -630,6 +630,10 @@ class SelectableCanvas extends StaticCanvas {
         // TODO Verify if we need to override target with container
         return activeObjectTargetInfo;
       }
+      if (this.preserveObjectStacking && isTouchEvent(e)) {
+        this._touchOverlapTarget = fullTargetInfo.target;
+        return activeObjectTargetInfo;
+      }
     }
 
     // we have an active object, but we ruled out it being our target in any way.
@@ -1119,6 +1123,7 @@ class SelectableCanvas extends StaticCanvas {
       activeObject.dispose();
     }
     delete this._activeObject;
+    delete this._touchOverlapTarget;
     super.destroy();
 
     // free resources
