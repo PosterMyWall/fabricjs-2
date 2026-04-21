@@ -38,5 +38,7 @@ export type AligningLineConfig = {
     drawX?: (point: Point, dir: number) => void;
     /** When moving a shape, the coordinates of other shapes are calculated only once. You can customize how to cache or clear them */
     getCaCheMapValue?: Point[];
+    /** Reference points on the target used as snap origins when moving. Default: target corners + center. */
+    getTargetReferencePoints?: (target: FabricObject) => Point[];
 };
 //# sourceMappingURL=typedefs.d.ts.map

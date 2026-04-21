@@ -1,8 +1,6 @@
 import { getDistanceList } from './basic.mjs';
 
-function collectLine(target, points) {
-  const list = target.getCoords();
-  list.push(target.getCenterPoint());
+function collectLine(target, points, list) {
   const margin = this.margin / this.canvas.getZoom();
   const opts = {
     target,
@@ -23,7 +21,6 @@ function collectLine(target, points) {
     hLines
   };
 }
-const originArr = [['left', 'top'], ['right', 'top'], ['right', 'bottom'], ['left', 'bottom'], ['center', 'center']];
 function collectPoints(props) {
   const {
     target,
@@ -57,7 +54,10 @@ function collectPoints(props) {
     list.forEach(item => {
       item[type] += d;
     });
-    target.setXY(list[i], ...originArr[i]);
+    // Apply the snap as a translation on target. Works whether `list` came from target
+    // itself or from a sub-object (e.g. an inner text content box used as reference).
+    if (type === 'x') target.set('left', target.left + d);
+    else target.set('top', target.top + d);
     target.setCoords();
   }
   return res;

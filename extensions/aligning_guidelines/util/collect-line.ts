@@ -1,4 +1,4 @@
-import type { FabricObject, Point, TOriginX, TOriginY } from '@postermywall/fabricjs-2';
+import type { FabricObject, Point } from '@postermywall/fabricjs-2';
 import type { AligningGuidelines } from '..';
 import type { LineProps } from '../typedefs';
 import { getDistanceList } from './basic';
@@ -7,9 +7,8 @@ export function collectLine(
   this: AligningGuidelines,
   target: FabricObject,
   points: Point[],
+  list: Point[],
 ) {
-  const list = target.getCoords();
-  list.push(target.getCenterPoint());
   const margin = this.margin / this.canvas.getZoom();
   const opts = { target, list, points, margin };
   const vLines = collectPoints({ ...opts, type: 'x' });
@@ -25,13 +24,6 @@ type CollectItemLineProps = {
   margin: number;
   type: 'x' | 'y';
 };
-const originArr: [TOriginX, TOriginY][] = [
-  ['left', 'top'],
-  ['right', 'top'],
-  ['right', 'bottom'],
-  ['left', 'bottom'],
-  ['center', 'center'],
-];
 function collectPoints(props: CollectItemLineProps) {
   const { target, list, points, margin, type } = props;
   const res: LineProps[] = [];
@@ -57,7 +49,10 @@ function collectPoints(props: CollectItemLineProps) {
     list.forEach((item) => {
       item[type] += d;
     });
-    target.setXY(list[i], ...originArr[i]);
+    // Apply the snap as a translation on target. Works whether `list` came from target
+    // itself or from a sub-object (e.g. an inner text content box used as reference).
+    if (type === 'x') target.set('left', target.left + d);
+    else target.set('top', target.top + d);
     target.setCoords();
   }
 

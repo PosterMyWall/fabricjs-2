@@ -35,6 +35,8 @@ export declare class AligningGuidelines {
     getPointMap(target: FabricObject): import("./typedefs").PointMap;
     /** When the user customizes the controller, this property is used to enable or disable alignment positioning through points. */
     getContraryMap(target: FabricObject): import("./typedefs").PointMap;
+    /** Reference points on the target used as snap origins when moving. Override to snap by inner/content bounds. */
+    getTargetReferencePoints(target: FabricObject): Point[];
     /** Users can customize. */
     getCaCheMapValue(object: FabricObject): Point[];
     drawLine(origin: Point, target: Point): void;
