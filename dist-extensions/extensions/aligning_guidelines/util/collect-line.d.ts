@@ -1,7 +1,7 @@
 import type { FabricObject, Point } from '@postermywall/fabricjs-2';
 import type { AligningGuidelines } from '..';
 import type { LineProps } from '../typedefs';
-export declare function collectLine(this: AligningGuidelines, target: FabricObject, points: Point[]): {
+export declare function collectLine(this: AligningGuidelines, target: FabricObject, points: Point[], list: Point[]): {
     vLines: LineProps[];
     hLines: LineProps[];
 };

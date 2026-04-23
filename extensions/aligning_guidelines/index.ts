@@ -92,6 +92,12 @@ export class AligningGuidelines {
   getContraryMap(target: FabricObject) {
     return getContraryMap(target);
   }
+  /** Reference points on the target used as snap origins when moving. Override to snap by inner/content bounds. */
+  getTargetReferencePoints(target: FabricObject): Point[] {
+    const list = target.getCoords();
+    list.push(target.getCenterPoint());
+    return list;
+  }
   /** Users can customize. */
   getCaCheMapValue(object: FabricObject) {
     const cacheKey = [
@@ -231,7 +237,8 @@ export class AligningGuidelines {
     for (const object of objects) points.push(...this.getCaCheMapValue(object));
 
     // Obtain horizontal and vertical reference lines.
-    const { vLines, hLines } = collectLine.call(this, target, points);
+    const list = this.getTargetReferencePoints(target);
+    const { vLines, hLines } = collectLine.call(this, target, points, list);
     vLines.forEach((o) => {
       // Objects cannot be deduplicated; convert them to strings for deduplication.
       this.verticalLines.add(JSON.stringify(o));
