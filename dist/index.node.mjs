@@ -424,7 +424,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.1.0-pmw-57";
+var version = "7.1.0-pmw-58";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -14480,6 +14480,15 @@ class SelectableCanvas extends StaticCanvas$1 {
         // TODO Verify if we need to override target with container
         return activeObjectTargetInfo;
       }
+
+      /*________________________ *PMW* added portion start ________________________*/
+      // Touch landed on an object overlapping the active one: keep dragging the active object
+      // and stash the overlap for tap-to-select on mouse-up. See Canvas._onMouseUp.
+      if (this.preserveObjectStacking && isTouchEvent(e)) {
+        this._touchOverlapTarget = fullTargetInfo.target;
+        return activeObjectTargetInfo;
+      }
+      /*________________________ *PMW* added portion end ________________________*/
     }
 
     // we have an active object, but we ruled out it being our target in any way.
@@ -14969,6 +14978,8 @@ class SelectableCanvas extends StaticCanvas$1 {
       activeObject.dispose();
     }
     delete this._activeObject;
+    //*PMW*
+    delete this._touchOverlapTarget;
     super.destroy();
 
     // free resources
@@ -15880,6 +15891,16 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
       pointer = pointer || this.getScenePoint(e);
       originalMouseUpHandler && originalMouseUpHandler.call(originalControl, e, transform, pointer.x, pointer.y);
     }
+    /*________________________ *PMW* added portion start ________________________*/
+    // Tap (no drag) on an object stacked above the active one: promote it now.
+    // Stash is set in SelectableCanvas.findTarget; always clear it here.
+    if (isClick && this._touchOverlapTarget && this._touchOverlapTarget.selectable && this._touchOverlapTarget.evented && this._touchOverlapTarget !== this._activeObject) {
+      this.setActiveObject(this._touchOverlapTarget, e);
+      shouldRender = true;
+    }
+    this._touchOverlapTarget = undefined;
+    /*________________________ *PMW* added portion end ________________________*/
+
     this._setCursorFromEvent(e, target);
     this._handleEvent(e, 'up');
     this._groupSelector = null;
@@ -16086,6 +16107,8 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
    */
   _resetTransformEventData() {
     this._targetInfo = this._viewportPoint = this._scenePoint = undefined;
+    //*PMW*
+    this._touchOverlapTarget = undefined;
   }
 
   /**

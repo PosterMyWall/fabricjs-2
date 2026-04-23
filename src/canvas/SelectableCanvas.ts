@@ -302,6 +302,13 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   declare protected _targetInfo: FullTargetsInfoWithContainer | undefined;
 
+  /**
+   * *PMW property added*
+   * Top-most object the touch landed on when the active object sat beneath it.
+   * Used on mouse-up to promote it to active if the gesture was a plain tap.
+   */
+  declare protected _touchOverlapTarget: FabricObject | undefined;
+
   static ownDefaults = canvasDefaults;
 
   static getDefaults(): Record<string, any> {
@@ -826,6 +833,15 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         // TODO Verify if we need to override target with container
         return activeObjectTargetInfo;
       }
+
+      /*________________________ *PMW* added portion start ________________________*/
+      // Touch landed on an object overlapping the active one: keep dragging the active object
+      // and stash the overlap for tap-to-select on mouse-up. See Canvas._onMouseUp.
+      if (this.preserveObjectStacking && isTouchEvent(e)) {
+        this._touchOverlapTarget = fullTargetInfo.target;
+        return activeObjectTargetInfo;
+      }
+      /*________________________ *PMW* added portion end ________________________*/
     }
 
     // we have an active object, but we ruled out it being our target in any way.
@@ -1373,6 +1389,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     }
 
     delete this._activeObject;
+    //*PMW*
+    delete this._touchOverlapTarget;
 
     super.destroy();
 

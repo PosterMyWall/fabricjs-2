@@ -783,6 +783,16 @@ class Canvas extends SelectableCanvas {
       pointer = pointer || this.getScenePoint(e);
       originalMouseUpHandler && originalMouseUpHandler.call(originalControl, e, transform, pointer.x, pointer.y);
     }
+    /*________________________ *PMW* added portion start ________________________*/
+    // Tap (no drag) on an object stacked above the active one: promote it now.
+    // Stash is set in SelectableCanvas.findTarget; always clear it here.
+    if (isClick && this._touchOverlapTarget && this._touchOverlapTarget.selectable && this._touchOverlapTarget.evented && this._touchOverlapTarget !== this._activeObject) {
+      this.setActiveObject(this._touchOverlapTarget, e);
+      shouldRender = true;
+    }
+    this._touchOverlapTarget = undefined;
+    /*________________________ *PMW* added portion end ________________________*/
+
     this._setCursorFromEvent(e, target);
     this._handleEvent(e, 'up');
     this._groupSelector = null;
@@ -989,6 +999,8 @@ class Canvas extends SelectableCanvas {
    */
   _resetTransformEventData() {
     this._targetInfo = this._viewportPoint = this._scenePoint = undefined;
+    //*PMW*
+    this._touchOverlapTarget = undefined;
   }
 
   /**
