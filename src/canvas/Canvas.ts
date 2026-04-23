@@ -960,6 +960,9 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
           pointer.y,
         );
     }
+    /*________________________ *PMW* added portion start ________________________*/
+    // Tap (no drag) on an object stacked above the active one: promote it now.
+    // Stash is set in SelectableCanvas.findTarget; always clear it here.
     if (
       isClick &&
       this._touchOverlapTarget &&
@@ -971,6 +974,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       shouldRender = true;
     }
     this._touchOverlapTarget = undefined;
+    /*________________________ *PMW* added portion end ________________________*/
 
     this._setCursorFromEvent(e, target);
     this._handleEvent(e, 'up');
@@ -1205,6 +1209,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    */
   _resetTransformEventData() {
     this._targetInfo = this._viewportPoint = this._scenePoint = undefined;
+    //*PMW*
     this._touchOverlapTarget = undefined;
   }
 

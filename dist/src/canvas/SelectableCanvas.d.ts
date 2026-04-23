@@ -220,6 +220,11 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      * multuple times.
      */
     protected _targetInfo: FullTargetsInfoWithContainer | undefined;
+    /**
+     * *PMW property added*
+     * Top-most object the touch landed on when the active object sat beneath it.
+     * Used on mouse-up to promote it to active if the gesture was a plain tap.
+     */
     protected _touchOverlapTarget: FabricObject | undefined;
     static ownDefaults: import("../typedefs").TOptions<CanvasOptions>;
     static getDefaults(): Record<string, any>;
