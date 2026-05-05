@@ -972,6 +972,10 @@ class Canvas extends SelectableCanvas {
     if (target) {
       if (target.selectable && target.activeOn === 'down') {
         this.setActiveObject(target, e);
+        // *PMW* if a selection handler swapped _activeObject during setActiveObject (e.g. promoting a group-member click to the whole-group ActiveSelection), re-bind target so drag starts on this mousedown instead of needing a second click.
+        if (this._activeObject && this._activeObject !== target) {
+          target = this._activeObject;
+        }
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
       // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.

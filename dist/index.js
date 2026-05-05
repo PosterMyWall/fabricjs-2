@@ -374,7 +374,7 @@
   }
   const cache = new Cache();
 
-  var version = "7.1.0-pmw-58";
+  var version = "7.1.0-pmw-59";
 
   // use this syntax so babel plugin see this import here
   const VERSION = version;
@@ -16030,6 +16030,10 @@
       if (target) {
         if (target.selectable && target.activeOn === 'down') {
           this.setActiveObject(target, e);
+          // *PMW* if a selection handler swapped _activeObject during setActiveObject (e.g. promoting a group-member click to the whole-group ActiveSelection), re-bind target so drag starts on this mousedown instead of needing a second click.
+          if (this._activeObject && this._activeObject !== target) {
+            target = this._activeObject;
+          }
         }
         const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
         // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
