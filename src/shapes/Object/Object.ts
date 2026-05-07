@@ -811,6 +811,20 @@ export class FabricObject<
    * @return {Boolean}
    */
   shouldCache() {
+    /*________________________ *PMW* added portion start ________________________*/
+    // GPU shadow rim experiment: bypass the per-object cache when a shadow is present
+    // so Skia computes the shadow from the path geometry instead of from the cached
+    // bitmap's edge alpha (which ANGLE-Vulkan amplifies into rectangular halos).
+    if (this.shadow) {
+      const g = globalThis as { __pmwShadowExperimentLogged?: boolean };
+      if (!g.__pmwShadowExperimentLogged) {
+        g.__pmwShadowExperimentLogged = true;
+        console.log('[PMW shadow experiment] shouldCache() bypass active');
+      }
+      this.ownCaching = false;
+      return false;
+    }
+    /*________________________ *PMW* added portion end ________________________*/
     this.ownCaching =
       (this.objectCaching && (!this.parent || !this.parent.isOnACache())) ||
       this.needsItsOwnCache();
