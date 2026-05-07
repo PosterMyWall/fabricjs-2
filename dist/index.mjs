@@ -368,7 +368,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.1.0-pmw-59";
+var version = "7.1.0-pmw-60";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -14405,6 +14405,20 @@ class SelectableCanvas extends StaticCanvas {
     // in case we are over the active object
     if (activeObjectTargetInfo.target) {
       if (aObjects.length > 1) {
+        /*________________________ *PMW* added portion start ________________________*/
+        // ActiveSelection's bbox can swallow hits on non-members that visually sit inside it
+        // (gaps between members, or items stacked above one). Route hover/click to the non-member;
+        // on touch, stash it in _touchOverlapTarget so a drag still moves the AS and a plain tap
+        // promotes the overlap on mouse-up (mirrors the single-active-object case below).
+        const overlapTarget = fullTargetInfo.target;
+        if (overlapTarget && overlapTarget !== activeObject && !aObjects.includes(overlapTarget)) {
+          if (this.preserveObjectStacking && isTouchEvent(e)) {
+            this._touchOverlapTarget = overlapTarget;
+            return activeObjectTargetInfo;
+          }
+          return fullTargetInfo;
+        }
+        /*________________________ *PMW* added portion end ________________________*/
         // in case of active selection and target hit over the activeSelection, just exit
         // TODO Verify if we need to override target with container
         return activeObjectTargetInfo;
