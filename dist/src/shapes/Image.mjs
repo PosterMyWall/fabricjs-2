@@ -4,7 +4,7 @@ import { getFilterBackend } from '../filters/FilterBackend.mjs';
 import { SHARED_ATTRIBUTES } from '../parser/attributes.mjs';
 import { parseAttributes } from '../parser/parseAttributes.mjs';
 import { uid } from '../util/internals/uid.mjs';
-import { createCanvasElementFor } from '../util/misc/dom.mjs';
+import { createCanvasElementFor, createCanvasElement } from '../util/misc/dom.mjs';
 import { findScaleToFit, findScaleToCover } from '../util/misc/findScaleTo.mjs';
 import { loadImage, enlivenObjects, enlivenObjectEnlivables } from '../util/misc/objectEnlive.mjs';
 import { parsePreserveAspectRatioAttribute } from '../util/misc/svgParsing.mjs';
@@ -476,6 +476,35 @@ class FabricImage extends FabricObject {
     if (this._element.nodeName === 'VIDEO') {
       elementToDraw = this._applyVideoFilter(this._element);
     }
+
+    /*________________________ *PMW* shadow rim fix start ________________________*/
+    // GPU/Vulkan rectangular halo fix: when a shadow is active, drawImage on an
+    // opaque rectangular bitmap makes Skia's blur kernel read opaque alpha at the
+    // bitmap edge (ANGLE-Vulkan CLAMP_TO_EDGE) — producing a hard rectangular halo
+    // around image/video items. Wrapping the bitmap in a transparent-padded
+    // offscreen canvas gives the kernel alpha=0 at the edge instead.
+    if (this.shadow && elementToDraw) {
+      const g = globalThis;
+      if (!g.__pmwShadowRimFixLogged) {
+        g.__pmwShadowRimFixLogged = true;
+        console.log('[PMW shadow rim fix] padded offscreen path active for Image render');
+      }
+      const pad = 4;
+      const dW = Math.ceil(maxDestW);
+      const dH = Math.ceil(maxDestH);
+      const off = createCanvasElement();
+      off.width = dW + pad * 2;
+      off.height = dH + pad * 2;
+      const offCtx = off.getContext('2d');
+      if (offCtx) {
+        offCtx.imageSmoothingEnabled = ctx.imageSmoothingEnabled;
+        offCtx.drawImage(elementToDraw, sX, sY, sW, sH, pad, pad, dW, dH);
+        ctx.drawImage(off, x - pad, y - pad);
+        return;
+      }
+    }
+    /*________________________ *PMW* shadow rim fix end ________________________*/
+
     elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
   }
 

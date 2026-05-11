@@ -7147,20 +7147,6 @@
      * @return {Boolean}
      */
     shouldCache() {
-      /*________________________ *PMW* added portion start ________________________*/
-      // GPU shadow rim experiment: bypass the per-object cache when a shadow is present
-      // so Skia computes the shadow from the path geometry instead of from the cached
-      // bitmap's edge alpha (which ANGLE-Vulkan amplifies into rectangular halos).
-      if (this.shadow) {
-        const g = globalThis;
-        if (!g.__pmwShadowExperimentLogged) {
-          g.__pmwShadowExperimentLogged = true;
-          console.log('[PMW shadow experiment] shouldCache() bypass active');
-        }
-        this.ownCaching = false;
-        return false;
-      }
-      /*________________________ *PMW* added portion end ________________________*/
       this.ownCaching = this.objectCaching && (!this.parent || !this.parent.isOnACache()) || this.needsItsOwnCache();
       return this.ownCaching;
     }
@@ -26023,6 +26009,35 @@
       if (this._element.nodeName === 'VIDEO') {
         elementToDraw = this._applyVideoFilter(this._element);
       }
+
+      /*________________________ *PMW* shadow rim fix start ________________________*/
+      // GPU/Vulkan rectangular halo fix: when a shadow is active, drawImage on an
+      // opaque rectangular bitmap makes Skia's blur kernel read opaque alpha at the
+      // bitmap edge (ANGLE-Vulkan CLAMP_TO_EDGE) — producing a hard rectangular halo
+      // around image/video items. Wrapping the bitmap in a transparent-padded
+      // offscreen canvas gives the kernel alpha=0 at the edge instead.
+      if (this.shadow && elementToDraw) {
+        const g = globalThis;
+        if (!g.__pmwShadowRimFixLogged) {
+          g.__pmwShadowRimFixLogged = true;
+          console.log('[PMW shadow rim fix] padded offscreen path active for Image render');
+        }
+        const pad = 4;
+        const dW = Math.ceil(maxDestW);
+        const dH = Math.ceil(maxDestH);
+        const off = createCanvasElement();
+        off.width = dW + pad * 2;
+        off.height = dH + pad * 2;
+        const offCtx = off.getContext('2d');
+        if (offCtx) {
+          offCtx.imageSmoothingEnabled = ctx.imageSmoothingEnabled;
+          offCtx.drawImage(elementToDraw, sX, sY, sW, sH, pad, pad, dW, dH);
+          ctx.drawImage(off, x - pad, y - pad);
+          return;
+        }
+      }
+      /*________________________ *PMW* shadow rim fix end ________________________*/
+
       elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, maxDestW, maxDestH);
     }
 
