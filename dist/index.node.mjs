@@ -424,7 +424,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.1.0-pmw-60";
+var version = "7.1.0-pmw-61";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -15885,7 +15885,10 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
         control
       } = found || {};
       corner = key;
-      if (target.selectable && target !== this._activeObject && target.activeOn === 'up') {
+      // *PMW* only select-on-up for a genuine click. After a drag the marquee has already
+      // resolved the selection in handleSelection; re-selecting this lone target here would
+      // clobber that group selection.
+      if (isClick && target.selectable && target !== this._activeObject && target.activeOn === 'up') {
         this.setActiveObject(target, e);
         shouldRender = true;
       } else if (control) {
@@ -16079,7 +16082,10 @@ let Canvas$1 = class Canvas extends SelectableCanvas {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
-    if (this.selection && !config.disableGroupSelector && (!target || !target.selectable && !target.isEditing && target !== this._activeObject)) {
+    // *PMW* a target with activeOn === 'up' defers its own selection to mouseup, so it
+    // doesn't claim the press here — treat it like a non-selectable target so a drag
+    // starting on it opens the group selector instead.
+    if (this.selection && !config.disableGroupSelector && (!target || (!target.selectable || target.activeOn === 'up') && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,

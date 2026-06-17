@@ -919,7 +919,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       );
       const { key, control } = found || {};
       corner = key;
+      // *PMW* only select-on-up for a genuine click. After a drag the marquee has already
+      // resolved the selection in handleSelection; re-selecting this lone target here would
+      // clobber that group selection.
       if (
+        isClick &&
         target.selectable &&
         target !== this._activeObject &&
         target.activeOn === 'up'
@@ -1148,11 +1152,14 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     // target is not selectable ( otherwise we selected it )
     // target is not editing
     // target is not already selected ( otherwise we drag )
+    // *PMW* a target with activeOn === 'up' defers its own selection to mouseup, so it
+    // doesn't claim the press here — treat it like a non-selectable target so a drag
+    // starting on it opens the group selector instead.
     if (
       this.selection &&
       !config.disableGroupSelector &&
       (!target ||
-        (!target.selectable &&
+        ((!target.selectable || target.activeOn === 'up') &&
           !(target as IText).isEditing &&
           target !== this._activeObject))
     ) {
