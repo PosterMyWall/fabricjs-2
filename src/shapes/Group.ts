@@ -41,6 +41,7 @@ import type { SerializedLayoutManager } from '../LayoutManager/LayoutManager';
 import type { FitContentLayout } from '../LayoutManager';
 import type { DrawContext } from './Object/Object';
 import type { Table } from './Table';
+import { escapeXml } from '../util/lang_string';
 
 /**
  * This class handles the specific case of creating a group using {@link Group#fromObject} and is not meant to be used in any other case.
@@ -66,8 +67,7 @@ export interface GroupOwnProps {
 }
 
 export interface SerializedGroupProps
-  extends SerializedObjectProps,
-    GroupOwnProps {
+  extends SerializedObjectProps, GroupOwnProps {
   objects: SerializedObjectProps[];
   layoutManager: SerializedLayoutManager;
 }
@@ -624,7 +624,7 @@ export class Group
   setCoords() {
     super.setCoords();
     this._shouldSetNestedCoords() &&
-    this.forEachObject((object) => object.setCoords());
+      this.forEachObject((object) => object.setCoords());
   }
 
   triggerLayout(options: ImperativeLayoutOptions = {}) {
@@ -759,7 +759,7 @@ export class Group
   getSvgStyles(): string {
     const opacity =
         typeof this.opacity !== 'undefined' && this.opacity !== 1
-          ? `opacity: ${this.opacity};`
+          ? `opacity: ${escapeXml(this.opacity)};`
           : '',
       visibility = this.visible ? '' : ' visibility: hidden;';
     return [opacity, this.getSvgFilter(), visibility].join('');
@@ -791,6 +791,7 @@ export class Group
     const groupWidth = this.width,
       objects = this._objects,
       padding = this.padding;
+    // eslint-disable-next-line no-useless-assignment
     let i = 0,
       corners,
       tl,
@@ -838,6 +839,7 @@ export class Group
     const groupHeight = this.height,
       objects = this._objects,
       padding = this.padding;
+    // eslint-disable-next-line no-useless-assignment
     let i = 0,
       corners,
       tl,

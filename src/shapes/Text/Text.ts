@@ -41,6 +41,7 @@ import {
   JUSTIFY_CENTER,
   JUSTIFY_LEFT,
   JUSTIFY_RIGHT,
+  TEXT_DECORATION_COLOR,
   TEXT_DECORATION_THICKNESS,
 } from './constants';
 import { CENTER, LEFT, RIGHT, TOP, BOTTOM } from '../../constants';
@@ -127,11 +128,11 @@ interface UniqueTextProps {
   direction: CanvasDirection;
   path?: Path;
   textDecorationThickness: number;
+  textDecorationColor?: string;
 }
 
 export interface SerializedTextProps
-  extends SerializedObjectProps,
-    UniqueTextProps {
+  extends SerializedObjectProps, UniqueTextProps {
   styles: TextStyleArray | TextStyle;
 }
 
@@ -144,10 +145,10 @@ export interface TextProps extends FabricObjectProps, UniqueTextProps {
  * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
 export class FabricText<
-    Props extends TOptions<TextProps> = Partial<TextProps>,
-    SProps extends SerializedTextProps = SerializedTextProps,
-    EventSpec extends ObjectEvents = ObjectEvents,
-  >
+  Props extends TOptions<TextProps> = Partial<TextProps>,
+  SProps extends SerializedTextProps = SerializedTextProps,
+  EventSpec extends ObjectEvents = ObjectEvents,
+>
   extends StyledText<Props, SProps, EventSpec>
   implements UniqueTextProps
 {
@@ -321,11 +322,11 @@ export class FabricText<
   declare path?: Path;
 
   /**
-   * The text decoration tickness for underline, overline and strikethrough
-   * The tickness is expressed in thousandths of fontSize ( em ).
+   * The text decoration thickness for underline, overline and strikethrough
+   * The thickness is expressed in thousandths of fontSize ( em ).
    * The original value was 1/15 that translates to 66.6667 thousandths.
    * The choice of unit of measure is to align with charSpacing.
-   * You can slim the tickness without issues, while large underline or overline may end up
+   * You can slim the thickness without issues, while large underline or overline may end up
    * outside the bounding box of the text. In order to fix that a bigger refactor of the code
    * is needed and is out of scope for now. If you need such large overline on the first line
    * of text or large underline on the last line of text, consider disabling caching as a
@@ -333,6 +334,14 @@ export class FabricText<
    * @default 66.667
    */
   declare textDecorationThickness: number;
+
+  /**
+   * Optional text decoration color for underline, overline and strikethrough.
+   * When undefined, decoration color falls back to the text fill color.
+   * This feature is not really supported by anything else than svg 2 specs with css3 support.
+   * Chrome does not support this, nor firefox apparently.
+   */
+  declare textDecorationColor?: string;
 
   /**
    * Offset amount for text path starting position
@@ -1090,7 +1099,6 @@ export class FabricText<
         i === len - 1 && this.lineHeight < 1
           ? lineHeight / this.lineHeight
           : lineHeight;
-
     }
     return height;
   }
@@ -1175,7 +1183,7 @@ export class FabricText<
    * @private
    * @param {String} method fillText or strokeText.
    * @param {CanvasRenderingContext2D} ctx Context to render on
-   * @param {Array} line Content of the line, splitted in an array by grapheme
+   * @param {Array} line Content of the line, split in an array by grapheme
    * @param {Number} left
    * @param {Number} top
    * @param {Number} lineIndex
@@ -1616,13 +1624,16 @@ export class FabricText<
       let boxWidth = 0;
       let lastDecoration = this.getValueOfPropertyAt(i, 0, type);
       let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
+      let lastDecorationColor =
+        this.getValueOfPropertyAt(i, 0, TEXT_DECORATION_COLOR) || lastFill;
       let lastTickness = this.getValueOfPropertyAt(
         i,
         0,
         TEXT_DECORATION_THICKNESS,
       );
       let currentDecoration = lastDecoration;
-      let currentFill = lastFill;
+      let currentFill: typeof lastFill;
+      let currentDecorationColor = lastDecorationColor;
       let currentTickness = lastTickness;
       const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
       let size = this.getHeightOfChar(i, 0);
@@ -1631,6 +1642,8 @@ export class FabricText<
         const charBox = this.__charBounds[i][j] as Required<GraphemeBBox>;
         currentDecoration = this.getValueOfPropertyAt(i, j, type);
         currentFill = this.getValueOfPropertyAt(i, j, FILL);
+        currentDecorationColor =
+          this.getValueOfPropertyAt(i, j, TEXT_DECORATION_COLOR) || currentFill;
         currentTickness = this.getValueOfPropertyAt(
           i,
           j,
@@ -1661,6 +1674,7 @@ export class FabricText<
         } else if (
           (currentDecoration !== lastDecoration ||
             currentFill !== lastFill ||
+            currentDecorationColor !== lastDecorationColor ||
             currentSize !== size ||
             currentTickness !== lastTickness ||
             currentDy !== dy) &&
@@ -1690,6 +1704,7 @@ export class FabricText<
           boxStart = charBox.left;
           boxWidth = charBox.width;
           lastDecoration = currentDecoration;
+          lastDecorationColor = currentDecorationColor;
           lastTickness = currentTickness;
           lastFill = currentFill;
           size = currentSize;
@@ -1709,7 +1724,7 @@ export class FabricText<
       );
       const finalTickness = (this.fontSize * currentTickness) / 1000;
       currentDecoration &&
-        currentFill &&
+        currentDecorationColor &&
         currentTickness &&
         this.fillTextDecorationRect(
           ctx,
@@ -2075,6 +2090,8 @@ export class FabricText<
     'font-size',
     'letter-spacing',
     'text-decoration',
+    'text-decoration-thickness',
+    'text-decoration-color',
     'text-anchor',
   );
 

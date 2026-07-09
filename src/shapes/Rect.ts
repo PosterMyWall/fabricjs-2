@@ -7,6 +7,7 @@ import { FabricObject, cacheProperties } from './Object/FabricObject';
 import type { FabricObjectProps, SerializedObjectProps } from './Object/types';
 import type { ObjectEvents } from '../EventTypeDefs';
 import type { CSSRules } from '../parser/typedefs';
+import { escapeXml } from '../util/lang_string';
 
 export const rectDefaultValues: Partial<TClassProperties<Rect>> = {
   uniformRoundness: false,
@@ -21,12 +22,9 @@ interface UniqueRectProps {
 }
 
 export interface SerializedRectProps
-  extends SerializedObjectProps,
-    UniqueRectProps {
-}
+  extends SerializedObjectProps, UniqueRectProps {}
 
-export interface RectProps extends FabricObjectProps, UniqueRectProps {
-}
+export interface RectProps extends FabricObjectProps, UniqueRectProps {}
 
 const RECT_PROPS = ['rx', 'ry'] as const;
 
@@ -36,7 +34,8 @@ export class Rect<
   EventSpec extends ObjectEvents = ObjectEvents,
 >
   extends FabricObject<Props, SProps, EventSpec>
-  implements RectProps {
+  implements RectProps
+{
   declare uniformRoundness: boolean;
   /**
    * Horizontal border radius
@@ -113,40 +112,40 @@ export class Rect<
 
     ctx.lineTo(x + w - rx, y);
     isRounded &&
-    ctx.bezierCurveTo(
-      x + w - kRect * rx,
-      y,
-      x + w,
-      y + kRect * ry,
-      x + w,
-      y + ry,
-    );
+      ctx.bezierCurveTo(
+        x + w - kRect * rx,
+        y,
+        x + w,
+        y + kRect * ry,
+        x + w,
+        y + ry,
+      );
 
     ctx.lineTo(x + w, y + h - ry);
     isRounded &&
-    ctx.bezierCurveTo(
-      x + w,
-      y + h - kRect * ry,
-      x + w - kRect * rx,
-      y + h,
-      x + w - rx,
-      y + h,
-    );
+      ctx.bezierCurveTo(
+        x + w,
+        y + h - kRect * ry,
+        x + w - kRect * rx,
+        y + h,
+        x + w - rx,
+        y + h,
+      );
 
     ctx.lineTo(x + rx, y + h);
     isRounded &&
-    ctx.bezierCurveTo(
-      x + kRect * rx,
-      y + h,
-      x,
-      y + h - kRect * ry,
-      x,
-      y + h - ry,
-    );
+      ctx.bezierCurveTo(
+        x + kRect * rx,
+        y + h,
+        x,
+        y + h - kRect * ry,
+        x,
+        y + h - ry,
+      );
 
     ctx.lineTo(x, y + ry);
     isRounded &&
-    ctx.bezierCurveTo(x, y + kRect * ry, x + kRect * rx, y, x + rx, y);
+      ctx.bezierCurveTo(x, y + kRect * ry, x + kRect * rx, y, x + rx, y);
 
     ctx.closePath();
 
@@ -177,7 +176,7 @@ export class Rect<
       'COMMON_PARTS',
       `x="${-width / 2}" y="${
         -height / 2
-      }" rx="${rx}" ry="${ry}" width="${width}" height="${height}" />\n`,
+      }" rx="${escapeXml(rx)}" ry="${escapeXml(ry)}" width="${escapeXml(width)}" height="${escapeXml(height)}" />\n`,
     ];
   }
 

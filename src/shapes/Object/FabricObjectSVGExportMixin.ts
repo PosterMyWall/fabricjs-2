@@ -1,10 +1,15 @@
 import type { TSVGReviver } from '../../typedefs';
+import {
+  getSafeSvgStyleNumber,
+  getSafeSvgStyleToken,
+} from '../../util/internals/svgExportCheck';
 import { uid } from '../../util/internals/uid';
 import { colorPropToSVG } from '../../util/misc/svgParsing';
 import { FILL, NONE, STROKE } from '../../constants';
 import type { FabricObject } from './FabricObject';
 import { isFiller } from '../../util/typeAssertions';
 import { matrixToSVG } from '../../util/misc/svgExport';
+import { escapeXml } from '../../util/lang_string';
 
 export class FabricObjectSVGExportMixin {
   /**
@@ -23,16 +28,38 @@ export class FabricObjectSVGExportMixin {
     this: FabricObjectSVGExportMixin & FabricObject,
     skipShadow?: boolean,
   ) {
-    const fillRule = this.fillRule ? this.fillRule : 'nonzero',
-      strokeWidth = this.strokeWidth ? this.strokeWidth : '0',
-      strokeDashArray = this.strokeDashArray
-        ? this.strokeDashArray.join(' ')
-        : NONE,
-      strokeDashOffset = this.strokeDashOffset ? this.strokeDashOffset : '0',
-      strokeLineCap = this.strokeLineCap ? this.strokeLineCap : 'butt',
-      strokeLineJoin = this.strokeLineJoin ? this.strokeLineJoin : 'miter',
-      strokeMiterLimit = this.strokeMiterLimit ? this.strokeMiterLimit : '4',
-      opacity = typeof this.opacity !== 'undefined' ? this.opacity : '1',
+    const fillRule =
+        this.fillRule == null ? 'nonzero' : getSafeSvgStyleToken(this.fillRule),
+      strokeWidth =
+        this.strokeWidth == null
+          ? '0'
+          : getSafeSvgStyleNumber(this.strokeWidth),
+      strokeDashArray =
+        this.strokeDashArray == null
+          ? NONE
+          : this.strokeDashArray.every((value) =>
+                Number.isFinite(Number(value)),
+              )
+            ? this.strokeDashArray.join(' ')
+            : '',
+      strokeDashOffset =
+        this.strokeDashOffset == null
+          ? '0'
+          : getSafeSvgStyleNumber(this.strokeDashOffset),
+      strokeLineCap =
+        this.strokeLineCap == null
+          ? 'butt'
+          : getSafeSvgStyleToken(this.strokeLineCap),
+      strokeLineJoin =
+        this.strokeLineJoin == null
+          ? 'miter'
+          : getSafeSvgStyleToken(this.strokeLineJoin),
+      strokeMiterLimit =
+        this.strokeMiterLimit == null
+          ? '4'
+          : getSafeSvgStyleNumber(this.strokeMiterLimit),
+      opacity =
+        this.opacity == null ? '1' : getSafeSvgStyleNumber(this.opacity),
       visibility = this.visible ? '' : ' visibility: hidden;',
       filter = skipShadow ? '' : this.getSvgFilter(),
       fill = colorPropToSVG(FILL, this.fill),
@@ -40,34 +67,20 @@ export class FabricObjectSVGExportMixin {
 
     return [
       stroke,
-      'stroke-width: ',
-      strokeWidth,
-      '; ',
-      'stroke-dasharray: ',
-      strokeDashArray,
-      '; ',
-      'stroke-linecap: ',
-      strokeLineCap,
-      '; ',
-      'stroke-dashoffset: ',
-      strokeDashOffset,
-      '; ',
-      'stroke-linejoin: ',
-      strokeLineJoin,
-      '; ',
-      'stroke-miterlimit: ',
-      strokeMiterLimit,
-      '; ',
+      strokeWidth ? `stroke-width: ${strokeWidth}; ` : '',
+      strokeDashArray ? `stroke-dasharray: ${strokeDashArray}; ` : '',
+      strokeLineCap ? `stroke-linecap: ${strokeLineCap}; ` : '',
+      strokeDashOffset ? `stroke-dashoffset: ${strokeDashOffset}; ` : '',
+      strokeLineJoin ? `stroke-linejoin: ${strokeLineJoin}; ` : '',
+      strokeMiterLimit ? `stroke-miterlimit: ${strokeMiterLimit}; ` : '',
       fill,
-      'fill-rule: ',
-      fillRule,
-      '; ',
-      'opacity: ',
-      opacity,
-      ';',
+      fillRule ? `fill-rule: ${fillRule}; ` : '',
+      opacity ? `opacity: ${opacity};` : '',
       filter,
       visibility,
-    ].join('');
+    ]
+      .map((v) => escapeXml(v))
+      .join('');
   }
 
   /**
@@ -75,7 +88,9 @@ export class FabricObjectSVGExportMixin {
    * @return {String}
    */
   getSvgFilter(this: FabricObjectSVGExportMixin & FabricObject) {
-    return this.shadow ? `filter: url(#SVGID_${this.shadow.id});` : '';
+    return this.shadow
+      ? `filter: url(#SVGID_${escapeXml(this.shadow.id)});`
+      : '';
   }
 
   /**
@@ -86,12 +101,12 @@ export class FabricObjectSVGExportMixin {
     this: FabricObjectSVGExportMixin & FabricObject & { id?: string },
   ) {
     return [
-      this.id ? `id="${this.id}" ` : '',
+      this.id ? `id="${escapeXml(String(this.id))}" ` : '',
       this.clipPath
-        ? `clip-path="url(#${
+        ? `clip-path="url(#${escapeXml(
             (this.clipPath as FabricObjectSVGExportMixin & FabricObject)
-              .clipPathId
-          })" `
+              .clipPathId!,
+          )})" `
         : '',
     ].join('');
   }
@@ -248,6 +263,8 @@ export class FabricObjectSVGExportMixin {
   }
 
   addPaintOrder(this: FabricObjectSVGExportMixin & FabricObject) {
-    return this.paintFirst !== FILL ? ` paint-order="${this.paintFirst}" ` : '';
+    return this.paintFirst !== FILL
+      ? ` paint-order="${escapeXml(this.paintFirst)}" `
+      : '';
   }
 }

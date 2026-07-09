@@ -5,6 +5,9 @@ import { degreesToRadians } from '../../util/misc/radiansDegreesConversion';
 import type { TQrDecomposeOut } from '../../util/misc/matrix';
 import {
   calcDimensionsMatrix,
+  calcPlaneRotation,
+  calcPlaneZoom,
+  calcPlaneScaleY,
   createRotateMatrix,
   createTranslateMatrix,
   multiplyTransformMatrices,
@@ -20,6 +23,7 @@ import type { TFabricObjectProps, SerializedObjectProps } from './types';
 import { createObjectDefaultControls } from '../../controls/commonControls';
 import { interactiveObjectDefaultValues } from './defaultValues';
 import { SCALE } from '../../constants';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { config } from '../../config';
 
 export type TOCoord = Point & {
@@ -42,10 +46,10 @@ export type TStyleOverride = ControlRenderingStyleOverride &
   >;
 
 export class InteractiveFabricObject<
-    Props extends TFabricObjectProps = Partial<FabricObjectProps>,
-    SProps extends SerializedObjectProps = SerializedObjectProps,
-    EventSpec extends ObjectEvents = ObjectEvents,
-  >
+  Props extends TFabricObjectProps = Partial<FabricObjectProps>,
+  SProps extends SerializedObjectProps = SerializedObjectProps,
+  EventSpec extends ObjectEvents = ObjectEvents,
+>
   extends FabricObject<Props, SProps, EventSpec>
   implements FabricObjectProps
 {
@@ -255,6 +259,8 @@ export class InteractiveFabricObject<
    */
   calcOCoords(): Record<string, TOCoord> {
     const vpt = this.getViewportTransform(),
+      vptScaleX = calcPlaneZoom(vpt),
+      vptScaleY = calcPlaneScaleY(vpt),
       center = this.getCenterPoint(),
       tMatrix = createTranslateMatrix(center.x, center.y),
       rMatrix = createRotateMatrix({
@@ -263,10 +269,10 @@ export class InteractiveFabricObject<
       positionMatrix = multiplyTransformMatrices(tMatrix, rMatrix),
       startMatrix = multiplyTransformMatrices(vpt, positionMatrix),
       finalMatrix = multiplyTransformMatrices(startMatrix, [
-        1 / vpt[0],
+        1 / vptScaleX,
         0,
         0,
-        1 / vpt[3],
+        1 / vptScaleY,
         0,
         0,
       ]),
@@ -462,7 +468,12 @@ export class InteractiveFabricObject<
     if (this.flipX) {
       options.angle -= 180;
     }
-    ctx.rotate(degreesToRadians(this.group ? options.angle : this.angle));
+    const vptAngle = calcPlaneRotation(vpt);
+    ctx.rotate(
+      this.group
+        ? degreesToRadians(options.angle)
+        : degreesToRadians(this.angle) + vptAngle,
+    );
     shouldDrawBorders && this.drawBorders(ctx, options, styleOverride);
     shouldDrawControls && this.drawControls(ctx, styleOverride);
     ctx.restore();

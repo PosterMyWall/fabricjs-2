@@ -31,6 +31,7 @@ import type { CSSRules } from '../parser/typedefs';
 import type { Resize, ResizeSerializedProps } from '../filters/Resize';
 import type { TCachedFabricObject } from './Object/Object';
 import { log } from '../util/internals/console';
+import { escapeXml } from '../util/lang_string';
 
 // @todo Would be nice to have filtering code not imported directly.
 
@@ -56,7 +57,7 @@ interface UniqueImageProps {
   cropX: number;
   cropY: number;
   imageSmoothing: boolean;
-  filters: BaseFilter<string, Record<string, any>>[];
+  filters: BaseFilter<string>[];
   resizeFilter?: Resize;
 }
 
@@ -173,7 +174,7 @@ export class FabricImage<
 
   declare protected src: string;
 
-  declare filters: BaseFilter<string, Record<string, any>>[];
+  declare filters: BaseFilter<string>[];
   declare resizeFilter: Resize;
 
   declare _element: ImageSource;
@@ -212,9 +213,9 @@ export class FabricImage<
     this.setElement(
       typeof arg0 === 'string'
         ? ((
-          (this.canvas && getDocumentFromElement(this.canvas.getElement())) ||
-          getFabricDocument()
-        ).getElementById(arg0) as ImageSource)
+            (this.canvas && getDocumentFromElement(this.canvas.getElement())) ||
+            getFabricDocument()
+          ).getElementById(arg0) as ImageSource)
         : arg0,
       options,
     );
@@ -384,15 +385,14 @@ export class FabricImage<
       const clipPathId = uid();
       svgString.push(
         '<clipPath id="imageCrop_' + clipPathId + '">\n',
-        '\t<rect x="' +
         x +
-        '" y="' +
-        y +
-        '" width="' +
-        this.width +
-        '" height="' +
-        this.height +
-        '" />\n',
+          '" y="' +
+          y +
+          '" width="' +
+          escapeXml(this.width) +
+          '" height="' +
+          escapeXml(this.height) +
+          '" />\n',
         '</clipPath>\n',
       );
       clipPath = ' clip-path="url(#imageCrop_' + clipPathId + ')" ';
@@ -403,7 +403,7 @@ export class FabricImage<
     imageMarkup.push(
       '\t<image ',
       'COMMON_PARTS',
-      `xlink:href="${this.getSvgSrc(true)}" x="${x - this.cropX}" y="${
+      `xlink:href="${escapeXml(this.getSrc(true))}" x="${x - this.cropX}" y="${
         y - this.cropY
         // we're essentially moving origin of transformation from top/left corner to the center of the shape
         // by wrapping it in container <g> element with actual transformation, then offsetting object to the top/left
@@ -419,9 +419,9 @@ export class FabricImage<
       const origFill = this.fill;
       this.fill = null;
       strokeSvg = [
-        `\t<rect x="${x}" y="${y}" width="${this.width}" height="${
-          this.height
-        }" style="${this.getSvgStyles()}" />\n`,
+        `\t<rect x="${x}" y="${y}" width="${escapeXml(this.width)}" height="${escapeXml(
+          this.height,
+        )}" style="${this.getSvgStyles()}" />\n`,
       ];
       this.fill = origFill;
     }
@@ -470,7 +470,10 @@ export class FabricImage<
    * @param {String} src Source string (URL)
    * @param {LoadImageOptions} [options] Options object
    */
-  setSrc(src: string, { crossOrigin, signal }: LoadImageOptions = {}) {
+  setSrc(
+    src: string,
+    { crossOrigin, signal }: LoadImageOptions = {},
+  ): Promise<void> {
     return loadImage(src, { crossOrigin, signal }).then((img) => {
       typeof crossOrigin !== 'undefined' && this.set({ crossOrigin });
       this.setElement(img);
@@ -524,9 +527,7 @@ export class FabricImage<
    * @param {Array} filters to be applied
    * @param {Boolean} forResizing specify if the filter operation is a resize operation
    */
-  applyFilters(
-    filters: BaseFilter<string, Record<string, any>>[] = this.filters || [],
-  ) {
+  applyFilters(filters: BaseFilter<string>[] = this.filters || []) {
     filters = filters.filter((filter) => filter && !filter.isNeutralState());
     this.set('dirty', true);
 
@@ -692,7 +693,7 @@ export class FabricImage<
     }
 
     const videoEl = elementToDraw,
-      sourceWidth =  videoEl.width,
+      sourceWidth = videoEl.width,
       sourceHeight = videoEl.height;
 
     if (this._element === videoEl) {
@@ -705,7 +706,9 @@ export class FabricImage<
       this._filteredEl = canvasEl;
     } else {
       // clear the existing element to get new filter data
-      (this._element as HTMLCanvasElement).getContext('2d')?.clearRect(0, 0, sourceWidth, sourceHeight);
+      (this._element as HTMLCanvasElement)
+        .getContext('2d')
+        ?.clearRect(0, 0, sourceWidth, sourceHeight);
     }
 
     getFilterBackend().applyFilters(
