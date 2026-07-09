@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { Control } from 'fabric';
+import { Control } from '@postermywall/fabricjs-2';
 import { createImageCroppingControls } from './croppingControls';
 import {
   changeCropHeight,

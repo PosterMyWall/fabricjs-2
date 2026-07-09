@@ -6,8 +6,8 @@ import type {
   ControlRenderingStyleOverride,
   InteractiveFabricObject,
   Gradient,
-} from 'fabric';
-import { Point, util, controlsUtils, iMatrix } from 'fabric';
+} from '@postermywall/fabricjs-2';
+import { Point, util, controlsUtils, iMatrix } from '@postermywall/fabricjs-2';
 
 /** A deduping code block */
 const commonGradientInfo = (

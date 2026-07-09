@@ -1,5 +1,5 @@
-import type { Gradient } from 'fabric';
-import { Control, controlsUtils } from 'fabric';
+import type { Gradient } from '@postermywall/fabricjs-2';
+import { Control, controlsUtils } from '@postermywall/fabricjs-2';
 import {
   linearGradientColorActionHandlerGenerator,
   linearGradientColorPositionHandlerGenerator,

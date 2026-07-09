@@ -29,6 +29,9 @@ export {
   changeWidthAndScaleToCover,
   changeHeightAndScaleToCover,
   withFlip,
+  withCornerFlip,
+  cropPanMoveHandler,
+  renderGhostImage,
 } from './cropping_controls/croppingHandlers';
 export { enterCropMode } from './cropping_controls/enterCropMode';
 export { createLinearGradientControls } from './linear_gradient_controls/linearGradientControls';

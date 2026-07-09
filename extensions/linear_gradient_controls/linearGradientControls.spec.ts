@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { Control, Gradient } from 'fabric';
+import { Control, Gradient } from '@postermywall/fabricjs-2';
 import { createLinearGradientControls } from './linearGradientControls';
 
 describe('createLinearGradientControls', () => {

@@ -1,4 +1,11 @@
-import { Rect, Gradient, Point, iMatrix, Canvas, type Transform } from 'fabric';
+import {
+  Rect,
+  Gradient,
+  Point,
+  iMatrix,
+  Canvas,
+  type Transform,
+} from '@postermywall/fabricjs-2';
 import {
   linearGradientCoordPositionHandlerGenerator,
   linearGradientColorPositionHandlerGenerator,

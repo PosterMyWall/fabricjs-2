@@ -1,5 +1,5 @@
-import type { Transform } from 'fabric';
-import { FabricImage, Canvas, Control, Point } from 'fabric';
+import type { Transform } from '@postermywall/fabricjs-2';
+import { FabricImage, Canvas, Control, Point } from '@postermywall/fabricjs-2';
 import { createImageCroppingControls } from './croppingControls';
 import {
   changeImageWidth,
