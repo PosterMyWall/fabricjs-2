@@ -1155,10 +1155,22 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     // *PMW* a target with activeOn === 'up' defers its own selection to mouseup, so it
     // doesn't claim the press here — treat it like a non-selectable target so a drag
     // starting on it opens the group selector instead.
+    // *PMW* a body press on a fully movement-locked target (lockMovementX && lockMovementY)
+    // has no drag action at all — even when the target is the active object — so it opens
+    // the group selector too. A press on a control handle keeps transforming (scaling and
+    // rotating stay available on movement-locked objects), and an editing text target
+    // keeps the press for text selection.
+    const isPressOnMovementLockedBody =
+      !!target &&
+      target.lockMovementX &&
+      target.lockMovementY &&
+      !(target as IText).isEditing &&
+      !target.findControl(this.getViewportPoint(e), isTouchEvent(e));
     if (
       this.selection &&
       !config.disableGroupSelector &&
       (!target ||
+        isPressOnMovementLockedBody ||
         ((!target.selectable || target.activeOn === 'up') &&
           !(target as IText).isEditing &&
           target !== this._activeObject))
@@ -1187,8 +1199,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
         isTouchEvent(e),
       );
       // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
+      // *PMW* a press already claimed by the group selector (movement-locked body press)
+      // must not also set up a transform — the transform would swallow the mouse moves.
       if (
         target === this._activeObject &&
+        !this._groupSelector &&
         (handle || !grouped || config.enableGroupSelection)
       ) {
         this._setupCurrentTransform(e, target, alreadySelected);

@@ -368,7 +368,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.1.0-pmw-61";
+var version = "7.1.0-pmw-62";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -16029,7 +16029,13 @@ class Canvas extends SelectableCanvas {
     // *PMW* a target with activeOn === 'up' defers its own selection to mouseup, so it
     // doesn't claim the press here — treat it like a non-selectable target so a drag
     // starting on it opens the group selector instead.
-    if (this.selection && !config.disableGroupSelector && (!target || (!target.selectable || target.activeOn === 'up') && !target.isEditing && target !== this._activeObject)) {
+    // *PMW* a body press on a fully movement-locked target (lockMovementX && lockMovementY)
+    // has no drag action at all — even when the target is the active object — so it opens
+    // the group selector too. A press on a control handle keeps transforming (scaling and
+    // rotating stay available on movement-locked objects), and an editing text target
+    // keeps the press for text selection.
+    const isPressOnMovementLockedBody = !!target && target.lockMovementX && target.lockMovementY && !target.isEditing && !target.findControl(this.getViewportPoint(e), isTouchEvent(e));
+    if (this.selection && !config.disableGroupSelector && (!target || isPressOnMovementLockedBody || (!target.selectable || target.activeOn === 'up') && !target.isEditing && target !== this._activeObject)) {
       const p = this.getScenePoint(e);
       this._groupSelector = {
         x: p.x,
@@ -16051,7 +16057,9 @@ class Canvas extends SelectableCanvas {
       }
       const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
       // *PMW* added code. Added fabric.enableGroupSelection to the condition to enable dragging of active selection.
-      if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
+      // *PMW* a press already claimed by the group selector (movement-locked body press)
+      // must not also set up a transform — the transform would swallow the mouse moves.
+      if (target === this._activeObject && !this._groupSelector && (handle || !grouped || config.enableGroupSelection)) {
         this._setupCurrentTransform(e, target, alreadySelected);
         const control = handle ? handle.control : undefined,
           pointer = this.getScenePoint(e),
