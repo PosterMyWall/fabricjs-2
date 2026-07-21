@@ -206,7 +206,11 @@ class AligningGuidelines {
     });
   }
   beforeRender() {
-    this.canvas.clearContext(this.canvas.contextTop);
+    // *PMW* added guard. contextTop is undefined while Canvas#toCanvasElement runs an off-screen export render; clearing it crashed every snapshot taken with alignment guides enabled.
+    const ctx = this.canvas.contextTop;
+    if (ctx) {
+      this.canvas.clearContext(ctx);
+    }
   }
   afterRender() {
     if (this.onlyDrawPoint) {

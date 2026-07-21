@@ -368,7 +368,7 @@ class Cache {
 }
 const cache = new Cache();
 
-var version = "7.1.0-pmw-62";
+var version = "7.1.0-pmw-63";
 
 // use this syntax so babel plugin see this import here
 const VERSION = version;
@@ -16507,9 +16507,12 @@ class Canvas extends SelectableCanvas {
       upper
     } = this.elements;
     upper.ctx = undefined;
-    const htmlElement = super.toCanvasElement(multiplier, options);
-    upper.ctx = upper.el.getContext('2d');
-    return htmlElement;
+    // *PMW* modified code. Restore the upper context in a finally so a throwing render hook can't leave contextTop undefined and break every subsequent render of the live canvas.
+    try {
+      return super.toCanvasElement(multiplier, options);
+    } finally {
+      upper.ctx = upper.el.getContext('2d');
+    }
   }
 
   /**
