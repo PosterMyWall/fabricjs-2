@@ -385,7 +385,8 @@ export class FabricImage<
       const clipPathId = uid();
       svgString.push(
         '<clipPath id="imageCrop_' + clipPathId + '">\n',
-        x +
+        '\t<rect x="' +
+          x +
           '" y="' +
           y +
           '" width="' +
