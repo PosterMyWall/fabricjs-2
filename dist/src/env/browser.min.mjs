@@ -1,2 +1,2 @@
-import{WebGLProbe as o}from"../filters/GLProbes/WebGLProbe.min.mjs";const n={},t=()=>({document:document,window:window,isTouchSupported:"ontouchstart"in window||"ontouchstart"in document||window&&window.navigator&&window.navigator.maxTouchPoints>0,WebGLProbe:new o,dispose(){},copyPasteData:n});export{t as getEnv};
+import{WebGLProbe as e}from"../filters/GLProbes/WebGLProbe.min.mjs";const t={},n=()=>({document,window,isTouchSupported:`ontouchstart`in window||`ontouchstart`in document||window&&window.navigator&&window.navigator.maxTouchPoints>0,WebGLProbe:new e,dispose(){},copyPasteData:t});export{n as getEnv};
 //# sourceMappingURL=browser.min.mjs.map

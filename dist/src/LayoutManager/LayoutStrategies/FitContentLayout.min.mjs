@@ -1,2 +1,2 @@
-import{defineProperty as r}from"../../../_virtual/_rollupPluginBabelHelpers.min.mjs";import{LayoutStrategy as t}from"./LayoutStrategy.min.mjs";import{classRegistry as e}from"../../ClassRegistry.min.mjs";class s extends t{shouldPerformLayout(r){return!0}}r(s,"type","fit-content"),e.setClass(s);export{s as FitContentLayout};
+import{_defineProperty as e}from"../../../_virtual/_@oxc-project_runtime@0.126.0/helpers/defineProperty.min.mjs";import{classRegistry as t}from"../../ClassRegistry.min.mjs";import{LayoutStrategy as n}from"./LayoutStrategy.min.mjs";var r=class extends n{shouldPerformLayout(e){return!0}};e(r,`type`,`fit-content`),t.setClass(r);export{r as FitContentLayout};
 //# sourceMappingURL=FitContentLayout.min.mjs.map

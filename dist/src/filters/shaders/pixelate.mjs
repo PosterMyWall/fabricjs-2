@@ -1,3 +1,4 @@
+//#region src/filters/shaders/pixelate.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -17,6 +18,7 @@ const fragmentSource = `
     gl_FragColor = color;
   }
 `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=pixelate.mjs.map

@@ -33,6 +33,7 @@ export declare abstract class AnimationBase<T extends number | number[] = number
      * Animation start time ms
      */
     private startTime;
+    private timeout;
     constructor({ startValue, byValue, duration, delay, easing, onStart, onChange, onComplete, abort, target, }: TBaseAnimationOptions<T>);
     get state(): AnimationState;
     isDone(): boolean;

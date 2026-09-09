@@ -1,3 +1,4 @@
+//#region src/filters/shaders/removeColor.ts
 const fragmentShader = `
 precision highp float;
 uniform sampler2D uTexture;
@@ -11,6 +12,7 @@ void main() {
   }
 }
 `;
-
+//#endregion
 export { fragmentShader };
+
 //# sourceMappingURL=removeColor.mjs.map

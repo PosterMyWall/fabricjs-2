@@ -1,3 +1,4 @@
+//#region src/filters/shaders/brightness.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -9,6 +10,7 @@ const fragmentSource = `
     gl_FragColor = color;
   }
 `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=brightness.mjs.map

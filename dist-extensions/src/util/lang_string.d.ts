@@ -12,7 +12,7 @@ export declare const capitalize: (string: string, firstLetterOnly?: boolean) => 
  * @param {String} string String to escape
  * @return {String} Escaped version of a string
  */
-export declare const escapeXml: (string: string) => string;
+export declare const escapeXml: (stringOrNumber: string | number) => string;
 /**
  * Divide a string in the user perceived single units
  * @param {String} textstring String to escape

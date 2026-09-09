@@ -1,5 +1,6 @@
+//#region src/filters/shaders/convolute.ts
 const fragmentSource = {
-  Convolute_3_1: `
+	Convolute_3_1: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[9];
@@ -17,7 +18,7 @@ const fragmentSource = {
       gl_FragColor = color;
     }
     `,
-  Convolute_3_0: `
+	Convolute_3_0: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[9];
@@ -37,7 +38,7 @@ const fragmentSource = {
       gl_FragColor.a = alpha;
     }
     `,
-  Convolute_5_1: `
+	Convolute_5_1: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[25];
@@ -55,7 +56,7 @@ const fragmentSource = {
       gl_FragColor = color;
     }
     `,
-  Convolute_5_0: `
+	Convolute_5_0: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[25];
@@ -75,7 +76,7 @@ const fragmentSource = {
       gl_FragColor.a = alpha;
     }
     `,
-  Convolute_7_1: `
+	Convolute_7_1: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[49];
@@ -93,7 +94,7 @@ const fragmentSource = {
       gl_FragColor = color;
     }
     `,
-  Convolute_7_0: `
+	Convolute_7_0: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[49];
@@ -113,7 +114,7 @@ const fragmentSource = {
       gl_FragColor.a = alpha;
     }
     `,
-  Convolute_9_1: `
+	Convolute_9_1: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[81];
@@ -131,7 +132,7 @@ const fragmentSource = {
       gl_FragColor = color;
     }
     `,
-  Convolute_9_0: `
+	Convolute_9_0: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform float uMatrix[81];
@@ -152,6 +153,7 @@ const fragmentSource = {
     }
     `
 };
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=convolute.mjs.map

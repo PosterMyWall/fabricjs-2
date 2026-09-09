@@ -1,2 +1,2 @@
-import{elementMatchesRule as t}from"./elementMatchesRule.min.mjs";function e(e){let n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},o={};for(const i in n)t(e,i.split(" "))&&(o={...o,...n[i]});return o}export{e as getGlobalStylesForElement};
+import{elementMatchesRule as e}from"./elementMatchesRule.min.mjs";function t(t,n={}){let r={};for(let i in n)e(t,i.split(` `))&&(r={...r,...n[i]});return r}export{t as getGlobalStylesForElement};
 //# sourceMappingURL=getGlobalStylesForElement.min.mjs.map

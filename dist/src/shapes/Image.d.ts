@@ -24,7 +24,7 @@ interface UniqueImageProps {
     cropX: number;
     cropY: number;
     imageSmoothing: boolean;
-    filters: BaseFilter<string, Record<string, any>>[];
+    filters: BaseFilter<string>[];
     resizeFilter?: Resize;
 }
 export declare const imageDefaultValues: Partial<TClassProperties<FabricImage>>;
@@ -110,7 +110,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
     imageSmoothing: boolean;
     preserveAspectRatio: string;
     protected src: string;
-    filters: BaseFilter<string, Record<string, any>>[];
+    filters: BaseFilter<string>[];
     resizeFilter: Resize;
     _element: ImageSource;
     _filteredEl?: HTMLCanvasElement;
@@ -213,7 +213,7 @@ export declare class FabricImage<Props extends TOptions<ImageProps> = Partial<Im
      * @param {Array} filters to be applied
      * @param {Boolean} forResizing specify if the filter operation is a resize operation
      */
-    applyFilters(filters?: BaseFilter<string, Record<string, any>>[]): this | undefined;
+    applyFilters(filters?: BaseFilter<string>[]): this | undefined;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on

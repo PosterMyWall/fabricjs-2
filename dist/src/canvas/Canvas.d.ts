@@ -310,9 +310,11 @@ export declare class Canvas extends SelectableCanvas implements CanvasOptions {
      * @param {String} config.evtIn name of the event to fire for in
      * @private
      */
-    fireSyntheticInOutEvents<T extends keyof TSyntheticEventContext>(type: T, { target, oldTarget, fireCanvas, e, ...data }: TSyntheticEventContext[T] & {
+    fireSyntheticInOutEvents<T extends keyof TSyntheticEventContext>(type: T, { target, oldTarget, actualTarget, oldActualTarget, fireCanvas, e, ...data }: TSyntheticEventContext[T] & {
         target?: FabricObject;
         oldTarget?: FabricObject;
+        actualTarget?: FabricObject;
+        oldActualTarget?: FabricObject;
         fireCanvas?: boolean;
     }): void;
     /**

@@ -1,2 +1,2 @@
-import{defineProperty as s}from"../../_virtual/_rollupPluginBabelHelpers.min.mjs";import{classRegistry as e}from"../ClassRegistry.min.mjs";import{polylineDefaultValues as r,Polyline as l}from"./Polyline.min.mjs";class o extends l{isOpen(){return!1}}s(o,"ownDefaults",r),s(o,"type","Polygon"),e.setClass(o),e.setSVGClass(o);export{o as Polygon};
+import{_defineProperty as e}from"../../_virtual/_@oxc-project_runtime@0.126.0/helpers/defineProperty.min.mjs";import{classRegistry as t}from"../ClassRegistry.min.mjs";import{Polyline as n,polylineDefaultValues as r}from"./Polyline.min.mjs";var i=class extends n{isOpen(){return!1}};e(i,`ownDefaults`,r),e(i,`type`,`Polygon`),t.setClass(i),t.setSVGClass(i);export{i as Polygon};
 //# sourceMappingURL=Polygon.min.mjs.map

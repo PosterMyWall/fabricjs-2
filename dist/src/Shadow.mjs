@@ -1,185 +1,140 @@
-import { defineProperty as _defineProperty } from '../_virtual/_rollupPluginBabelHelpers.mjs';
-import { classRegistry } from './ClassRegistry.mjs';
-import { Color } from './color/Color.mjs';
-import { config } from './config.mjs';
-import { reNum } from './parser/constants.mjs';
-import { Point } from './Point.mjs';
-import { uid } from './util/internals/uid.mjs';
-import { pickBy } from './util/misc/pick.mjs';
-import { degreesToRadians } from './util/misc/radiansDegreesConversion.mjs';
-import { toFixed } from './util/misc/toFixed.mjs';
-import { rotateVector } from './util/misc/vectors.mjs';
-
+import { _defineProperty } from "../_virtual/_@oxc-project_runtime@0.126.0/helpers/defineProperty.mjs";
+import { config } from "./config.mjs";
+import { classRegistry } from "./ClassRegistry.mjs";
+import { Point } from "./Point.mjs";
+import { uid } from "./util/internals/uid.mjs";
+import { degreesToRadians } from "./util/misc/radiansDegreesConversion.mjs";
+import { pickBy } from "./util/misc/pick.mjs";
+import { toFixed } from "./util/misc/toFixed.mjs";
+import { escapeXml } from "./util/lang_string.mjs";
+import { rotateVector } from "./util/misc/vectors.mjs";
+import { Color } from "./color/Color.mjs";
+import { reNum } from "./parser/constants.mjs";
+//#region src/Shadow.ts
 /**
-   * Regex matching shadow offsetX, offsetY and blur (ex: "2px 2px 10px rgba(0,0,0,0.2)", "rgb(0,255,0) 2px 2px")
-   * - (?:\s|^): This part captures either a whitespace character (\s) or the beginning of a line (^). It's non-capturing (due to (?:...)), meaning it doesn't create a capturing group.
-   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: This captures the first component of the shadow, which is the horizontal offset. Breaking it down:
-   *   - (-?\d+): Captures an optional minus sign followed by one or more digits (integer part of the number).
-   *   - (?:\.\d*)?: Optionally captures a decimal point followed by zero or more digits (decimal part of the number).
-   *   - (?:px)?: Optionally captures the "px" unit.
-   *   - (?:\s?|$): Captures either an optional whitespace or the end of the line. This whole part is wrapped in a non-capturing group and marked as optional with ?.
-   * - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: Similar to the previous step, this captures the vertical offset.
+* Regex matching shadow offsetX, offsetY and blur (ex: "2px 2px 10px rgba(0,0,0,0.2)", "rgb(0,255,0) 2px 2px")
+* - (?:\s|^): This part captures either a whitespace character (\s) or the beginning of a line (^). It's non-capturing (due to (?:...)), meaning it doesn't create a capturing group.
+* - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: This captures the first component of the shadow, which is the horizontal offset. Breaking it down:
+*   - (-?\d+): Captures an optional minus sign followed by one or more digits (integer part of the number).
+*   - (?:\.\d*)?: Optionally captures a decimal point followed by zero or more digits (decimal part of the number).
+*   - (?:px)?: Optionally captures the "px" unit.
+*   - (?:\s?|$): Captures either an optional whitespace or the end of the line. This whole part is wrapped in a non-capturing group and marked as optional with ?.
+* - (-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?: Similar to the previous step, this captures the vertical offset.
 
 (\d+(?:\.\d*)?(?:px)?)?: This captures the blur radius. It's similar to the horizontal offset but without the optional minus sign.
 
 (?:\s+(-?\d+(?:\.\d*)?(?:px)?(?:\s?|$))?){0,1}: This captures an optional part for the color. It allows for whitespace followed by a component with an optional minus sign, digits, decimal point, and "px" unit.
 
 (?:$|\s): This captures either the end of the line or a whitespace character. It ensures that the match ends either at the end of the string or with a whitespace character.
-   */
-
-let ShadowOrGlowType = /*#__PURE__*/function (ShadowOrGlowType) {
-  ShadowOrGlowType["LIGHT_SHADOW"] = "light_shadow";
-  ShadowOrGlowType["STRONG_SHADOW"] = "strong_shadow";
-  ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
-  ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
-  ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
-  return ShadowOrGlowType;
+*/
+let ShadowOrGlowType = /* @__PURE__ */ function(ShadowOrGlowType) {
+	ShadowOrGlowType["LIGHT_SHADOW"] = "light_shadow";
+	ShadowOrGlowType["STRONG_SHADOW"] = "strong_shadow";
+	ShadowOrGlowType["CUSTOM_SHADOW"] = "custom_shadow";
+	ShadowOrGlowType["LIGHT_GLOW"] = "light_glow";
+	ShadowOrGlowType["STRONG_GLOW"] = "strong_glow";
+	return ShadowOrGlowType;
 }({});
-const shadowOffsetRegex = '(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?';
-const reOffsetsAndBlur = new RegExp('(?:\\s|^)' + shadowOffsetRegex + shadowOffsetRegex + '(' + reNum + '?(?:px)?)?(?:\\s?|$)(?:$|\\s)');
+const shadowOffsetRegex = "(-?\\d+(?:\\.\\d*)?(?:px)?(?:\\s?|$))?";
+const reOffsetsAndBlur = new RegExp("(?:\\s|^)" + shadowOffsetRegex + shadowOffsetRegex + "(" + reNum + "?(?:px)?)?(?:\\s?|$)(?:$|\\s)");
 const shadowDefaultValues = {
-  color: 'rgb(0,0,0)',
-  blur: 0,
-  offsetX: 0,
-  offsetY: 0,
-  affectStroke: false,
-  includeDefaultValues: true,
-  nonScaling: false
+	color: "rgb(0,0,0)",
+	blur: 0,
+	offsetX: 0,
+	offsetY: 0,
+	affectStroke: false,
+	includeDefaultValues: true,
+	nonScaling: false
 };
-class Shadow {
-  /**
-   * @see {@link http://fabric5.fabricjs.com/shadows|Shadow demo}
-   * @param {Object|String} [options] Options object with any of color, blur, offsetX, offsetY properties or string (e.g. "rgba(0,0,0,0.2) 2px 2px 10px")
-   */
-
-  constructor() {
-    let arg0 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    const options = typeof arg0 === 'string' ? Shadow.parseShadow(arg0) : arg0;
-    Object.assign(this, Shadow.ownDefaults, options);
-    this.id = uid();
-  }
-
-  /**
-   * @param {String} value Shadow value to parse
-   * @return {Object} Shadow object with color, offsetX, offsetY and blur
-   */
-  static parseShadow(value) {
-    const shadowStr = value.trim(),
-      [, offsetX = 0, offsetY = 0, blur = 0] = (reOffsetsAndBlur.exec(shadowStr) || []).map(value => parseFloat(value) || 0),
-      color = (shadowStr.replace(reOffsetsAndBlur, '') || 'rgb(0,0,0)').trim();
-    return {
-      color,
-      offsetX,
-      offsetY,
-      blur
-    };
-  }
-  isShadow() {
-    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
-  }
-  isCustomShadow() {
-    return this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
-  }
-  isGlow() {
-    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
-  }
-  isLightShadow() {
-    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW;
-  }
-  isStrongShadow() {
-    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW;
-  }
-
-  /**
-   * Returns a string representation of an instance
-   * @see http://www.w3.org/TR/css-text-decor-3/#text-shadow
-   * @return {String} Returns CSS3 text-shadow declaration
-   */
-  toString() {
-    return [this.offsetX, this.offsetY, this.blur, this.color].join('px ');
-  }
-
-  /**
-   * Returns SVG representation of a shadow
-   * @param {FabricObject} object
-   * @return {String} SVG representation of a shadow
-   */
-  toSVG(object) {
-    const offset = rotateVector(new Point(this.offsetX, this.offsetY), degreesToRadians(-object.angle)),
-      BLUR_BOX = 20,
-      color = new Color(this.color);
-    let fBoxX = 40,
-      fBoxY = 40;
-    if (object.width && object.height) {
-      //http://www.w3.org/TR/SVG/filters.html#FilterEffectsRegion
-      // we add some extra space to filter box to contain the blur ( 20 )
-      fBoxX = toFixed((Math.abs(offset.x) + this.blur) / object.width, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
-      fBoxY = toFixed((Math.abs(offset.y) + this.blur) / object.height, config.NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
-    }
-    if (object.flipX) {
-      offset.x *= -1;
-    }
-    if (object.flipY) {
-      offset.y *= -1;
-    }
-    return `<filter id="SVGID_${this.id}" y="-${fBoxY}%" height="${100 + 2 * fBoxY}%" x="-${fBoxX}%" width="${100 + 2 * fBoxX}%" >\n\t<feGaussianBlur in="SourceAlpha" stdDeviation="${toFixed(this.blur ? this.blur / 2 : 0, config.NUM_FRACTION_DIGITS)}"></feGaussianBlur>\n\t<feOffset dx="${toFixed(offset.x, config.NUM_FRACTION_DIGITS)}" dy="${toFixed(offset.y, config.NUM_FRACTION_DIGITS)}" result="oBlur" ></feOffset>\n\t<feFlood flood-color="${color.toRgb()}" flood-opacity="${color.getAlpha()}"/>\n\t<feComposite in2="oBlur" operator="in" />\n\t<feMerge>\n\t\t<feMergeNode></feMergeNode>\n\t\t<feMergeNode in="SourceGraphic"></feMergeNode>\n\t</feMerge>\n</filter>\n`;
-  }
-
-  /**
-   * Returns object representation of a shadow
-   * @return {Object} Object representation of a shadow instance
-   */
-  toObject() {
-    const data = {
-      color: this.color,
-      blur: this.blur,
-      offsetX: this.offsetX,
-      offsetY: this.offsetY,
-      affectStroke: this.affectStroke,
-      nonScaling: this.nonScaling,
-      type: this.constructor.type,
-      shadowOrGlowType: this.shadowOrGlowType
-    };
-    const defaults = Shadow.ownDefaults;
-    return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
-  }
-  static async fromObject(options) {
-    return new this(options);
-  }
-}
-/**
- * Shadow color
- * @type String
- */
-/**
- * Shadow blur
- * @type Number
- */
-/**
- * Shadow horizontal offset
- * @type Number
- */
-/**
- * Shadow vertical offset
- * @type Number
- */
-/**
- * Whether the shadow should affect stroke operations
- * @type Boolean
- */
-/**
- * Indicates whether toObject should include default values
- * @type Boolean
- */
-/**
- * When `false`, the shadow will scale with the object.
- * When `true`, the shadow's offsetX, offsetY, and blur will not be affected by the object's scale.
- * default to false
- * @type Boolean
- */
+var Shadow = class Shadow {
+	constructor(arg0 = {}) {
+		const options = typeof arg0 === "string" ? Shadow.parseShadow(arg0) : arg0;
+		Object.assign(this, Shadow.ownDefaults, options);
+		this.id = uid();
+	}
+	/**
+	* @param {String} value Shadow value to parse
+	* @return {Object} Shadow object with color, offsetX, offsetY and blur
+	*/
+	static parseShadow(value) {
+		const shadowStr = value.trim(), [, offsetX = 0, offsetY = 0, blur = 0] = (reOffsetsAndBlur.exec(shadowStr) || []).map((value) => parseFloat(value) || 0);
+		return {
+			color: (shadowStr.replace(reOffsetsAndBlur, "") || "rgb(0,0,0)").trim(),
+			offsetX,
+			offsetY,
+			blur
+		};
+	}
+	isShadow() {
+		return this.shadowOrGlowType === "strong_shadow" || this.shadowOrGlowType === "light_shadow" || this.shadowOrGlowType === "custom_shadow";
+	}
+	isCustomShadow() {
+		return this.shadowOrGlowType === "custom_shadow";
+	}
+	isGlow() {
+		return this.shadowOrGlowType === "light_glow" || this.shadowOrGlowType === "strong_glow";
+	}
+	isLightShadow() {
+		return this.shadowOrGlowType === "light_shadow";
+	}
+	isStrongShadow() {
+		return this.shadowOrGlowType === "strong_shadow";
+	}
+	/**
+	* Returns a string representation of an instance
+	* @see http://www.w3.org/TR/css-text-decor-3/#text-shadow
+	* @return {String} Returns CSS3 text-shadow declaration
+	*/
+	toString() {
+		return [
+			this.offsetX,
+			this.offsetY,
+			this.blur,
+			this.color
+		].join("px ");
+	}
+	/**
+	* Returns SVG representation of a shadow
+	* @param {FabricObject} object
+	* @return {String} SVG representation of a shadow
+	*/
+	toSVG(object) {
+		const offset = rotateVector(new Point(this.offsetX, this.offsetY), degreesToRadians(-object.angle)), BLUR_BOX = 20, NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS, color = new Color(this.color);
+		let fBoxX = 40, fBoxY = 40;
+		if (object.width && object.height) {
+			fBoxX = toFixed((Math.abs(offset.x) + this.blur) / object.width, NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
+			fBoxY = toFixed((Math.abs(offset.y) + this.blur) / object.height, NUM_FRACTION_DIGITS) * 100 + BLUR_BOX;
+		}
+		if (object.flipX) offset.x *= -1;
+		if (object.flipY) offset.y *= -1;
+		return `<filter id="SVGID_${escapeXml(this.id)}" y="-${fBoxY}%" height="${100 + 2 * fBoxY}%" x="-${fBoxX}%" width="${100 + 2 * fBoxX}%" >\n\t<feGaussianBlur in="SourceAlpha" stdDeviation="${toFixed(this.blur ? this.blur / 2 : 0, NUM_FRACTION_DIGITS)}"></feGaussianBlur>\n\t<feOffset dx="${toFixed(offset.x, NUM_FRACTION_DIGITS)}" dy="${toFixed(offset.y, NUM_FRACTION_DIGITS)}" result="oBlur" ></feOffset>\n\t<feFlood flood-color="${color.toRgb()}" flood-opacity="${color.getAlpha()}"/>\n\t<feComposite in2="oBlur" operator="in" />\n\t<feMerge>\n\t\t<feMergeNode></feMergeNode>\n\t\t<feMergeNode in="SourceGraphic"></feMergeNode>\n\t</feMerge>\n</filter>\n`;
+	}
+	/**
+	* Returns object representation of a shadow
+	* @return {Object} Object representation of a shadow instance
+	*/
+	toObject() {
+		const data = {
+			color: this.color,
+			blur: this.blur,
+			offsetX: this.offsetX,
+			offsetY: this.offsetY,
+			affectStroke: this.affectStroke,
+			nonScaling: this.nonScaling,
+			type: this.constructor.type,
+			shadowOrGlowType: this.shadowOrGlowType
+		};
+		const defaults = Shadow.ownDefaults;
+		return !this.includeDefaultValues ? pickBy(data, (value, key) => value !== defaults[key]) : data;
+	}
+	static async fromObject(options) {
+		return new this(options);
+	}
+};
 _defineProperty(Shadow, "ownDefaults", shadowDefaultValues);
-_defineProperty(Shadow, "type", 'shadow');
-classRegistry.setClass(Shadow, 'shadow');
+_defineProperty(Shadow, "type", "shadow");
+classRegistry.setClass(Shadow, "shadow");
+//#endregion
+export { Shadow, ShadowOrGlowType };
 
-export { Shadow, ShadowOrGlowType, shadowDefaultValues };
 //# sourceMappingURL=Shadow.mjs.map

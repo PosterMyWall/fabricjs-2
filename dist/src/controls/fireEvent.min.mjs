@@ -1,2 +1,2 @@
-const t=(t,r)=>{var a;const{transform:{target:e}}=r;null===(a=e.canvas)||void 0===a||a.fire(`object:${t}`,{...r,target:e}),e.fire(t,r)};export{t as fireEvent};
+const e=(e,t)=>{var n;let{transform:{target:r}}=t;(n=r.canvas)==null||n.fire(`object:${e}`,{...t,target:r}),r.fire(e,t)};export{e as fireEvent};
 //# sourceMappingURL=fireEvent.min.mjs.map

@@ -1,17 +1,14 @@
-import { FabricObjectSVGExportMixin } from './FabricObjectSVGExportMixin.mjs';
-import { InteractiveFabricObject } from './InteractiveObject.mjs';
-import { applyMixins } from '../../util/applyMixins.mjs';
-import { classRegistry } from '../../ClassRegistry.mjs';
-
-// TODO somehow we have to make a tree-shakeable import
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-class FabricObject extends InteractiveFabricObject {}
+import { classRegistry } from "../../ClassRegistry.mjs";
+import { FabricObjectSVGExportMixin } from "./FabricObjectSVGExportMixin.mjs";
+import "./defaultValues.mjs";
+import { InteractiveFabricObject } from "./InteractiveObject.mjs";
+import { applyMixins } from "../../util/applyMixins.mjs";
+//#region src/shapes/Object/FabricObject.ts
+var FabricObject = class extends InteractiveFabricObject {};
 applyMixins(FabricObject, [FabricObjectSVGExportMixin]);
 classRegistry.setClass(FabricObject);
-classRegistry.setClass(FabricObject, 'object');
-
+classRegistry.setClass(FabricObject, "object");
+//#endregion
 export { FabricObject };
+
 //# sourceMappingURL=FabricObject.mjs.map

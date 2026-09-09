@@ -1,2 +1,2 @@
-function e(e,o){Object.entries(e).forEach(e=>{let[t,r]=e;void 0!==r&&(o[t.toLowerCase()]=r)})}export{e as parseStyleObject};
+function e(e,t){Object.entries(e).forEach(([e,n])=>{n!==void 0&&(t[e.toLowerCase()]=n)})}export{e as parseStyleObject};
 //# sourceMappingURL=parseStyleObject.min.mjs.map

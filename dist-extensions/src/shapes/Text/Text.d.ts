@@ -56,6 +56,7 @@ interface UniqueTextProps {
     direction: CanvasDirection;
     path?: Path;
     textDecorationThickness: number;
+    textDecorationColor?: string;
 }
 export interface SerializedTextProps extends SerializedObjectProps, UniqueTextProps {
     styles: TextStyleArray | TextStyle;
@@ -212,11 +213,11 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     path?: Path;
     /**
-     * The text decoration tickness for underline, overline and strikethrough
-     * The tickness is expressed in thousandths of fontSize ( em ).
+     * The text decoration thickness for underline, overline and strikethrough
+     * The thickness is expressed in thousandths of fontSize ( em ).
      * The original value was 1/15 that translates to 66.6667 thousandths.
      * The choice of unit of measure is to align with charSpacing.
-     * You can slim the tickness without issues, while large underline or overline may end up
+     * You can slim the thickness without issues, while large underline or overline may end up
      * outside the bounding box of the text. In order to fix that a bigger refactor of the code
      * is needed and is out of scope for now. If you need such large overline on the first line
      * of text or large underline on the last line of text, consider disabling caching as a
@@ -224,6 +225,13 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @default 66.667
      */
     textDecorationThickness: number;
+    /**
+     * Optional text decoration color for underline, overline and strikethrough.
+     * When undefined, decoration color falls back to the text fill color.
+     * This feature is not really supported by anything else than svg 2 specs with css3 support.
+     * Chrome does not support this, nor firefox apparently.
+     */
+    textDecorationColor?: string;
     /**
      * Offset amount for text path starting position
      * Only used when text has a path
@@ -532,7 +540,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @private
      * @param {String} method fillText or strokeText.
      * @param {CanvasRenderingContext2D} ctx Context to render on
-     * @param {Array} line Content of the line, splitted in an array by grapheme
+     * @param {Array} line Content of the line, split in an array by grapheme
      * @param {Number} left
      * @param {Number} top
      * @param {Number} lineIndex

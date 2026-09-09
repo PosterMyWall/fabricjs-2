@@ -131,9 +131,13 @@ interface SimpleEventHandler<T extends Event = TPointerEvent> extends TEvent<T> 
 }
 interface InEvent {
     previousTarget?: FabricObject;
+    actualTarget?: FabricObject;
+    previousActualTarget?: FabricObject;
 }
 interface OutEvent {
     nextTarget?: FabricObject;
+    actualTarget?: FabricObject;
+    nextActualTarget?: FabricObject;
 }
 export interface DragEventData extends TEvent<DragEvent> {
     target?: FabricObject;
@@ -225,6 +229,9 @@ export interface ObjectEvents extends ObjectPointerEvents, DnDEvents, MiscEvents
     };
     'erasing:end': {
         path: FabricObject;
+    };
+    'before:render': {
+        ctx: CanvasRenderingContext2D;
     };
 }
 export interface StaticCanvasEvents extends CollectionEvents {

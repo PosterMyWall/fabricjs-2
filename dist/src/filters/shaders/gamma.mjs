@@ -1,3 +1,4 @@
+//#region src/filters/shaders/gamma.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -13,6 +14,7 @@ const fragmentSource = `
     gl_FragColor.rgb *= color.a;
   }
 `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=gamma.mjs.map

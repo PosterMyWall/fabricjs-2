@@ -1,7 +1,7 @@
 import type { ControlActionHandler, TPointerEvent, TransformActionHandler } from '../EventTypeDefs';
 import { Point } from '../Point';
 import type { InteractiveFabricObject, TOCoord } from '../shapes/Object/InteractiveObject';
-import type { TCornerPoint, TDegree, TMat2D } from '../typedefs';
+import type { TCornerPoint, TDegree, TMat2D, TOriginX, TOriginY } from '../typedefs';
 import type { ControlRenderingStyleOverride } from './controlRendering';
 export declare class Control {
     /**
@@ -117,7 +117,15 @@ export declare class Control {
      * @default false
      */
     withConnection: boolean;
+    transformAnchorPoint?: {
+        x: TOriginX;
+        y: TOriginY;
+    };
     constructor(options?: Partial<Control>);
+    getTransformAnchorPoint(): {
+        x: TOriginX;
+        y: TOriginY;
+    };
     /**
      * The control actionHandler, provide one to handle action ( control being moved )
      * @param {Event} eventData the native mouse event

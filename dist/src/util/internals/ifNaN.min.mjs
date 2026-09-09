@@ -1,2 +1,2 @@
-const e=(e,o)=>isNaN(e)&&"number"==typeof o?o:e;export{e as ifNaN};
+const e=(e,t)=>isNaN(e)&&typeof t==`number`?t:e;export{e as ifNaN};
 //# sourceMappingURL=ifNaN.min.mjs.map

@@ -1,2 +1,2 @@
-function t(t,e){let r,n,o,g,a=[];for(o=0,g=e.length;o<g;o++)r=e[o],n=t.getElementsByTagNameNS("http://www.w3.org/2000/svg",r),a=a.concat(Array.from(n));return a}export{t as getMultipleNodes};
+function e(e,t){let n,r,i,a,o=[];for(i=0,a=t.length;i<a;i++)n=t[i],r=e.getElementsByTagNameNS(`http://www.w3.org/2000/svg`,n),o=o.concat(Array.from(r));return o}export{e as getMultipleNodes};
 //# sourceMappingURL=getMultipleNodes.min.mjs.map

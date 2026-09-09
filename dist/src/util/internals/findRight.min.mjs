@@ -1,2 +1,2 @@
-const r=(r,t)=>{for(let e=r.length-1;e>=0;e--)if(t(r[e],e,r))return e;return-1};export{r as findIndexRight};
+const e=(e,t)=>{for(let n=e.length-1;n>=0;n--)if(t(e[n],n,e))return n;return-1};export{e as findIndexRight};
 //# sourceMappingURL=findRight.min.mjs.map

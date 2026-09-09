@@ -1,5 +1,6 @@
+//#region src/filters/shaders/blendImage.ts
 const fragmentSource = {
-  multiply: `
+	multiply: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform sampler2D uImage;
@@ -13,7 +14,7 @@ const fragmentSource = {
       gl_FragColor = color;
     }
     `,
-  mask: `
+	mask: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform sampler2D uImage;
@@ -39,6 +40,7 @@ const vertexSource = `
       gl_Position = vec4(aPosition * 2.0 - 1.0, 0.0, 1.0);
     }
     `;
-
+//#endregion
 export { fragmentSource, vertexSource };
+
 //# sourceMappingURL=blendImage.mjs.map

@@ -2,6 +2,7 @@ import type { FabricObject } from '../../shapes/Object/FabricObject';
 import type { Abortable, TCrossOrigin, TFiller } from '../../typedefs';
 import type { BaseFilter } from '../../filters/BaseFilter';
 import type { FabricObject as BaseFabricObject } from '../../shapes/Object/Object';
+import { FabricError } from '../internals/console';
 import type { Shadow } from '../../Shadow';
 export type LoadImageOptions = Abortable & {
     /**
@@ -21,7 +22,7 @@ export type EnlivenObjectOptions = Abortable & {
      * Method for further parsing of object elements,
      * called after each fabric object created.
      */
-    reviver?: <T extends BaseFabricObject | FabricObject | BaseFilter<string> | Shadow | TFiller>(serializedObj: Record<string, any>, instance: T) => void;
+    reviver?: <T extends BaseFabricObject | FabricObject | BaseFilter<string> | Shadow | TFiller>(serializedObj: Record<string, any>, instance: T | undefined, error?: FabricError) => void | Promise<T>;
 };
 /**
  * @TODO type this correctly.
