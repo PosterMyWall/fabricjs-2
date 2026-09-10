@@ -207,7 +207,8 @@ var AligningGuidelines = class {
 		});
 	}
 	beforeRender() {
-		this.canvas.clearContext(this.canvas.contextTop);
+		const ctx = this.canvas.contextTop;
+		if (ctx) this.canvas.clearContext(ctx);
 	}
 	afterRender() {
 		if (this.onlyDrawPoint) drawPointList.call(this);

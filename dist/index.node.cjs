@@ -386,7 +386,7 @@ var Cache = class {
 const cache = new Cache();
 //#endregion
 //#region src/constants.ts
-const VERSION = "7.1.0-pmw-61";
+const VERSION = "7.1.0-pmw-65";
 function noop() {}
 const halfPI = Math.PI / 2;
 const quarterPI = Math.PI / 4;
@@ -12658,7 +12658,8 @@ var Canvas$1 = class extends SelectableCanvas {
 			grouped = true;
 			shouldRender = true;
 		} else if (this._shouldClearSelection(e, target)) this.discardActiveObject(e);
-		if (this.selection && !config.disableGroupSelector && (!target || (!target.selectable || target.activeOn === "up") && !target.isEditing && target !== this._activeObject)) {
+		const isPressOnMovementLockedBody = !!target && target.lockMovementX && target.lockMovementY && !target.isEditing && !target.findControl(this.getViewportPoint(e), isTouchEvent(e));
+		if (this.selection && !config.disableGroupSelector && (!target || isPressOnMovementLockedBody || (!target.selectable || target.activeOn === "up") && !target.isEditing && target !== this._activeObject)) {
 			const p = this.getScenePoint(e);
 			this._groupSelector = {
 				x: p.x,
@@ -12674,7 +12675,7 @@ var Canvas$1 = class extends SelectableCanvas {
 				if (this._activeObject && this._activeObject !== target) target = this._activeObject;
 			}
 			const handle = target.findControl(this.getViewportPoint(e), isTouchEvent(e));
-			if (target === this._activeObject && (handle || !grouped || config.enableGroupSelection)) {
+			if (target === this._activeObject && !this._groupSelector && (handle || !grouped || config.enableGroupSelection)) {
 				this._setupCurrentTransform(e, target, alreadySelected);
 				const control = handle ? handle.control : void 0, pointer = this.getScenePoint(e), mouseDownHandler = control && control.getMouseDownHandler(e, target, control);
 				mouseDownHandler && mouseDownHandler.call(control, e, this._currentTransform, pointer.x, pointer.y);
@@ -12970,9 +12971,11 @@ var Canvas$1 = class extends SelectableCanvas {
 	toCanvasElement(multiplier = 1, options) {
 		const { upper } = this.elements;
 		upper.ctx = void 0;
-		const htmlElement = super.toCanvasElement(multiplier, options);
-		upper.ctx = upper.el.getContext("2d");
-		return htmlElement;
+		try {
+			return super.toCanvasElement(multiplier, options);
+		} finally {
+			upper.ctx = upper.el.getContext("2d");
+		}
 	}
 	/**
 	* @override clear {@link textEditingManager}
