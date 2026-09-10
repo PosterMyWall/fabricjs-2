@@ -2,6 +2,8 @@
 
 ## [next]
 
+- Upgrade 7.4.0 [#4](https://github.com/fabricjs/fabric.js/pull/4)
+
 ## [7.4.0]
 
 - feat(): Support viewport rotation in getZoom, dimensions, and control coords [#10977](https://github.com/fabricjs/fabric.js/pull/10977)
