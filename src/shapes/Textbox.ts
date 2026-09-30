@@ -325,7 +325,10 @@ export class Textbox<
     const data = this.getGraphemeDataForRender(lines);
     const wrapped: string[][] = [];
     for (let i = 0; i < data.wordsData.length; i++) {
-      wrapped.push(...this._wrapLine(i, desiredWidth, data));
+      // *PMW* an indented line (list row) wraps within the remaining width
+      wrapped.push(
+        ...this._wrapLine(i, desiredWidth, data, this._getRealLineIndent(i)),
+      );
     }
     this.isWrapping = false;
     return wrapped;
@@ -557,6 +560,37 @@ export class Textbox<
         delete this.styles[prop];
       }
     }
+    // *PMW* prune per-line styles of real lines that no longer exist
+    for (const prop in this.lineStyles) {
+      if (!linesToKeep.has(prop)) {
+        delete this.lineStyles[prop];
+      }
+    }
+  }
+
+  /**
+   * *PMW* A visual line starts its real line when its style-map offset is 0.
+   * @private
+   */
+  _isStartOfRealLine(visualLineIndex: number): boolean {
+    if (this._styleMap && !this.isWrapping) {
+      const map = this._styleMap[visualLineIndex];
+      return map ? map.offset === 0 : true;
+    }
+    return true;
+  }
+
+  /**
+   * *PMW* Maps a visual (soft-wrapped) line index to the real (unwrapped) line index through
+   * the style map, mirroring the styleHas/_getStyleDeclaration wrapping guard.
+   * @private
+   */
+  _getRealLineIndex(visualLineIndex: number): number {
+    if (this._styleMap && !this.isWrapping) {
+      const map = this._styleMap[visualLineIndex];
+      return map ? map.line : visualLineIndex;
+    }
+    return visualLineIndex;
   }
 
   /**

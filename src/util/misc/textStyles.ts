@@ -4,6 +4,10 @@ import type {
   TextStyleDeclaration,
 } from '../../shapes/Text/StyledText';
 import { cloneStyles } from '../internals/cloneStyles';
+import {
+  cloneDeepPlainValue,
+  deepPlainValuesEqual,
+} from '../internals/deepPlainValues';
 import { graphemeSplit } from '../lang_string';
 
 export type TextStyleArray = {
@@ -34,10 +38,18 @@ export const hasStyleChanged = (
   prevStyle.textDecorationColor !== thisStyle.textDecorationColor ||
   prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor ||
   prevStyle.deltaY !== thisStyle.deltaY ||
+  // *PMW* per-character shadow declarations are plain objects — value-compare them,
+  // for render batching and serialized range grouping alike
+  !deepPlainValuesEqual(prevStyle.shadow, thisStyle.shadow) ||
   (forTextSpans &&
     (prevStyle.overline !== thisStyle.overline ||
       prevStyle.underline !== thisStyle.underline ||
-      prevStyle.linethrough !== thisStyle.linethrough));
+      prevStyle.linethrough !== thisStyle.linethrough ||
+      // *PMW* these must split serialized ranges too, or adjacent characters
+      // differing only in them get merged into one range on save
+      prevStyle.squigglyline !== thisStyle.squigglyline ||
+      prevStyle.isStrokeForBold !== thisStyle.isStrokeForBold ||
+      !deepPlainValuesEqual(prevStyle.pmwRunStyles, thisStyle.pmwRunStyles)));
 
 /**
  * Returns the array form of a text object's inline styles property with styles grouped in ranges
@@ -126,7 +138,9 @@ export const stylesFromArray = (
         //create object for line index if it doesn't exist
         stylesObject[i] = stylesObject[i] || {};
         //assign a style at this character's index
-        stylesObject[i][c] = { ...styles[styleIndex].style };
+        // *PMW* deep instead of shallow: every character gets its own copy of
+        // nested declaration values (`pmwRunStyles`), never a shared reference
+        stylesObject[i][c] = cloneDeepPlainValue(styles[styleIndex].style);
         //if character is at the end of the current style collection, move to the next
         if (charIndex === styles[styleIndex].end - 1) {
           styleIndex++;

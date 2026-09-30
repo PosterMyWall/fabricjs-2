@@ -1,5 +1,6 @@
 import { reNewline } from "../../constants.mjs";
 import { graphemeSplit } from "../lang_string.mjs";
+import { cloneDeepPlainValue, deepPlainValuesEqual } from "../internals/deepPlainValues.mjs";
 import { cloneStyles } from "../internals/cloneStyles.mjs";
 //#region src/util/misc/textStyles.ts
 /**
@@ -8,7 +9,7 @@ import { cloneStyles } from "../internals/cloneStyles.mjs";
 * @param {boolean} forTextSpans whether to check overline, underline, and line-through properties
 * @return {boolean} true if the style changed
 */
-const hasStyleChanged = (prevStyle, thisStyle, forTextSpans = false) => prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textDecorationThickness !== thisStyle.textDecorationThickness || prevStyle.textDecorationColor !== thisStyle.textDecorationColor || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough);
+const hasStyleChanged = (prevStyle, thisStyle, forTextSpans = false) => prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textDecorationThickness !== thisStyle.textDecorationThickness || prevStyle.textDecorationColor !== thisStyle.textDecorationColor || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || !deepPlainValuesEqual(prevStyle.shadow, thisStyle.shadow) || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough || prevStyle.squigglyline !== thisStyle.squigglyline || prevStyle.isStrokeForBold !== thisStyle.isStrokeForBold || !deepPlainValuesEqual(prevStyle.pmwRunStyles, thisStyle.pmwRunStyles));
 /**
 * Returns the array form of a text object's inline styles property with styles grouped in ranges
 * rather than per character. This format is less verbose, and is better suited for storage
@@ -60,7 +61,7 @@ const stylesFromArray = (styles, text) => {
 			charIndex++;
 			if (styles[styleIndex] && styles[styleIndex].start <= charIndex && charIndex < styles[styleIndex].end) {
 				stylesObject[i] = stylesObject[i] || {};
-				stylesObject[i][c] = { ...styles[styleIndex].style };
+				stylesObject[i][c] = cloneDeepPlainValue(styles[styleIndex].style);
 				if (charIndex === styles[styleIndex].end - 1) styleIndex++;
 			}
 		}

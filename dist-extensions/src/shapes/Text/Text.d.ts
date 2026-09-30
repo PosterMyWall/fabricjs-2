@@ -25,6 +25,24 @@ export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
  * needs the the info of previous graphemes already filled
  * Override to customize measuring
  */
+/**
+ * *PMW* One real line's style record. Fabric consumes:
+ * - `textAlign`: overrides the object alignment for the line;
+ * - `leftIndent`: explicit extra left offset in text units (also reserved from the wrap width);
+ * - `listMarker`: a marker string (bullet glyph / ordinal) drawn in the gutter left of the
+ *   line's first visual row — when set without `leftIndent`, the indent is auto-measured from
+ *   the marker plus a gap;
+ * - `listMarkerFontFamily` / `listMarkerFill`: marker font/fill, defaulting to the line's first
+ *   character's effective style.
+ * Every other key is an opaque passenger preserved by the editing logic.
+ */
+export type LineStyleDeclaration = {
+    textAlign?: string;
+    leftIndent?: number;
+    listMarker?: string;
+    listMarkerFontFamily?: string;
+    listMarkerFill?: string;
+} & Record<string, unknown>;
 export type GraphemeBBox = {
     width: number;
     height: number;
@@ -53,6 +71,7 @@ interface UniqueTextProps {
     ignoreDelegatedSet: boolean;
     squigglylineColor: string;
     isStrokeForBold: boolean;
+    pmwRunStyles?: Record<string, unknown>;
     direction: CanvasDirection;
     path?: Path;
     textDecorationThickness: number;
@@ -64,10 +83,6 @@ export interface SerializedTextProps extends SerializedObjectProps, UniqueTextPr
 export interface TextProps extends FabricObjectProps, UniqueTextProps {
     styles: TextStyle;
 }
-/**
- * Text class
- * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
- */
 export declare class FabricText<Props extends TOptions<TextProps> = Partial<TextProps>, SProps extends SerializedTextProps = SerializedTextProps, EventSpec extends ObjectEvents = ObjectEvents> extends StyledText<Props, SProps, EventSpec> implements UniqueTextProps {
     /**
      * Properties that requires a text layout recalculation when changed
@@ -136,6 +151,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     squigglyline: boolean;
     squigglylineColor: string;
     isStrokeForBold: boolean;
+    pmwRunStyles?: Record<string, unknown>;
     /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
     ignoreDelegatedSet: boolean;
     /**
@@ -190,6 +206,14 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     textBackgroundColor: string;
     styles: TextStyle;
+    /**
+     * *PMW* Per-line style declarations keyed by REAL (unwrapped) line index. Fabric consumes
+     * `textAlign` (overrides the object-level alignment for that line) and `leftIndent` (extra
+     * left offset in text units, e.g. for list rows); any other key is an opaque passenger that
+     * the editing logic shifts with its line (see ITextBehavior). Never mutate a record in
+     * place — writers always assign fresh objects so caches and snapshots stay coherent.
+     */
+    lineStyles: Record<number | string, LineStyleDeclaration>;
     /**
      * Path that the text should follow.
      * since 4.6.0 the path will be drawn automatically.
@@ -391,6 +415,24 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @return {Object}.zoomY zoomY zoom value to unscale the canvas before drawing cache
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
+    /**
+     * *PMW* The largest reach (blur plus offset) of any per-character shadow declaration,
+     * in text units. 0 when no character carries a shadow.
+     * @private
+     */
+    _getMaxCharShadowExtent(): number;
+    /**
+     * *PMW* Applies a per-character shadow declaration (a plain
+     * {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
+     * mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
+     * @private
+     */
+    _setCharShadow(ctx: CanvasRenderingContext2D, shadow: {
+        color?: string;
+        blur?: number;
+        offsetX?: number;
+        offsetY?: number;
+    }): void;
     /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
@@ -601,6 +643,76 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {Number} start selection start
      * @param {Number} end selection end
      */
+    /**
+     * *PMW* Maps a visual (possibly soft-wrapped) line index to the real (unwrapped) line
+     * index that keys `styles`' line entries and `lineStyles`. Plain text has no wrapping,
+     * so this is the identity; Textbox overrides it through its style map.
+     * @private
+     */
+    _getRealLineIndex(visualLineIndex: number): number;
+    /**
+     * *PMW* The alignment a visual line renders with: its real line's `lineStyles.textAlign`
+     * override when present, the object-level `textAlign` otherwise.
+     * @private
+     */
+    _getEffectiveTextAlignForLine(visualLineIndex: number): string;
+    /**
+     * *PMW* Whether a visual line is the first visual row of its real (unwrapped) line — where a
+     * list marker draws. Plain text has no wrapping, so always true; Textbox overrides.
+     * @private
+     */
+    _isStartOfRealLine(_visualLineIndex: number): boolean;
+    /**
+     * *PMW* A real line's left indent in text units: the explicit `leftIndent` when set, else the
+     * measured width of its list marker plus a gap, else 0. Consumed by the line offset, the
+     * Textbox wrap width, and the marker renderer.
+     * @private
+     */
+    _getRealLineIndent(realLineIndex: number): number;
+    /**
+     * *PMW* One shared gutter for every auto-indented list row of the textbox: the
+     * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
+     * an explicit leftIndent (the fork's raw-key capability) do not participate — their own indent
+     * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
+     * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
+     * long ordinals ("10.") from colliding with their text.
+     * @private
+     */
+    _getAutoListGutterWidth(): number;
+    /**
+     * *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
+     * falling back to the line's first character's effective style.
+     * @private
+     */
+    _getListMarkerStyle(realLineIndex: number): {
+        fontSize: number;
+        fontFamily: string;
+        fill: string;
+    };
+    /**
+     * *PMW* Measured width of a real line's list marker in text units.
+     * @private
+     */
+    _measureListMarkerWidth(realLineIndex: number): number;
+    /**
+     * *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
+     * fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
+     * @private
+     */
+    _renderListMarker(ctx: CanvasRenderingContext2D, visualLineIndex: number, lineDrawLeft: number, lineDrawTop: number): void;
+    /**
+     * *PMW* Sets or clears (align undefined) one real line's alignment override.
+     */
+    setLineAlignment(realLineIndex: number, align?: string): void;
+    /**
+     * *PMW* The alignment the given real line renders with.
+     */
+    getLineAlignment(realLineIndex: number): string;
+    /**
+     * *PMW* Applies (or clears, when align is undefined) an alignment override to every real
+     * line the grapheme range [start, end) touches.
+     */
+    setSelectionAlignment(start: number, end: number, align?: string): void;
     setSuperscript(start: number, end: number): void;
     /**
      * Turns the character into an 'inferior figure' (i.e. 'subscript')

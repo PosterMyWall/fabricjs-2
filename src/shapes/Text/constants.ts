@@ -26,6 +26,7 @@ export const textLayoutProperties: string[] = [
   'charSpacing',
   'textAlign',
   'styles',
+  'lineStyles',
   'path',
   'pathStartOffset',
   'pathSide',
@@ -53,6 +54,8 @@ export type StylePropertiesType =
   | 'deltaY'
   | 'squigglyline'
   | 'isStrokeForBold'
+  | 'pmwRunStyles'
+  | 'shadow'
   | 'overline'
   | 'underline'
   | 'linethrough'
@@ -64,6 +67,8 @@ export const styleProperties: Readonly<StylePropertiesType[]> = [
   ...textDecorationProperties,
   STROKE,
   'isStrokeForBold',
+  'pmwRunStyles',
+  'shadow',
   'strokeWidth',
   FILL,
   'deltaY',

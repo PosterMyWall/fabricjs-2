@@ -365,7 +365,7 @@ var Cache = class {
 const cache = new Cache();
 //#endregion
 //#region src/constants.ts
-const VERSION = "7.1.0-pmw-65";
+const VERSION = "7.1.0-pmw-66";
 function noop() {}
 const halfPI = Math.PI / 2;
 const quarterPI = Math.PI / 4;
@@ -4080,6 +4080,7 @@ const textLayoutProperties = [
 	"charSpacing",
 	"textAlign",
 	"styles",
+	"lineStyles",
 	"path",
 	"pathStartOffset",
 	"pathSide",
@@ -4098,6 +4099,8 @@ const styleProperties = [
 	...textDecorationProperties,
 	STROKE,
 	"isStrokeForBold",
+	"pmwRunStyles",
+	"shadow",
 	"strokeWidth",
 	FILL,
 	"deltaY",
@@ -8298,13 +8301,34 @@ const projectStrokeOnPoints = (points, options, openPath = false) => {
 	return projections;
 };
 //#endregion
+//#region src/util/internals/deepPlainValues.ts
+const cloneDeepPlainValue = (value) => {
+	if (Array.isArray(value)) return value.map(cloneDeepPlainValue);
+	if (value && typeof value === "object") {
+		const cloned = {};
+		for (const key of Object.keys(value)) cloned[key] = cloneDeepPlainValue(value[key]);
+		return cloned;
+	}
+	return value;
+};
+const deepPlainValuesEqual = (a, b) => {
+	if (a === b) return true;
+	if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((item, index) => deepPlainValuesEqual(item, b[index]));
+	if (a && b && typeof a === "object" && typeof b === "object") {
+		const aKeys = Object.keys(a);
+		const bKeys = Object.keys(b);
+		return aKeys.length === bKeys.length && aKeys.every((key) => deepPlainValuesEqual(a[key], b[key]));
+	}
+	return false;
+};
+//#endregion
 //#region src/util/internals/cloneStyles.ts
 const cloneStyles = (style) => {
 	const newObj = {};
 	Object.keys(style).forEach((key) => {
 		newObj[key] = {};
 		Object.keys(style[key]).forEach((keyInner) => {
-			newObj[key][keyInner] = { ...style[key][keyInner] };
+			newObj[key][keyInner] = cloneDeepPlainValue(style[key][keyInner]);
 		});
 	});
 	return newObj;
@@ -8317,7 +8341,7 @@ const cloneStyles = (style) => {
 * @param {boolean} forTextSpans whether to check overline, underline, and line-through properties
 * @return {boolean} true if the style changed
 */
-const hasStyleChanged = (prevStyle, thisStyle, forTextSpans = false) => prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textDecorationThickness !== thisStyle.textDecorationThickness || prevStyle.textDecorationColor !== thisStyle.textDecorationColor || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough);
+const hasStyleChanged = (prevStyle, thisStyle, forTextSpans = false) => prevStyle.fill !== thisStyle.fill || prevStyle.stroke !== thisStyle.stroke || prevStyle.strokeWidth !== thisStyle.strokeWidth || prevStyle.fontSize !== thisStyle.fontSize || prevStyle.fontFamily !== thisStyle.fontFamily || prevStyle.fontWeight !== thisStyle.fontWeight || prevStyle.fontStyle !== thisStyle.fontStyle || prevStyle.textDecorationThickness !== thisStyle.textDecorationThickness || prevStyle.textDecorationColor !== thisStyle.textDecorationColor || prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor || prevStyle.deltaY !== thisStyle.deltaY || !deepPlainValuesEqual(prevStyle.shadow, thisStyle.shadow) || forTextSpans && (prevStyle.overline !== thisStyle.overline || prevStyle.underline !== thisStyle.underline || prevStyle.linethrough !== thisStyle.linethrough || prevStyle.squigglyline !== thisStyle.squigglyline || prevStyle.isStrokeForBold !== thisStyle.isStrokeForBold || !deepPlainValuesEqual(prevStyle.pmwRunStyles, thisStyle.pmwRunStyles));
 /**
 * Returns the array form of a text object's inline styles property with styles grouped in ranges
 * rather than per character. This format is less verbose, and is better suited for storage
@@ -8369,7 +8393,7 @@ const stylesFromArray = (styles, text) => {
 			charIndex++;
 			if (styles[styleIndex] && styles[styleIndex].start <= charIndex && charIndex < styles[styleIndex].end) {
 				stylesObject[i] = stylesObject[i] || {};
-				stylesObject[i][c] = { ...styles[styleIndex].style };
+				stylesObject[i][c] = cloneDeepPlainValue(styles[styleIndex].style);
 				if (charIndex === styles[styleIndex].end - 1) styleIndex++;
 			}
 		}
@@ -15397,6 +15421,7 @@ var StyledText = class extends FabricObject$1 {
 	* then it also is deleted.
 	*/
 	cleanStyle(property) {
+		if (property === "shadow") return false;
 		if (!this.styles) return false;
 		const obj = this.styles;
 		let stylesCount = 0, letterCount, stylePropertyValue, allStyleObjectPropertiesMatch = true, graphemeCount = 0;
@@ -15759,10 +15784,42 @@ function getMeasuringContext() {
 	}).getContext("2d");
 	return measuringContext;
 }
+/** *PMW* gap between a list marker and its line, as a fraction of the marker's font size. */
+const LIST_MARKER_GAP_FACTOR = .25;
+/**
+* *PMW* Unordered markers draw raised by fontSize / this factor: the bullets-font glyph sits low
+* in its em box, and the legacy renderer optically centered it by shifting its bullets textbox up
+* by the same amount (BULLETS_TOP_DISTANCE_FACTOR = 16 in the legacy webapp text item). Ordered
+* markers sit on the row baseline.
+*/
+const UNORDERED_MARKER_RAISE_FACTOR = 16;
+/**
+* *PMW* Floor for the list gutter, as a multiple of the marker's font size. Every list row at a
+* given font size reserves at least this much, so bullet rows, numbered rows and separate
+* textboxes all share one text column instead of each starting at its own measured width.
+* 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
+* plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
+* than the floor ("10.", "VIII.") still grow the gutter past it.
+* Mirrored in PHP as MigrateToVersion76::LIST_GUTTER_EM_FACTOR — keep both in sync.
+*/
+const LIST_GUTTER_EM_FACTOR = 1.25;
 /**
 * Text class
 * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
 */
+/**
+* *PMW* Resolves a fill value to the color a list marker inherits: a string fill is itself; a
+* Gradient contributes its lowest-offset stop's color (the marker glyph is too small to ramp).
+* Pattern fills resolve to nothing and fall through the caller's chain.
+*/
+function getMarkerColorFromFill(fill) {
+	if (typeof fill === "string" && fill) return fill;
+	const colorStops = fill && typeof fill === "object" ? fill.colorStops : void 0;
+	if (!Array.isArray(colorStops) || colorStops.length === 0) return;
+	let firstStop = colorStops[0];
+	for (const stop of colorStops) if (stop.offset < firstStop.offset) firstStop = stop;
+	return firstStop.color;
+}
 var FabricText = class FabricText extends StyledText {
 	/**
 	* Properties that requires a text layout recalculation when changed
@@ -15791,6 +15848,7 @@ var FabricText = class FabricText extends StyledText {
 		Object.assign(this, FabricText.ownDefaults);
 		this.setOptions(options);
 		if (!this.styles) this.styles = {};
+		if (!this.lineStyles) this.lineStyles = {};
 		this.text = text;
 		this.initialized = true;
 		if (this.path) this.setPathInfo();
@@ -15841,13 +15899,15 @@ var FabricText = class FabricText extends StyledText {
 	enlargeSpaces() {
 		let diffSpace, currentLineWidth, numberOfSpaces, accumulatedSpace, line, charBound, spaces;
 		for (let i = 0, len = this._textLines.length; i < len; i++) {
+			if (!this._getEffectiveTextAlignForLine(i).includes("justify")) continue;
 			if (this.textAlign !== "justify" && (i === len - 1 || this.isEndOfWrapping(i))) continue;
 			accumulatedSpace = 0;
 			line = this._textLines[i];
 			currentLineWidth = this.getLineWidth(i);
-			if (currentLineWidth < this.width && (spaces = this.textLines[i].match(this._reSpacesAndTabs))) {
+			const justifiableWidth = this.width - this._getRealLineIndent(this._getRealLineIndex(i));
+			if (currentLineWidth < justifiableWidth && (spaces = this.textLines[i].match(this._reSpacesAndTabs))) {
 				numberOfSpaces = spaces.length;
-				diffSpace = (this.width - currentLineWidth) / numberOfSpaces;
+				diffSpace = (justifiableWidth - currentLineWidth) / numberOfSpaces;
 				for (let j = 0; j <= line.length; j++) {
 					charBound = this.__charBounds[i][j];
 					if (this._reSpaceAndTab.test(line[j])) {
@@ -15914,7 +15974,42 @@ var FabricText = class FabricText extends StyledText {
 		const fontSize = this.fontSize;
 		dims.width += fontSize * dims.zoomX;
 		dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+		const charShadowExtent = this._getMaxCharShadowExtent();
+		if (charShadowExtent > 0) {
+			dims.width += charShadowExtent * 2 * dims.zoomX;
+			dims.height += charShadowExtent * 2 * dims.zoomY;
+		}
 		return dims;
+	}
+	/**
+	* *PMW* The largest reach (blur plus offset) of any per-character shadow declaration,
+	* in text units. 0 when no character carries a shadow.
+	* @private
+	*/
+	_getMaxCharShadowExtent() {
+		if (!this.styles || !this.styleHas("shadow")) return 0;
+		let maxExtent = 0;
+		for (const line of Object.values(this.styles)) for (const decl of Object.values(line)) {
+			const shadow = decl.shadow;
+			if (shadow) {
+				const extent = (shadow.blur || 0) + Math.max(Math.abs(shadow.offsetX || 0), Math.abs(shadow.offsetY || 0));
+				if (extent > maxExtent) maxExtent = extent;
+			}
+		}
+		return maxExtent;
+	}
+	/**
+	* *PMW* Applies a per-character shadow declaration (a plain
+	* {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
+	* mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
+	* @private
+	*/
+	_setCharShadow(ctx, shadow) {
+		const retinaScaling = this.getCanvasRetinaScaling(), [sx, , , sy] = this.canvas?.viewportTransform || iMatrix, multX = sx * retinaScaling, multY = sy * retinaScaling, scaling = this.getObjectScaling();
+		ctx.shadowColor = shadow.color || "rgb(0,0,0)";
+		ctx.shadowBlur = (shadow.blur || 0) * config.browserShadowBlurConstant * (multX + multY) * (scaling.x + scaling.y) / 4;
+		ctx.shadowOffsetX = (shadow.offsetX || 0) * multX * scaling.x;
+		ctx.shadowOffsetY = (shadow.offsetY || 0) * multY * scaling.y;
 	}
 	/**
 	* @private
@@ -16262,6 +16357,7 @@ var FabricText = class FabricText extends StyledText {
 		let lineHeights = 0;
 		const left = this._getLeftOffset(), top = this._getTopOffset();
 		for (let i = 0, len = this._textLines.length; i < len; i++) {
+			if (method === "fillText") this._renderListMarker(ctx, i, left + this._getLineLeftOffset(i), top + lineHeights + this.getHeightOfLineImpl(i));
 			this._renderTextLine(method, ctx, this._textLines[i], left + this._getLineLeftOffset(i), top + lineHeights + this.getHeightOfLineImpl(i), i);
 			lineHeights += this.getHeightOfLine(i);
 		}
@@ -16441,6 +16537,7 @@ var FabricText = class FabricText extends StyledText {
 		ctx.save();
 		ctx.font = this._getFontDeclaration(fullDecl);
 		if (decl.textBackgroundColor) this._removeShadow(ctx);
+		if (decl.shadow) this._setCharShadow(ctx, decl.shadow);
 		if (decl.deltaY) top += decl.deltaY;
 		if (shouldFill) {
 			const fillOffsets = this._setFillStyles(ctx, fullDecl);
@@ -16457,6 +16554,154 @@ var FabricText = class FabricText extends StyledText {
 	* @param {Number} start selection start
 	* @param {Number} end selection end
 	*/
+	/**
+	* *PMW* Maps a visual (possibly soft-wrapped) line index to the real (unwrapped) line
+	* index that keys `styles`' line entries and `lineStyles`. Plain text has no wrapping,
+	* so this is the identity; Textbox overrides it through its style map.
+	* @private
+	*/
+	_getRealLineIndex(visualLineIndex) {
+		return visualLineIndex;
+	}
+	/**
+	* *PMW* The alignment a visual line renders with: its real line's `lineStyles.textAlign`
+	* override when present, the object-level `textAlign` otherwise.
+	* @private
+	*/
+	_getEffectiveTextAlignForLine(visualLineIndex) {
+		return this.lineStyles[this._getRealLineIndex(visualLineIndex)]?.textAlign || this.textAlign;
+	}
+	/**
+	* *PMW* Whether a visual line is the first visual row of its real (unwrapped) line — where a
+	* list marker draws. Plain text has no wrapping, so always true; Textbox overrides.
+	* @private
+	*/
+	_isStartOfRealLine(_visualLineIndex) {
+		return true;
+	}
+	/**
+	* *PMW* A real line's left indent in text units: the explicit `leftIndent` when set, else the
+	* measured width of its list marker plus a gap, else 0. Consumed by the line offset, the
+	* Textbox wrap width, and the marker renderer.
+	* @private
+	*/
+	_getRealLineIndent(realLineIndex) {
+		const record = this.lineStyles[realLineIndex];
+		if (!record) return 0;
+		if (typeof record.leftIndent === "number") return record.leftIndent;
+		if (record.listMarker) return this._getAutoListGutterWidth();
+		return 0;
+	}
+	/**
+	* *PMW* One shared gutter for every auto-indented list row of the textbox: the
+	* {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
+	* an explicit leftIndent (the fork's raw-key capability) do not participate — their own indent
+	* wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
+	* bullet and numbered rows and across separate textboxes of the same font size; the max keeps
+	* long ordinals ("10.") from colliding with their text.
+	* @private
+	*/
+	_getAutoListGutterWidth() {
+		let gutter = 0;
+		for (const key of Object.keys(this.lineStyles)) {
+			const realLineIndex = parseInt(key, 10);
+			const record = this.lineStyles[realLineIndex];
+			if (!record?.listMarker || typeof record.leftIndent === "number") continue;
+			const { fontSize } = this._getListMarkerStyle(realLineIndex);
+			gutter = Math.max(gutter, LIST_GUTTER_EM_FACTOR * fontSize, this._measureListMarkerWidth(realLineIndex) + LIST_MARKER_GAP_FACTOR * fontSize);
+		}
+		return gutter;
+	}
+	/**
+	* *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
+	* falling back to the line's first character's effective style.
+	* @private
+	*/
+	_getListMarkerStyle(realLineIndex) {
+		const record = this.lineStyles[realLineIndex] || {};
+		const firstCharStyle = this.styles[realLineIndex]?.[0] || {};
+		const fill = typeof record.listMarkerFill === "string" && record.listMarkerFill || getMarkerColorFromFill(firstCharStyle.fill) || getMarkerColorFromFill(this.fill) || "#000000";
+		return {
+			fontSize: firstCharStyle.fontSize ?? this.fontSize,
+			fontFamily: typeof record.listMarkerFontFamily === "string" && record.listMarkerFontFamily || firstCharStyle.fontFamily || this.fontFamily,
+			fill
+		};
+	}
+	/**
+	* *PMW* Measured width of a real line's list marker in text units.
+	* @private
+	*/
+	_measureListMarkerWidth(realLineIndex) {
+		const marker = this.lineStyles[realLineIndex]?.listMarker;
+		if (!marker) return 0;
+		const { fontSize, fontFamily } = this._getListMarkerStyle(realLineIndex);
+		const ctx = getMeasuringContext();
+		ctx.font = this._getFontDeclaration({
+			fontSize,
+			fontFamily
+		}, true);
+		return ctx.measureText(String(marker)).width * fontSize / this.CACHE_FONT_SIZE;
+	}
+	/**
+	* *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
+	* fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
+	* @private
+	*/
+	_renderListMarker(ctx, visualLineIndex, lineDrawLeft, lineDrawTop) {
+		if (!this._isStartOfRealLine(visualLineIndex)) return;
+		const realLineIndex = this._getRealLineIndex(visualLineIndex);
+		const marker = this.lineStyles[realLineIndex]?.listMarker;
+		if (!marker) return;
+		const { fontSize, fontFamily, fill } = this._getListMarkerStyle(realLineIndex);
+		const gap = LIST_MARKER_GAP_FACTOR * fontSize;
+		const markerLeft = this.direction === "rtl" ? lineDrawLeft + gap : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
+		ctx.save();
+		ctx.direction = "ltr";
+		ctx.textAlign = LEFT;
+		ctx.font = this._getFontDeclaration({
+			fontSize,
+			fontFamily
+		});
+		ctx.fillStyle = fill;
+		const unorderedMarkerRaise = this.lineStyles[realLineIndex]?.listMarkerFontFamily ? fontSize / UNORDERED_MARKER_RAISE_FACTOR : 0;
+		ctx.fillText(String(marker), markerLeft, lineDrawTop - this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction - unorderedMarkerRaise);
+		ctx.restore();
+	}
+	/**
+	* *PMW* Sets or clears (align undefined) one real line's alignment override.
+	*/
+	setLineAlignment(realLineIndex, align) {
+		const { [realLineIndex]: existing, ...rest } = this.lineStyles;
+		const nextRecord = align ? {
+			...rest,
+			[realLineIndex]: {
+				...existing,
+				textAlign: align
+			}
+		} : existing && Object.keys(existing).length > 1 ? (() => {
+			const { textAlign: _cleared, ...keptKeys } = existing;
+			return {
+				...rest,
+				[realLineIndex]: keptKeys
+			};
+		})() : rest;
+		this.set("lineStyles", nextRecord);
+	}
+	/**
+	* *PMW* The alignment the given real line renders with.
+	*/
+	getLineAlignment(realLineIndex) {
+		return this.lineStyles[realLineIndex]?.textAlign || this.textAlign;
+	}
+	/**
+	* *PMW* Applies (or clears, when align is undefined) an alignment override to every real
+	* line the grapheme range [start, end) touches.
+	*/
+	setSelectionAlignment(start, end, align) {
+		const firstLine = this.get2DCursorLocation(start, true).lineIndex;
+		const lastLine = this.get2DCursorLocation(Math.max(start, end - 1), true).lineIndex;
+		for (let line = firstLine; line <= lastLine; line++) this.setLineAlignment(line, align);
+	}
 	setSuperscript(start, end) {
 		this._setScript(start, end, this.superscript);
 	}
@@ -16488,9 +16733,9 @@ var FabricText = class FabricText extends StyledText {
 	* @return {Number} Line left offset
 	*/
 	_getLineLeftOffset(lineIndex) {
-		const lineWidth = this.getLineWidth(lineIndex), lineDiff = this.width - lineWidth, textAlign = this.textAlign, direction = this.direction, isEndOfWrapping = this.isEndOfWrapping(lineIndex);
+		const lineWidth = this.getLineWidth(lineIndex), textAlign = this._getEffectiveTextAlignForLine(lineIndex), direction = this.direction, isEndOfWrapping = this.isEndOfWrapping(lineIndex), indentMagnitude = this._getRealLineIndent(this._getRealLineIndex(lineIndex)), lineDiff = this.width - lineWidth - indentMagnitude, lineIndent = (direction === "rtl" ? -1 : 1) * indentMagnitude + 0;
 		let leftOffset = 0;
-		if (textAlign === "justify" || textAlign === "justify-center" && !isEndOfWrapping || textAlign === "justify-right" && !isEndOfWrapping || textAlign === "justify-left" && !isEndOfWrapping) return 0;
+		if (textAlign === "justify" || textAlign === "justify-center" && !isEndOfWrapping || textAlign === "justify-right" && !isEndOfWrapping || textAlign === "justify-left" && !isEndOfWrapping) return lineIndent;
 		if (textAlign === "center") leftOffset = lineDiff / 2;
 		if (textAlign === "right") leftOffset = lineDiff;
 		if (textAlign === "justify-center") leftOffset = lineDiff / 2;
@@ -16500,7 +16745,7 @@ var FabricText = class FabricText extends StyledText {
 			else if (textAlign === "left" || textAlign === "justify-left") leftOffset = -lineDiff;
 			else if (textAlign === "center" || textAlign === "justify-center") leftOffset = -lineDiff / 2;
 		}
-		return leftOffset;
+		return leftOffset + lineIndent;
 	}
 	/**
 	* @private
@@ -16560,10 +16805,12 @@ var FabricText = class FabricText extends StyledText {
 			let lastFill = this.getValueOfPropertyAt(i, 0, FILL);
 			let lastDecorationColor = this.getValueOfPropertyAt(i, 0, "textDecorationColor") || lastFill;
 			let lastTickness = this.getValueOfPropertyAt(i, 0, TEXT_DECORATION_THICKNESS);
+			let lastShadow = this.getValueOfPropertyAt(i, 0, "shadow");
 			let currentDecoration = lastDecoration;
 			let currentFill = lastFill;
 			let currentDecorationColor = lastDecorationColor;
 			let currentTickness = lastTickness;
+			let currentShadow = lastShadow;
 			const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
 			let size = this.getHeightOfChar(i, 0);
 			let dy = this.getValueOfPropertyAt(i, 0, "deltaY");
@@ -16573,23 +16820,30 @@ var FabricText = class FabricText extends StyledText {
 				currentFill = this.getValueOfPropertyAt(i, j, FILL);
 				currentDecorationColor = this.getValueOfPropertyAt(i, j, "textDecorationColor") || currentFill;
 				currentTickness = this.getValueOfPropertyAt(i, j, TEXT_DECORATION_THICKNESS);
+				currentShadow = this.getValueOfPropertyAt(i, j, "shadow");
 				const currentSize = this.getHeightOfChar(i, j);
 				const currentDy = this.getValueOfPropertyAt(i, j, "deltaY");
 				if (path && currentDecoration && currentFill) {
 					const finalTickness = this.fontSize * currentTickness / 1e3;
 					ctx.save();
+					if (currentShadow) this._setCharShadow(ctx, currentShadow);
 					ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
 					ctx.translate(charBox.renderLeft, charBox.renderTop);
 					ctx.rotate(charBox.angle);
 					this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
 					ctx.restore();
-				} else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentDecorationColor !== lastDecorationColor || currentSize !== size || currentTickness !== lastTickness || currentDy !== dy) && boxWidth > 0) {
+				} else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentDecorationColor !== lastDecorationColor || currentSize !== size || currentTickness !== lastTickness || !deepPlainValuesEqual(currentShadow, lastShadow) || currentDy !== dy) && boxWidth > 0) {
 					const finalTickness = this.fontSize * lastTickness / 1e3;
 					let drawStart = leftOffset + lineLeftOffset + boxStart;
 					if (this.direction === "rtl") drawStart = this.width - drawStart - boxWidth;
 					if (lastDecoration && lastFill && lastTickness) {
+						if (lastShadow) {
+							ctx.save();
+							this._setCharShadow(ctx, lastShadow);
+						}
 						ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
 						this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
+						if (lastShadow) ctx.restore();
 					}
 					boxStart = charBox.left;
 					boxWidth = charBox.width;
@@ -16597,15 +16851,21 @@ var FabricText = class FabricText extends StyledText {
 					lastDecorationColor = currentDecorationColor;
 					lastTickness = currentTickness;
 					lastFill = currentFill;
+					lastShadow = currentShadow;
 					size = currentSize;
 					dy = currentDy;
 				} else boxWidth += charBox.kernedWidth;
 			}
 			let drawStart = leftOffset + lineLeftOffset + boxStart;
 			if (this.direction === "rtl") drawStart = this.width - drawStart - boxWidth;
+			if (currentShadow) {
+				ctx.save();
+				this._setCharShadow(ctx, currentShadow);
+			}
 			ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
 			const finalTickness = this.fontSize * currentTickness / 1e3;
 			currentDecoration && currentDecorationColor && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
+			if (currentShadow) ctx.restore();
 			topOffset += heightOfLine;
 		}
 	}
@@ -17619,7 +17879,10 @@ var ITextBehavior = class extends FabricText {
 					this.styles[lineStart][charStart + i - charEnd] = styleObj;
 				}
 			}
-			for (let i = lineStart + 1; i <= lineEnd; i++) delete this.styles[i];
+			for (let i = lineStart + 1; i <= lineEnd; i++) {
+				delete this.styles[i];
+				delete this.lineStyles[i];
+			}
 			this.shiftLineStyles(lineEnd, lineStart - lineEnd);
 		} else if (this.styles[lineStart]) {
 			const styleObj = this.styles[lineStart];
@@ -17648,6 +17911,12 @@ var ITextBehavior = class extends FabricText {
 				if (!clonedStyles[numericLine - offset]) delete this.styles[numericLine];
 			}
 		}
+		const shiftedLineStyles = {};
+		for (const line in this.lineStyles) {
+			const numericLine = parseInt(line, 10);
+			shiftedLineStyles[numericLine > lineIndex ? numericLine + offset : numericLine] = this.lineStyles[numericLine];
+		}
+		this.lineStyles = shiftedLineStyles;
 	}
 	/**
 	* Handle insertion of more consecutive style lines for when one or more
@@ -17666,6 +17935,12 @@ var ITextBehavior = class extends FabricText {
 		let someStyleIsCarryingOver = false;
 		qty || (qty = 1);
 		this.shiftLineStyles(lineIndex, qty);
+		const splitLineStyles = this.lineStyles[lineIndex];
+		if (splitLineStyles) {
+			const continuedLineStyles = { ...this.lineStyles };
+			for (let newLine = 1; newLine <= qty; newLine++) continuedLineStyles[lineIndex + newLine] = { ...splitLineStyles };
+			this.lineStyles = continuedLineStyles;
+		}
 		const currentCharStyle = this.styles[lineIndex] ? this.styles[lineIndex][charIndex === 0 ? charIndex : charIndex - 1] : void 0;
 		for (const index in this.styles[lineIndex]) {
 			const numIndex = parseInt(index, 10);
@@ -19114,7 +19389,7 @@ var Textbox = class Textbox extends IText {
 		this.isWrapping = true;
 		const data = this.getGraphemeDataForRender(lines);
 		const wrapped = [];
-		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data));
+		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data, this._getRealLineIndent(i)));
 		this.isWrapping = false;
 		return wrapped;
 	}
@@ -19268,6 +19543,30 @@ var Textbox = class Textbox extends IText {
 			}
 		}
 		for (const prop in this.styles) if (!linesToKeep.has(prop)) delete this.styles[prop];
+		for (const prop in this.lineStyles) if (!linesToKeep.has(prop)) delete this.lineStyles[prop];
+	}
+	/**
+	* *PMW* A visual line starts its real line when its style-map offset is 0.
+	* @private
+	*/
+	_isStartOfRealLine(visualLineIndex) {
+		if (this._styleMap && !this.isWrapping) {
+			const map = this._styleMap[visualLineIndex];
+			return map ? map.offset === 0 : true;
+		}
+		return true;
+	}
+	/**
+	* *PMW* Maps a visual (soft-wrapped) line index to the real (unwrapped) line index through
+	* the style map, mirroring the styleHas/_getStyleDeclaration wrapping guard.
+	* @private
+	*/
+	_getRealLineIndex(visualLineIndex) {
+		if (this._styleMap && !this.isWrapping) {
+			const map = this._styleMap[visualLineIndex];
+			return map ? map.line : visualLineIndex;
+		}
+		return visualLineIndex;
 	}
 	/**
 	* Returns object representation of an instance

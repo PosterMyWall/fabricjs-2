@@ -8,10 +8,23 @@ import type { FabricText } from './Text';
 import { pick } from '../../util';
 import { pickBy } from '../../util/misc/pick';
 
-export type CompleteTextStyleDeclaration = Pick<
-  FabricText,
-  StylePropertiesType
->;
+/**
+ * *PMW* A per-character shadow is a plain serializable declaration, never a Shadow instance
+ * (see Text._setCharShadow).
+ */
+export type CharShadowDeclaration = {
+  color?: string;
+  blur?: number;
+  offsetX?: number;
+  offsetY?: number;
+};
+
+export type CompleteTextStyleDeclaration = Omit<
+  Pick<FabricText, StylePropertiesType>,
+  'shadow'
+> & {
+  shadow: CharShadowDeclaration | null;
+};
 
 export type TextStyleDeclaration = Partial<CompleteTextStyleDeclaration>;
 
@@ -96,6 +109,11 @@ export abstract class StyledText<
    * then it also is deleted.
    */
   cleanStyle(property: keyof TextStyleDeclaration) {
+    // *PMW* shadow declarations are objects; cleanStyle's identity comparisons would
+    // wrongly promote or strip them. Clearing goes through setSelectionStyles({shadow: undefined}).
+    if (property === 'shadow') {
+      return false;
+    }
     if (!this.styles) {
       return false;
     }

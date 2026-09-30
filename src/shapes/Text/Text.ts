@@ -1,6 +1,15 @@
 import { cache } from '../../cache';
 import type { NORMAL } from '../../constants';
-import { DEFAULT_SVG_FONT_SIZE, FILL, LTR, RTL, STROKE } from '../../constants';
+import {
+  DEFAULT_SVG_FONT_SIZE,
+  FILL,
+  iMatrix,
+  LTR,
+  RTL,
+  STROKE,
+} from '../../constants';
+import { config } from '../../config';
+import { deepPlainValuesEqual } from '../../util/internals/deepPlainValues';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type {
   CompleteTextStyleDeclaration,
@@ -95,6 +104,47 @@ export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
  * needs the the info of previous graphemes already filled
  * Override to customize measuring
  */
+/**
+ * *PMW* One real line's style record. Fabric consumes:
+ * - `textAlign`: overrides the object alignment for the line;
+ * - `leftIndent`: explicit extra left offset in text units (also reserved from the wrap width);
+ * - `listMarker`: a marker string (bullet glyph / ordinal) drawn in the gutter left of the
+ *   line's first visual row — when set without `leftIndent`, the indent is auto-measured from
+ *   the marker plus a gap;
+ * - `listMarkerFontFamily` / `listMarkerFill`: marker font/fill, defaulting to the line's first
+ *   character's effective style.
+ * Every other key is an opaque passenger preserved by the editing logic.
+ */
+export type LineStyleDeclaration = {
+  textAlign?: string;
+  leftIndent?: number;
+  listMarker?: string;
+  listMarkerFontFamily?: string;
+  listMarkerFill?: string;
+} & Record<string, unknown>;
+
+/** *PMW* gap between a list marker and its line, as a fraction of the marker's font size. */
+const LIST_MARKER_GAP_FACTOR = 0.25;
+
+/**
+ * *PMW* Unordered markers draw raised by fontSize / this factor: the bullets-font glyph sits low
+ * in its em box, and the legacy renderer optically centered it by shifting its bullets textbox up
+ * by the same amount (BULLETS_TOP_DISTANCE_FACTOR = 16 in the legacy webapp text item). Ordered
+ * markers sit on the row baseline.
+ */
+const UNORDERED_MARKER_RAISE_FACTOR = 16;
+
+/**
+ * *PMW* Floor for the list gutter, as a multiple of the marker's font size. Every list row at a
+ * given font size reserves at least this much, so bullet rows, numbered rows and separate
+ * textboxes all share one text column instead of each starting at its own measured width.
+ * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
+ * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
+ * than the floor ("10.", "VIII.") still grow the gutter past it.
+ * Mirrored in PHP as MigrateToVersion76::LIST_GUTTER_EM_FACTOR — keep both in sync.
+ */
+const LIST_GUTTER_EM_FACTOR = 1.25;
+
 export type GraphemeBBox = {
   width: number;
   height: number;
@@ -125,6 +175,7 @@ interface UniqueTextProps {
   ignoreDelegatedSet: boolean;
   squigglylineColor: string;
   isStrokeForBold: boolean;
+  pmwRunStyles?: Record<string, unknown>;
   direction: CanvasDirection;
   path?: Path;
   textDecorationThickness: number;
@@ -144,6 +195,31 @@ export interface TextProps extends FabricObjectProps, UniqueTextProps {
  * Text class
  * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
+/**
+ * *PMW* Resolves a fill value to the color a list marker inherits: a string fill is itself; a
+ * Gradient contributes its lowest-offset stop's color (the marker glyph is too small to ramp).
+ * Pattern fills resolve to nothing and fall through the caller's chain.
+ */
+function getMarkerColorFromFill(fill: unknown): string | undefined {
+  if (typeof fill === 'string' && fill) {
+    return fill;
+  }
+  const colorStops =
+    fill && typeof fill === 'object'
+      ? (fill as Gradient<'linear'>).colorStops
+      : undefined;
+  if (!Array.isArray(colorStops) || colorStops.length === 0) {
+    return undefined;
+  }
+  let firstStop = colorStops[0];
+  for (const stop of colorStops) {
+    if (stop.offset < firstStop.offset) {
+      firstStop = stop;
+    }
+  }
+  return firstStop.color;
+}
+
 export class FabricText<
   Props extends TOptions<TextProps> = Partial<TextProps>,
   SProps extends SerializedTextProps = SerializedTextProps,
@@ -234,6 +310,11 @@ export class FabricText<
   /*PMW*/
   declare squigglylineColor: string;
   declare isStrokeForBold: boolean;
+  /*PMW* Opaque per-character passenger carried in `styles` declarations only.
+   * Fabric never renders or assigns it at object level (no default on purpose);
+   * it exists so the style pipeline (get/setSelectionStyles, editing shifts,
+   * serialization) preserves caller-owned data attached to characters. */
+  declare pmwRunStyles?: Record<string, unknown>;
 
   //*PMW*
   /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
@@ -297,6 +378,15 @@ export class FabricText<
   declare textBackgroundColor: string;
 
   declare styles: TextStyle;
+
+  /**
+   * *PMW* Per-line style declarations keyed by REAL (unwrapped) line index. Fabric consumes
+   * `textAlign` (overrides the object-level alignment for that line) and `leftIndent` (extra
+   * left offset in text units, e.g. for list rows); any other key is an opaque passenger that
+   * the editing logic shifts with its line (see ITextBehavior). Never mutate a record in
+   * place — writers always assign fresh objects so caches and snapshots stay coherent.
+   */
+  declare lineStyles: Record<number | string, LineStyleDeclaration>;
 
   /**
    * Path that the text should follow.
@@ -470,6 +560,9 @@ export class FabricText<
     if (!this.styles) {
       this.styles = {};
     }
+    if (!this.lineStyles) {
+      this.lineStyles = {};
+    }
     this.text = text;
     this.initialized = true;
     if (this.path) {
@@ -538,6 +631,10 @@ export class FabricText<
       charBound,
       spaces;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
+      // *PMW* a line whose alignment override is not a justify variant keeps natural spaces
+      if (!this._getEffectiveTextAlignForLine(i).includes(JUSTIFY)) {
+        continue;
+      }
       if (
         this.textAlign !== JUSTIFY &&
         (i === len - 1 || this.isEndOfWrapping(i))
@@ -547,12 +644,15 @@ export class FabricText<
       accumulatedSpace = 0;
       line = this._textLines[i];
       currentLineWidth = this.getLineWidth(i);
+      // *PMW* a list/indented line justifies into the space left of the marker gutter
+      const justifiableWidth =
+        this.width - this._getRealLineIndent(this._getRealLineIndex(i));
       if (
-        currentLineWidth < this.width &&
+        currentLineWidth < justifiableWidth &&
         (spaces = this.textLines[i].match(this._reSpacesAndTabs))
       ) {
         numberOfSpaces = spaces.length;
-        diffSpace = (this.width - currentLineWidth) / numberOfSpaces;
+        diffSpace = (justifiableWidth - currentLineWidth) / numberOfSpaces;
         for (let j = 0; j <= line.length; j++) {
           charBound = this.__charBounds[i][j];
           if (this._reSpaceAndTab.test(line[j])) {
@@ -641,7 +741,75 @@ export class FabricText<
     const fontSize = this.fontSize;
     dims.width += fontSize * dims.zoomX;
     dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+    // *PMW* per-character shadows render inside the cache canvas (unlike the object
+    // shadow, which is applied when the cache is composited), so the cache must be
+    // large enough to hold the widest shadow's blur and offset on every side.
+    const charShadowExtent = this._getMaxCharShadowExtent();
+    if (charShadowExtent > 0) {
+      dims.width += charShadowExtent * 2 * dims.zoomX;
+      dims.height += charShadowExtent * 2 * dims.zoomY;
+    }
     return dims;
+  }
+
+  /**
+   * *PMW* The largest reach (blur plus offset) of any per-character shadow declaration,
+   * in text units. 0 when no character carries a shadow.
+   * @private
+   */
+  _getMaxCharShadowExtent(): number {
+    if (!this.styles || !this.styleHas('shadow')) {
+      return 0;
+    }
+    let maxExtent = 0;
+    for (const line of Object.values(this.styles)) {
+      for (const decl of Object.values(line)) {
+        const shadow = decl.shadow;
+        if (shadow) {
+          const extent =
+            (shadow.blur || 0) +
+            Math.max(
+              Math.abs(shadow.offsetX || 0),
+              Math.abs(shadow.offsetY || 0),
+            );
+          if (extent > maxExtent) {
+            maxExtent = extent;
+          }
+        }
+      }
+    }
+    return maxExtent;
+  }
+
+  /**
+   * *PMW* Applies a per-character shadow declaration (a plain
+   * {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
+   * mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
+   * @private
+   */
+  _setCharShadow(
+    ctx: CanvasRenderingContext2D,
+    shadow: {
+      color?: string;
+      blur?: number;
+      offsetX?: number;
+      offsetY?: number;
+    },
+  ) {
+    const retinaScaling = this.getCanvasRetinaScaling(),
+      [sx, , , sy] = this.canvas?.viewportTransform || iMatrix,
+      multX = sx * retinaScaling,
+      multY = sy * retinaScaling,
+      scaling = this.getObjectScaling();
+    ctx.shadowColor = shadow.color || 'rgb(0,0,0)';
+    ctx.shadowBlur =
+      ((shadow.blur || 0) *
+        config.browserShadowBlurConstant *
+        (multX + multY) *
+        (scaling.x + scaling.y)) /
+      4;
+    ctx.shadowOffsetX = (shadow.offsetX || 0) * multX * scaling.x;
+    ctx.shadowOffsetY = (shadow.offsetY || 0) * multY * scaling.y;
   }
 
   /**
@@ -1133,6 +1301,14 @@ export class FabricText<
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
     for (let i = 0, len = this._textLines.length; i < len; i++) {
+      if (method === 'fillText') {
+        this._renderListMarker(
+          ctx,
+          i,
+          left + this._getLineLeftOffset(i),
+          top + lineHeights + this.getHeightOfLineImpl(i),
+        );
+      }
       this._renderTextLine(
         method,
         ctx,
@@ -1426,6 +1602,11 @@ export class FabricText<
     if (decl.textBackgroundColor) {
       this._removeShadow(ctx);
     }
+    // *PMW* a per-character shadow replaces the context shadow for this glyph run;
+    // the surrounding save/restore scopes it to the run
+    if (decl.shadow) {
+      this._setCharShadow(ctx, decl.shadow);
+    }
     if (decl.deltaY) {
       top += decl.deltaY;
     }
@@ -1456,6 +1637,222 @@ export class FabricText<
    * @param {Number} start selection start
    * @param {Number} end selection end
    */
+  /**
+   * *PMW* Maps a visual (possibly soft-wrapped) line index to the real (unwrapped) line
+   * index that keys `styles`' line entries and `lineStyles`. Plain text has no wrapping,
+   * so this is the identity; Textbox overrides it through its style map.
+   * @private
+   */
+  _getRealLineIndex(visualLineIndex: number): number {
+    return visualLineIndex;
+  }
+
+  /**
+   * *PMW* The alignment a visual line renders with: its real line's `lineStyles.textAlign`
+   * override when present, the object-level `textAlign` otherwise.
+   * @private
+   */
+  _getEffectiveTextAlignForLine(visualLineIndex: number): string {
+    return (
+      this.lineStyles[this._getRealLineIndex(visualLineIndex)]?.textAlign ||
+      this.textAlign
+    );
+  }
+
+  /**
+   * *PMW* Whether a visual line is the first visual row of its real (unwrapped) line — where a
+   * list marker draws. Plain text has no wrapping, so always true; Textbox overrides.
+   * @private
+   */
+  _isStartOfRealLine(_visualLineIndex: number): boolean {
+    return true;
+  }
+
+  /**
+   * *PMW* A real line's left indent in text units: the explicit `leftIndent` when set, else the
+   * measured width of its list marker plus a gap, else 0. Consumed by the line offset, the
+   * Textbox wrap width, and the marker renderer.
+   * @private
+   */
+  _getRealLineIndent(realLineIndex: number): number {
+    const record = this.lineStyles[realLineIndex];
+    if (!record) {
+      return 0;
+    }
+    if (typeof record.leftIndent === 'number') {
+      return record.leftIndent;
+    }
+    if (record.listMarker) {
+      return this._getAutoListGutterWidth();
+    }
+    return 0;
+  }
+
+  /**
+   * *PMW* One shared gutter for every auto-indented list row of the textbox: the
+   * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
+   * an explicit leftIndent (the fork's raw-key capability) do not participate — their own indent
+   * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
+   * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
+   * long ordinals ("10.") from colliding with their text.
+   * @private
+   */
+  _getAutoListGutterWidth(): number {
+    let gutter = 0;
+    for (const key of Object.keys(this.lineStyles)) {
+      const realLineIndex = parseInt(key, 10);
+      const record = this.lineStyles[realLineIndex];
+      if (!record?.listMarker || typeof record.leftIndent === 'number') {
+        continue;
+      }
+      const { fontSize } = this._getListMarkerStyle(realLineIndex);
+      gutter = Math.max(
+        gutter,
+        LIST_GUTTER_EM_FACTOR * fontSize,
+        this._measureListMarkerWidth(realLineIndex) +
+          LIST_MARKER_GAP_FACTOR * fontSize,
+      );
+    }
+    return gutter;
+  }
+
+  /**
+   * *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
+   * falling back to the line's first character's effective style.
+   * @private
+   */
+  _getListMarkerStyle(realLineIndex: number): {
+    fontSize: number;
+    fontFamily: string;
+    fill: string;
+  } {
+    const record = this.lineStyles[realLineIndex] || {};
+    const firstCharStyle = this.styles[realLineIndex]?.[0] || {};
+    const fill =
+      (typeof record.listMarkerFill === 'string' && record.listMarkerFill) ||
+      getMarkerColorFromFill(firstCharStyle.fill) ||
+      getMarkerColorFromFill(this.fill) ||
+      '#000000';
+    return {
+      fontSize: firstCharStyle.fontSize ?? this.fontSize,
+      fontFamily:
+        (typeof record.listMarkerFontFamily === 'string' &&
+          record.listMarkerFontFamily) ||
+        firstCharStyle.fontFamily ||
+        this.fontFamily,
+      fill,
+    };
+  }
+
+  /**
+   * *PMW* Measured width of a real line's list marker in text units.
+   * @private
+   */
+  _measureListMarkerWidth(realLineIndex: number): number {
+    const marker = this.lineStyles[realLineIndex]?.listMarker;
+    if (!marker) {
+      return 0;
+    }
+    const { fontSize, fontFamily } = this._getListMarkerStyle(realLineIndex);
+    const ctx = getMeasuringContext()!;
+    // measure at CACHE_FONT_SIZE like _measureChar does, then scale to the marker's font size
+    ctx.font = this._getFontDeclaration({ fontSize, fontFamily }, true);
+    return (
+      (ctx.measureText(String(marker)).width * fontSize) / this.CACHE_FONT_SIZE
+    );
+  }
+
+  /**
+   * *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
+   * fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
+   * @private
+   */
+  _renderListMarker(
+    ctx: CanvasRenderingContext2D,
+    visualLineIndex: number,
+    lineDrawLeft: number,
+    lineDrawTop: number,
+  ) {
+    if (!this._isStartOfRealLine(visualLineIndex)) {
+      return;
+    }
+    const realLineIndex = this._getRealLineIndex(visualLineIndex);
+    const marker = this.lineStyles[realLineIndex]?.listMarker;
+    if (!marker) {
+      return;
+    }
+    const { fontSize, fontFamily, fill } =
+      this._getListMarkerStyle(realLineIndex);
+    // LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+    // right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+    // grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+    // anchor is its right edge there.
+    const gap = LIST_MARKER_GAP_FACTOR * fontSize;
+    const markerLeft =
+      this.direction === RTL
+        ? lineDrawLeft + gap
+        : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
+    ctx.save();
+    // markers are direction-neutral ordinals/glyphs; pin the ctx so an inherited RTL canvas
+    // state cannot re-anchor or reorder them
+    ctx.direction = LTR;
+    ctx.textAlign = LEFT;
+    ctx.font = this._getFontDeclaration({ fontSize, fontFamily });
+    ctx.fillStyle = fill;
+    const unorderedMarkerRaise = this.lineStyles[realLineIndex]
+      ?.listMarkerFontFamily
+      ? fontSize / UNORDERED_MARKER_RAISE_FACTOR
+      : 0;
+    ctx.fillText(
+      String(marker),
+      markerLeft,
+      lineDrawTop -
+        this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction -
+        unorderedMarkerRaise,
+    );
+    ctx.restore();
+  }
+
+  /**
+   * *PMW* Sets or clears (align undefined) one real line's alignment override.
+   */
+  setLineAlignment(realLineIndex: number, align?: string) {
+    const { [realLineIndex]: existing, ...rest } = this.lineStyles;
+    const nextRecord = align
+      ? { ...rest, [realLineIndex]: { ...existing, textAlign: align } }
+      : existing && Object.keys(existing).length > 1
+        ? (() => {
+            const { textAlign: _cleared, ...keptKeys } = existing;
+            return { ...rest, [realLineIndex]: keptKeys };
+          })()
+        : rest;
+    this.set('lineStyles', nextRecord);
+  }
+
+  /**
+   * *PMW* The alignment the given real line renders with.
+   */
+  getLineAlignment(realLineIndex: number): string {
+    return (
+      (this.lineStyles[realLineIndex]?.textAlign as string) || this.textAlign
+    );
+  }
+
+  /**
+   * *PMW* Applies (or clears, when align is undefined) an alignment override to every real
+   * line the grapheme range [start, end) touches.
+   */
+  setSelectionAlignment(start: number, end: number, align?: string) {
+    const firstLine = this.get2DCursorLocation(start, true).lineIndex;
+    const lastLine = this.get2DCursorLocation(
+      Math.max(start, end - 1),
+      true,
+    ).lineIndex;
+    for (let line = firstLine; line <= lastLine; line++) {
+      this.setLineAlignment(line, align);
+    }
+  }
+
   setSuperscript(start: number, end: number) {
     this._setScript(start, end, this.superscript);
   }
@@ -1505,10 +1902,18 @@ export class FabricText<
    */
   _getLineLeftOffset(lineIndex: number): number {
     const lineWidth = this.getLineWidth(lineIndex),
-      lineDiff = this.width - lineWidth,
-      textAlign = this.textAlign,
+      // *PMW* a line's own alignment override wins over the object-level textAlign
+      textAlign = this._getEffectiveTextAlignForLine(lineIndex),
       direction = this.direction,
-      isEndOfWrapping = this.isEndOfWrapping(lineIndex);
+      isEndOfWrapping = this.isEndOfWrapping(lineIndex),
+      indentMagnitude = this._getRealLineIndent(
+        this._getRealLineIndex(lineIndex),
+      ),
+      // *PMW* alignment distributes only the space left of the marker gutter, so the
+      // marker+text unit centers and right-aligns inside the box instead of overflowing
+      lineDiff = this.width - lineWidth - indentMagnitude,
+      // signed so RTL lines indent inward from their right edge; 0 stays +0
+      lineIndent = (direction === RTL ? -1 : 1) * indentMagnitude + 0;
     let leftOffset = 0;
     if (
       textAlign === JUSTIFY ||
@@ -1516,7 +1921,7 @@ export class FabricText<
       (textAlign === JUSTIFY_RIGHT && !isEndOfWrapping) ||
       (textAlign === JUSTIFY_LEFT && !isEndOfWrapping)
     ) {
-      return 0;
+      return lineIndent;
     }
     if (textAlign === CENTER) {
       leftOffset = lineDiff / 2;
@@ -1539,7 +1944,7 @@ export class FabricText<
         leftOffset = -lineDiff / 2;
       }
     }
-    return leftOffset;
+    return leftOffset + lineIndent;
   }
 
   /**
@@ -1631,10 +2036,13 @@ export class FabricText<
         0,
         TEXT_DECORATION_THICKNESS,
       );
+      // *PMW* a decoration inherits its characters' per-character shadow
+      let lastShadow = this.getValueOfPropertyAt(i, 0, 'shadow');
       let currentDecoration = lastDecoration;
       let currentFill: typeof lastFill = lastFill;
       let currentDecorationColor = lastDecorationColor;
       let currentTickness = lastTickness;
+      let currentShadow = lastShadow;
       const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
       let size = this.getHeightOfChar(i, 0);
       let dy = this.getValueOfPropertyAt(i, 0, 'deltaY');
@@ -1649,11 +2057,15 @@ export class FabricText<
           j,
           TEXT_DECORATION_THICKNESS,
         );
+        currentShadow = this.getValueOfPropertyAt(i, j, 'shadow');
         const currentSize = this.getHeightOfChar(i, j);
         const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
         if (path && currentDecoration && currentFill) {
           const finalTickness = (this.fontSize * currentTickness) / 1000;
           ctx.save();
+          if (currentShadow) {
+            this._setCharShadow(ctx, currentShadow);
+          }
           // bug? verify lastFill is a valid fill here.
           ctx.fillStyle = this.getFillForTextDecoration(
             ctx,
@@ -1677,6 +2089,7 @@ export class FabricText<
             currentDecorationColor !== lastDecorationColor ||
             currentSize !== size ||
             currentTickness !== lastTickness ||
+            !deepPlainValuesEqual(currentShadow, lastShadow) ||
             currentDy !== dy) &&
           boxWidth > 0
         ) {
@@ -1686,6 +2099,10 @@ export class FabricText<
             drawStart = this.width - drawStart - boxWidth;
           }
           if (lastDecoration && lastFill && lastTickness) {
+            if (lastShadow) {
+              ctx.save();
+              this._setCharShadow(ctx, lastShadow);
+            }
             // bug? verify lastFill is a valid fill here.
             ctx.fillStyle = this.getFillForTextDecoration(
               ctx,
@@ -1700,6 +2117,9 @@ export class FabricText<
               boxWidth,
               finalTickness,
             );
+            if (lastShadow) {
+              ctx.restore();
+            }
           }
           boxStart = charBox.left;
           boxWidth = charBox.width;
@@ -1707,6 +2127,7 @@ export class FabricText<
           lastDecorationColor = currentDecorationColor;
           lastTickness = currentTickness;
           lastFill = currentFill;
+          lastShadow = currentShadow;
           size = currentSize;
           dy = currentDy;
         } else {
@@ -1716,6 +2137,10 @@ export class FabricText<
       let drawStart = leftOffset + lineLeftOffset + boxStart;
       if (this.direction === RTL) {
         drawStart = this.width - drawStart - boxWidth;
+      }
+      if (currentShadow) {
+        ctx.save();
+        this._setCharShadow(ctx, currentShadow);
       }
       ctx.fillStyle = this.getFillForTextDecoration(
         ctx,
@@ -1734,6 +2159,9 @@ export class FabricText<
           boxWidth - charSpacing,
           finalTickness,
         );
+      if (currentShadow) {
+        ctx.restore();
+      }
       topOffset += heightOfLine;
     }
 
