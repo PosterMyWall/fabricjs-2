@@ -1,2 +1,2 @@
-import{fireEvent as m}from"./fireEvent.min.mjs";import{commonEventInfo as r}from"./util.min.mjs";const t=(t,o,i)=>(n,e,s,f)=>{const p=o(n,e,s,f);return p&&m(t,{...r(n,e,s,f),...i}),p};export{t as wrapWithFireEvent};
+import{commonEventInfo as e}from"./util.min.mjs";import{fireEvent as t}from"./fireEvent.min.mjs";const n=(n,r,i)=>(a,o,s,c)=>{let l=r(a,o,s,c);return l&&t(n,{...e(a,o,s,c),...i}),l};export{n as wrapWithFireEvent};
 //# sourceMappingURL=wrapWithFireEvent.min.mjs.map

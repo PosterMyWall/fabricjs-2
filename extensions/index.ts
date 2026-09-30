@@ -17,11 +17,21 @@ export {
   rotateEventHandler,
 } from './westures_integration';
 
-export { createImageCroppingControls } from './cropping_controls/croppingControls';
+export {
+  createImageCroppingControls,
+  createImageResizeControlsWithScaleToCover,
+} from './cropping_controls/croppingControls';
 export {
   changeCropY,
   changeCropX,
   changeCropWidth,
   changeCropHeight,
+  changeWidthAndScaleToCover,
+  changeHeightAndScaleToCover,
+  withFlip,
+  withCornerFlip,
+  cropPanMoveHandler,
+  renderGhostImage,
 } from './cropping_controls/croppingHandlers';
 export { enterCropMode } from './cropping_controls/enterCropMode';
+export { createLinearGradientControls } from './linear_gradient_controls/linearGradientControls';

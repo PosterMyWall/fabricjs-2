@@ -21,7 +21,7 @@ import type { ObjectToCanvasElementOptions } from '../Object/Object';
 import type { FabricObject } from '../Object/FabricObject';
 import { createCanvasElementFor } from '../../util/misc/dom';
 import { applyCanvasTransform } from '../../util/internals/applyCanvasTransform';
-import type {CompleteTextStyleDeclaration} from '../Text/StyledText';
+import type { CompleteTextStyleDeclaration } from '../Text/StyledText';
 
 export type CursorBoundaries = {
   left: number;
@@ -75,8 +75,7 @@ interface UniqueITextProps {
 }
 
 export interface SerializedITextProps
-  extends SerializedTextProps,
-    UniqueITextProps {}
+  extends SerializedTextProps, UniqueITextProps {}
 
 export interface ITextProps extends TextProps, UniqueITextProps {}
 
@@ -124,10 +123,10 @@ export interface ITextProps extends TextProps, UniqueITextProps {}
  * ```
  */
 export class IText<
-    Props extends TOptions<ITextProps> = Partial<ITextProps>,
-    SProps extends SerializedITextProps = SerializedITextProps,
-    EventSpec extends ITextEvents = ITextEvents,
-  >
+  Props extends TOptions<ITextProps> = Partial<ITextProps>,
+  SProps extends SerializedITextProps = SerializedITextProps,
+  EventSpec extends ITextEvents = ITextEvents,
+>
   extends ITextClickBehavior<Props, SProps, EventSpec>
   implements UniqueITextProps
 {
@@ -338,7 +337,7 @@ export class IText<
       -dim.x / 2 - this.padding / scaleX,
       -dim.y / 2 - this.padding / scaleY,
       dim.x + (this.padding / scaleX) * 2,
-      dim.y + (this.padding / scaleY) * 2
+      dim.y + (this.padding / scaleY) * 2,
     );
     // if there is background color no other shadows
     // should be casted
@@ -384,8 +383,17 @@ export class IText<
 
   public getStylesForSelection(): CompleteTextStyleDeclaration[] {
     return this.selectionStart === this.selectionEnd
-      ? [this.getStyleAtPosition(Math.max(0, this.selectionStart - 1), true) as CompleteTextStyleDeclaration]
-      : this.getSelectionStyles(this.selectionStart, this.selectionEnd, true) as CompleteTextStyleDeclaration[];
+      ? [
+          this.getStyleAtPosition(
+            Math.max(0, this.selectionStart - 1),
+            true,
+          ) as CompleteTextStyleDeclaration,
+        ]
+      : (this.getSelectionStyles(
+          this.selectionStart,
+          this.selectionEnd,
+          true,
+        ) as CompleteTextStyleDeclaration[]);
   }
 
   /**
@@ -742,7 +750,6 @@ export class IText<
     for (let i = startLine; i <= endLine; i++) {
       const lineOffset = this._getLineLeftOffset(i) || 0;
       let lineHeight = this.getHeightOfLine(i),
-        realLineHeight = 0,
         boxStart = 0,
         boxEnd = 0;
 
@@ -765,7 +772,7 @@ export class IText<
             charSpacing;
         }
       }
-      realLineHeight = lineHeight;
+      const realLineHeight = lineHeight;
       if (this.lineHeight < 1 || (i === endLine && this.lineHeight > 1)) {
         lineHeight /= this.lineHeight;
       }

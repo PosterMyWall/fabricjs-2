@@ -494,7 +494,7 @@ export class Resize extends BaseFilter<'Resize', ResizeOwnProps> {
     for (let j = 0; j < dH; j++) {
       for (let i = 0; i < dW; i++) {
         const x2 = (i + j * dW) * 4;
-        let weight = 0;
+        let weight: number;
         let weights = 0;
         let weightsAlpha = 0;
         let gxR = 0;
@@ -509,7 +509,7 @@ export class Resize extends BaseFilter<'Resize', ResizeOwnProps> {
           for (let xx = Math.floor(i * ratioW); xx < (i + 1) * ratioW; xx++) {
             let dx = Math.abs(centerX - (xx + 0.5)) / ratioWHalf;
             const w = Math.sqrt(w0 + dx * dx);
-            /* eslint-disable max-depth */
+
             if (w > 1 && w < -1) {
               continue;
             }
@@ -529,7 +529,6 @@ export class Resize extends BaseFilter<'Resize', ResizeOwnProps> {
               gxB += weight * data[dx + 2];
               weights += weight;
             }
-            /* eslint-enable max-depth */
           }
         }
         data2[x2] = gxR / weights;

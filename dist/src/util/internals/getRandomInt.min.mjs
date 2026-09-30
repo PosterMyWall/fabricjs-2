@@ -1,2 +1,2 @@
-const o=(o,t)=>Math.floor(Math.random()*(t-o+1))+o;export{o as getRandomInt};
+const e=(e,t)=>Math.floor(Math.random()*(t-e+1))+e;export{e as getRandomInt};
 //# sourceMappingURL=getRandomInt.min.mjs.map

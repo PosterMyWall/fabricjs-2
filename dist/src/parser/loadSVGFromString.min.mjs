@@ -1,2 +1,2 @@
-import{getFabricWindow as r}from"../env/index.min.mjs";import{parseSVGDocument as m}from"./parseSVGDocument.min.mjs";function n(n,t,e){const o=(new(r().DOMParser)).parseFromString(n.trim(),"text/xml");return m(o,t,e)}export{n as loadSVGFromString};
+import{getFabricWindow as e}from"../env/index.min.mjs";import{parseSVGDocument as t}from"./parseSVGDocument.min.mjs";function n(n,r,i){return t(new(e()).DOMParser().parseFromString(n.trim(),`text/xml`),r,i)}export{n as loadSVGFromString};
 //# sourceMappingURL=loadSVGFromString.min.mjs.map

@@ -40,7 +40,8 @@ interface UniqueTextboxProps {
 }
 
 export interface SerializedTextboxProps
-  extends SerializedITextProps,
+  extends
+    SerializedITextProps,
     Pick<UniqueTextboxProps, 'minWidth' | 'splitByGrapheme'> {}
 
 export interface TextboxProps extends ITextProps, UniqueTextboxProps {}
@@ -52,10 +53,10 @@ export interface TextboxProps extends ITextProps, UniqueTextboxProps {}
  * wrapping of lines.
  */
 export class Textbox<
-    Props extends TOptions<TextboxProps> = Partial<TextboxProps>,
-    SProps extends SerializedTextboxProps = SerializedTextboxProps,
-    EventSpec extends ITextEvents = ITextEvents,
-  >
+  Props extends TOptions<TextboxProps> = Partial<TextboxProps>,
+  SProps extends SerializedTextboxProps = SerializedTextboxProps,
+  EventSpec extends ITextEvents = ITextEvents,
+>
   extends IText<Props, SProps, EventSpec>
   implements UniqueTextboxProps
 {
@@ -208,7 +209,7 @@ export class Textbox<
       return true;
     }
     let offset = 0,
-      nextLineIndex = lineIndex + 1,
+      nextLineIndex: number,
       nextOffset: number,
       shouldLimit = false;
     const map = this._styleMap[lineIndex],
@@ -449,7 +450,6 @@ export class Textbox<
     );
     // layout words
     const data = wordsData[lineIndex];
-    offset = 0;
     let i;
     for (i = 0; i < data.length; i++) {
       const { word, width: wordWidth } = data[i];

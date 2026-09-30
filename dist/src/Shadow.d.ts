@@ -72,7 +72,7 @@ export declare class Shadow {
      * @type Boolean
      */
     nonScaling: boolean;
-    id: number;
+    id: number | string;
     shadowOrGlowType: ShadowOrGlowType;
     static ownDefaults: Partial<TClassProperties<Shadow>>;
     static type: string;

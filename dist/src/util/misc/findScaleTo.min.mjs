@@ -1,2 +1,2 @@
-const h=(h,t)=>Math.min(t.width/h.width,t.height/h.height),t=(h,t)=>Math.max(t.width/h.width,t.height/h.height);export{t as findScaleToCover,h as findScaleToFit};
+const e=(e,t)=>Math.min(t.width/e.width,t.height/e.height),t=(e,t)=>Math.max(t.width/e.width,t.height/e.height);export{t as findScaleToCover,e as findScaleToFit};
 //# sourceMappingURL=findScaleTo.min.mjs.map

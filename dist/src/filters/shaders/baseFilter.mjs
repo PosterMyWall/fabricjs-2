@@ -1,3 +1,4 @@
+//#region src/filters/shaders/baseFilter.ts
 const highPsourceCode = `precision highp float`;
 const identityFragmentShader = `
     ${highPsourceCode};
@@ -13,6 +14,7 @@ const vertexSource = `
       vTexCoord = aPosition;
       gl_Position = vec4(aPosition * 2.0 - 1.0, 0.0, 1.0);
     }`;
-
+//#endregion
 export { highPsourceCode, identityFragmentShader, vertexSource };
+
 //# sourceMappingURL=baseFilter.mjs.map

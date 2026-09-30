@@ -159,6 +159,12 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      */
     _hoveredTarget?: FabricObject;
     /**
+     * Keep track of the hovered target in the previous event with the shift key
+     * @type FabricObject | null
+     * @private
+     */
+    _hoveredActualTarget?: FabricObject;
+    /**
      * hold the list of nested targets hovered in the previous events
      * @type FabricObject[]
      * @private
@@ -316,6 +322,8 @@ export declare class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEve
      * Given the control clicked, determine the origin of the transform.
      * This is bad because controls can totally have custom names
      * should disappear before release 4.0
+     * Fabric 7.1, jan 2026 we are still using this.
+     * Needs to go.
      * @private
      * @deprecated
      */

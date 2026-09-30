@@ -1,2 +1,2 @@
-class s{}export{s as GLProbe};
+var e=class{};export{e as GLProbe};
 //# sourceMappingURL=GLProbe.min.mjs.map

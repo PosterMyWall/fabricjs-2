@@ -1,2 +1,2 @@
-import{config as i}from"../config.min.mjs";import{getEnv as o}from"./browser.min.mjs";let e;const t=i=>{e=i},m=()=>e||(e=o()),r=()=>m().document,n=()=>m().window,a=()=>{var o;return Math.max(null!==(o=i.devicePixelRatio)&&void 0!==o?o:n().devicePixelRatio,1)};export{a as getDevicePixelRatio,m as getEnv,r as getFabricDocument,n as getFabricWindow,t as setEnv};
+import{config as e}from"../config.min.mjs";import{getEnv as t}from"./browser.min.mjs";let n;const r=e=>{n=e},i=()=>n||(n=t()),a=()=>i().document,o=()=>i().window,s=()=>{var t;return Math.max((t=e.devicePixelRatio)==null?o().devicePixelRatio:t,1)};export{s as getDevicePixelRatio,i as getEnv,a as getFabricDocument,o as getFabricWindow,r as setEnv};
 //# sourceMappingURL=index.min.mjs.map

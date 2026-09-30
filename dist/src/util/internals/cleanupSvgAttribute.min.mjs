@@ -1,2 +1,2 @@
-import{reNum as e}from"../../parser/constants.min.mjs";import{normalizeWs as r}from"./normalizeWhiteSpace.min.mjs";const m=new RegExp(`(${e})`,"gi"),i=e=>r(e.replace(m," $1 ").replace(/,/gi," "));export{i as cleanupSvgAttribute};
+import{normalizeWs as e}from"./normalizeWhiteSpace.min.mjs";import{reNum as t}from"../../parser/constants.min.mjs";const n=RegExp(`(${t})`,`gi`),r=t=>e(t.replace(n,` $1 `).replace(/,/gi,` `));export{r as cleanupSvgAttribute};
 //# sourceMappingURL=cleanupSvgAttribute.min.mjs.map

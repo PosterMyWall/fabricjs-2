@@ -1,11 +1,6 @@
 import type { ControlCursorCallback, TPointerEvent, Transform, TransformActionHandler } from '../EventTypeDefs';
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { TAxis } from '../typedefs';
-type ScaleTransform = Transform & {
-    gestureScale?: number;
-    signX?: number;
-    signY?: number;
-};
 type ScaleBy = TAxis | 'equally' | '' | undefined;
 /**
  * Inspect event and fabricObject properties to understand if the scaling action
@@ -39,9 +34,9 @@ export declare const scaleCursorStyleHandler: ControlCursorCallback;
  * @param {number} y current mouse y position, canvas normalized
  * @return {Boolean} true if some change happened
  */
-export declare const scaleObjectFromCorner: TransformActionHandler<ScaleTransform>;
-export declare const scalingEqually: TransformActionHandler<ScaleTransform>;
-export declare const scalingX: TransformActionHandler<ScaleTransform>;
-export declare const scalingY: TransformActionHandler<ScaleTransform>;
+export declare const scaleObjectFromCorner: TransformActionHandler;
+export declare const scalingEqually: TransformActionHandler<Transform>;
+export declare const scalingX: TransformActionHandler<Transform>;
+export declare const scalingY: TransformActionHandler<Transform>;
 export {};
 //# sourceMappingURL=scale.d.ts.map

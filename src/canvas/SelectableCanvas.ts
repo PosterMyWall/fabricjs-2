@@ -233,6 +233,13 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   declare _hoveredTarget?: FabricObject;
 
   /**
+   * Keep track of the hovered target in the previous event with the shift key
+   * @type FabricObject | null
+   * @private
+   */
+  declare _hoveredActualTarget?: FabricObject;
+
+  /**
    * hold the list of nested targets hovered in the previous events
    * @type FabricObject[]
    * @private
@@ -572,6 +579,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    * Given the control clicked, determine the origin of the transform.
    * This is bad because controls can totally have custom names
    * should disappear before release 4.0
+   * Fabric 7.1, jan 2026 we are still using this.
+   * Needs to go.
    * @private
    * @deprecated
    */
@@ -579,15 +588,20 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     target: FabricObject,
     controlName: string,
   ): { x: TOriginX; y: TOriginY } {
-    const origin = {
-      x: target.originX,
-      y: target.originY,
-    };
+    const origin = controlName
+      ? target.controls[controlName].getTransformAnchorPoint()
+      : {
+          x: target.originX,
+          y: target.originY,
+        };
 
     if (!controlName) {
       return origin;
     }
 
+    // this part down here is deprecated.
+    // It is left to do not change the standard behavior in the middle of a major version
+    // but when possible `getTransformAnchorPoint` will be the only source of truth
     // is a left control ?
     if (['ml', 'tl', 'bl'].includes(controlName)) {
       origin.x = RIGHT;
@@ -767,6 +781,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     const pointer = this.getScenePoint(e),
       activeObject = this._activeObject,
       aObjects = this.getActiveObjects(),
+      // searching a target in all possible objects means also avoiding the Active selection and check if
+      // you are over a target that  is behind the active selection.
       targetInfo = this.searchPossibleTargets(this._objects, pointer);
 
     const {
@@ -775,6 +791,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
       target: currentTarget,
     } = targetInfo;
 
+    // fullTargetInfo is just a duplicated standard target that is good for the case of no active selection or no activeObject
+    // we prefer presenting the data twice rather than trying to understand in the code when the data will be available or not.
     const fullTargetInfo: FullTargetsInfoWithContainer = {
       ...targetInfo,
       currentSubTargets,
@@ -817,7 +835,11 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         // on touch, stash it in _touchOverlapTarget so a drag still moves the AS and a plain tap
         // promotes the overlap on mouse-up (mirrors the single-active-object case below).
         const overlapTarget = fullTargetInfo.target;
-        if (overlapTarget && overlapTarget !== activeObject && !aObjects.includes(overlapTarget)) {
+        if (
+          overlapTarget &&
+          overlapTarget !== activeObject &&
+          !aObjects.includes(overlapTarget)
+        ) {
           if (this.preserveObjectStacking && isTouchEvent(e)) {
             this._touchOverlapTarget = overlapTarget;
             return activeObjectTargetInfo;
@@ -825,7 +847,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
           return fullTargetInfo;
         }
         /*________________________ *PMW* added portion end ________________________*/
-        // in case of active selection and target hit over the activeSelection, just exit
+        // in case of active selection and target hit over the activeSelection, currentTarget could contain
+        // the target below the active selection or in general the target that would be hit by the multi selection targeting.
         // TODO Verify if we need to override target with container
         return activeObjectTargetInfo;
       }
@@ -1482,7 +1505,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         SKEW_Y,
         TOP,
       ] as (keyof typeof instance)[];
-      const originalValues = pick<typeof instance>(instance, layoutProps);
+      const originalValues = pick(instance, layoutProps);
       addTransformToObject(instance, group.calcOwnMatrix());
       return originalValues;
     } else {

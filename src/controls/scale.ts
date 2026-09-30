@@ -43,7 +43,7 @@ export function scaleIsProportional(
   // *PMW* changed uniformScaling to look at the new uniformScaling property in fabricObject rather than canvas
   // *PMW* changed canvas.uniScaleKey behaviour to not set unform scaling false in case of true but only to true in case of false
   return (
-    (fabricObject.uniformScaling) ||
+    fabricObject.uniformScaling ||
     (!fabricObject.uniformScaling && uniformIsToggled)
   );
 }
@@ -230,7 +230,7 @@ function scaleObject(
  * @param {number} y current mouse y position, canvas normalized
  * @return {Boolean} true if some change happened
  */
-export const scaleObjectFromCorner: TransformActionHandler<ScaleTransform> = (
+export const scaleObjectFromCorner: TransformActionHandler = (
   eventData,
   transform,
   x,
@@ -248,12 +248,7 @@ export const scaleObjectFromCorner: TransformActionHandler<ScaleTransform> = (
  * @param {number} y current mouse y position, canvas normalized
  * @return {Boolean} true if some change happened
  */
-const scaleObjectX: TransformActionHandler<ScaleTransform> = (
-  eventData,
-  transform,
-  x,
-  y,
-) => {
+const scaleObjectX: TransformActionHandler = (eventData, transform, x, y) => {
   return scaleObject(eventData, transform, x, y, { by: 'x' });
 };
 
@@ -266,12 +261,7 @@ const scaleObjectX: TransformActionHandler<ScaleTransform> = (
  * @param {number} y current mouse y position, canvas normalized
  * @return {Boolean} true if some change happened
  */
-const scaleObjectY: TransformActionHandler<ScaleTransform> = (
-  eventData,
-  transform,
-  x,
-  y,
-) => {
+const scaleObjectY: TransformActionHandler = (eventData, transform, x, y) => {
   return scaleObject(eventData, transform, x, y, { by: 'y' });
 };
 

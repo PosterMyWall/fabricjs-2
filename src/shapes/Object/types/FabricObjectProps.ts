@@ -4,14 +4,11 @@ import type { LockInteractionProps } from './LockInteractionProps';
 import type { ObjectProps } from './ObjectProps';
 
 export interface FabricObjectProps
-  extends ObjectProps,
-    ControlProps,
-    BorderProps,
-    LockInteractionProps {
+  extends ObjectProps, ControlProps, BorderProps, LockInteractionProps {
   /**
    * When `true`, cache does not get updated during scaling. The picture will get blocky if scaled
    * too much and will be redrawn with correct details at the end of scaling.
-   * this setting is performance and application dependant.
+   * this setting is performance and application dependent.
    * default to true
    * since 1.7.0
    * @type Boolean

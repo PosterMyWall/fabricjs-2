@@ -1,2 +1,2 @@
-import{PiBy180 as o}from"../../constants.min.mjs";const t=t=>t*o,m=t=>t/o;export{t as degreesToRadians,m as radiansToDegrees};
+import{PiBy180 as e}from"../../constants.min.mjs";const t=t=>t*e,n=t=>t/e;export{t as degreesToRadians,n as radiansToDegrees};
 //# sourceMappingURL=radiansDegreesConversion.min.mjs.map

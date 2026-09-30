@@ -1,3 +1,4 @@
+//#region src/filters/shaders/colorMatrix.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -10,6 +11,7 @@ const fragmentSource = `
     color += uConstants;
     gl_FragColor = color;
   }`;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=colorMatrix.mjs.map

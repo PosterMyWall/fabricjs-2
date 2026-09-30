@@ -3,6 +3,7 @@ import { parseTransformAttribute } from '../parser/parseTransformAttribute';
 import type { FabricObject } from '../shapes/Object/FabricObject';
 import type { TMat2D } from '../typedefs';
 import { uid } from '../util/internals/uid';
+import { isSafeSvgStyleValue } from '../util/internals/svgExportCheck';
 import { pick } from '../util/misc/pick';
 import { matrixToSVG } from '../util/misc/svgExport';
 import { linearDefaultCoords, radialDefaultCoords } from './constants';
@@ -19,7 +20,9 @@ import type {
   SerializedGradientProps,
 } from './typedefs';
 import { classRegistry } from '../ClassRegistry';
+import { Color } from '../color/Color';
 import { isPath } from '../util/typeAssertions';
+import { escapeXml } from '../util/lang_string';
 
 /**
  * Gradient class
@@ -209,7 +212,7 @@ export class Gradient<
     transform[5] -= offsetY;
 
     const commonAttributes = [
-      `id="SVGID_${this.id}"`,
+      `id="SVGID_${escapeXml(String(this.id))}"`,
       `gradientUnits="${gradientUnits}"`,
       `gradientTransform="${
         preTransform ? preTransform + ' ' : ''
@@ -217,39 +220,51 @@ export class Gradient<
       '',
     ].join(' ');
 
+    const sanitizeCoord = (value: unknown) => parseFloat(String(value));
+
     if (this.type === 'linear') {
       const { x1, y1, x2, y2 } = this.coords;
+      const sx1 = sanitizeCoord(x1);
+      const sy1 = sanitizeCoord(y1);
+      const sx2 = sanitizeCoord(x2);
+      const sy2 = sanitizeCoord(y2);
       markup.push(
         '<linearGradient ',
         commonAttributes,
         ' x1="',
-        x1,
+        sx1,
         '" y1="',
-        y1,
+        sy1,
         '" x2="',
-        x2,
+        sx2,
         '" y2="',
-        y2,
+        sy2,
         '">\n',
       );
     } else if (this.type === 'radial') {
       const { x1, y1, x2, y2, r1, r2 } = this
         .coords as GradientCoords<'radial'>;
-      const needsSwap = r1 > r2;
+      const sx1 = sanitizeCoord(x1);
+      const sy1 = sanitizeCoord(y1);
+      const sx2 = sanitizeCoord(x2);
+      const sy2 = sanitizeCoord(y2);
+      const sr1 = sanitizeCoord(r1);
+      const sr2 = sanitizeCoord(r2);
+      const needsSwap = sr1 > sr2;
       // svg radial gradient has just 1 radius. the biggest.
       markup.push(
         '<radialGradient ',
         commonAttributes,
         ' cx="',
-        needsSwap ? x1 : x2,
+        needsSwap ? sx1 : sx2,
         '" cy="',
-        needsSwap ? y1 : y2,
+        needsSwap ? sy1 : sy2,
         '" r="',
-        needsSwap ? r1 : r2,
+        needsSwap ? sr1 : sr2,
         '" fx="',
-        needsSwap ? x2 : x1,
+        needsSwap ? sx2 : sx1,
         '" fy="',
-        needsSwap ? y2 : y1,
+        needsSwap ? sy2 : sy1,
         '">\n',
       );
       if (needsSwap) {
@@ -259,20 +274,25 @@ export class Gradient<
           colorStop.offset = 1 - colorStop.offset;
         });
       }
-      const minRadius = Math.min(r1, r2);
+      const minRadius = Math.min(sr1, sr2);
       if (minRadius > 0) {
         // i have to shift all colorStops and add new one in 0.
-        const maxRadius = Math.max(r1, r2),
+        const maxRadius = Math.max(sr1, sr2),
           percentageShift = minRadius / maxRadius;
         colorStops.forEach((colorStop) => {
           colorStop.offset += percentageShift * (1 - colorStop.offset);
         });
       }
     }
-
     colorStops.forEach(({ color, offset }) => {
+      const rawColor = String(color);
+      // `escapeXml` protects the SVG attribute, but the value is also embedded in
+      // a CSS declaration, so reject tokens that can break either context.
+      const serializedColor = isSafeSvgStyleValue(rawColor)
+        ? rawColor
+        : new Color(rawColor).toRgba();
       markup.push(
-        `<stop offset="${offset * 100}%" style="stop-color:${color};"/>\n`,
+        `<stop offset="${offset * 100}%" style="stop-color:${escapeXml(serializedColor)};"/>\n`,
       );
     });
 

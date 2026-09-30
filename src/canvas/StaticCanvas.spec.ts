@@ -13,6 +13,7 @@ import { FabricImage } from '../shapes/Image';
 import { Point } from '../Point';
 import { Group } from '../shapes/Group';
 import { Path } from '../shapes/Path';
+import { makeRect } from '../../test/utils';
 import { Ellipse } from '../shapes/Ellipse';
 import { Line } from '../shapes/Line';
 import { Polyline } from '../shapes/Polyline';
@@ -1946,6 +1947,25 @@ describe('StaticCanvas', () => {
     canvas.viewportTransform = StaticCanvas.getDefaults().viewportTransform;
   });
 
+  it('returns the scale magnitude when viewport transform encodes rotation', () => {
+    const cos = Math.SQRT1_2,
+      sin = Math.SQRT1_2;
+    canvas.setViewportTransform([cos, sin, -sin, cos, 0, 0] as TMat2D);
+    expect(canvas.getZoom()).toBeCloseTo(1);
+
+    canvas.setViewportTransform([
+      2 * cos,
+      2 * sin,
+      -2 * sin,
+      2 * cos,
+      0,
+      0,
+    ] as TMat2D);
+    expect(canvas.getZoom()).toBeCloseTo(2);
+
+    canvas.viewportTransform = StaticCanvas.getDefaults().viewportTransform;
+  });
+
   it('sets zoom level correctly', () => {
     expect(canvas.setZoom).toBeTypeOf('function');
 
@@ -2241,10 +2261,25 @@ describe('StaticCanvas', () => {
   // });
 });
 
-function makeRect(options = {}) {
-  const defaultOptions = { width: 10, height: 10 };
-  return new Rect({ ...defaultOptions, ...options });
-}
+describe('malicious tests', () => {
+  it('from JSON to svg', async () => {
+    const canvas = new StaticCanvas();
+    const maliciousJSON = {
+      objects: [
+        {
+          type: 'rect',
+          id: '"><set onbegin="alert(1)"/>',
+          width: 100,
+          height: 100,
+          fill: 'red',
+        },
+      ],
+    };
+    await canvas.loadFromJSON(maliciousJSON);
+    const svg = canvas.toSVG();
+    expect(svg).not.toContain('onbegin="alert(1)"');
+  });
+});
 
 function createImageStub() {
   return new FabricImage(_createImageElement(), { width: 0, height: 0 });

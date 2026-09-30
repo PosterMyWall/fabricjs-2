@@ -3,8 +3,8 @@ import type {
   SerializedGradientProps,
   GradientOptions,
   ColorStop,
-} from 'fabric';
-import { Gradient } from 'fabric';
+} from '@postermywall/fabricjs-2';
+import { Gradient } from '@postermywall/fabricjs-2';
 import { installGradientUpdater } from './index';
 
 const oldGradientOptions: GradientOptions<'linear'> & {

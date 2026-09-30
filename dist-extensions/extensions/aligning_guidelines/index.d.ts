@@ -1,6 +1,6 @@
-import { type BasicTransformEvent, type Canvas, type FabricObject, type TPointerEvent, type Point } from '@postermywall/fabricjs-2';
+import { type BasicTransformEvent, type Canvas, type FabricObject, type Point } from '@postermywall/fabricjs-2';
 import type { AligningLineConfig, OriginMap } from './typedefs';
-type TransformEvent = BasicTransformEvent<TPointerEvent> & {
+type TransformEvent = BasicTransformEvent & {
     target: FabricObject;
 };
 export declare class AligningGuidelines {

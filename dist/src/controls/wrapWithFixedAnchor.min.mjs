@@ -1,2 +1,2 @@
-function i(i){return(n,r,o,t)=>{const{target:g,originX:e,originY:s}=r,u=g.getPositionByOrigin(e,s),c=i(n,r,o,t);return g.setPositionByOrigin(u,r.originX,r.originY),c}}export{i as wrapWithFixedAnchor};
+function e(e){return(t,n,r,i)=>{let{target:a,originX:o,originY:s}=n,c=a.getPositionByOrigin(o,s),l=e(t,n,r,i);return a.setPositionByOrigin(c,n.originX,n.originY),l}}export{e as wrapWithFixedAnchor};
 //# sourceMappingURL=wrapWithFixedAnchor.min.mjs.map

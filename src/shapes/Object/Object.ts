@@ -106,8 +106,8 @@ export type TCachedFabricObject<T extends FabricObject = FabricObject> = T &
       | 'cacheTranslationY'
     >
   > & {
-  _cacheContext: CanvasRenderingContext2D;
-};
+    _cacheContext: CanvasRenderingContext2D;
+  };
 
 export type ObjectToCanvasElementOptions = {
   format?: ImageFormat;
@@ -192,12 +192,13 @@ export class FabricObject<
   EventSpec extends ObjectEvents = ObjectEvents,
 >
   extends ObjectGeometry<EventSpec>
-  implements ObjectProps {
+  implements ObjectProps
+{
   declare minScaleLimit: number;
 
   declare opacity: number;
   declare __PMWID: string;
-  declare uniformScaling: boolean
+  declare uniformScaling: boolean;
   declare erasable: boolean | 'deep';
 
   declare paintFirst: 'fill' | 'stroke';
@@ -658,12 +659,12 @@ export class FabricObject<
     // but a non dirty child does not make the parent not dirty.
     // the parent could be dirty for some other reason.
     this.parent &&
-    (this.dirty ||
-      (isChanged &&
-        (this.constructor as typeof FabricObject).stateProperties.includes(
-          key,
-        ))) &&
-    this.parent._set('dirty', true);
+      (this.dirty ||
+        (isChanged &&
+          (this.constructor as typeof FabricObject).stateProperties.includes(
+            key,
+          ))) &&
+      this.parent._set('dirty', true);
 
     return this;
   }
@@ -872,6 +873,7 @@ export class FabricObject<
     } else {
       this._renderBackground(ctx);
     }
+    this.fire('before:render', { ctx });
     this._render(ctx);
     this._drawClipPath(ctx, this.clipPath, context);
     this.fill = originalFill;

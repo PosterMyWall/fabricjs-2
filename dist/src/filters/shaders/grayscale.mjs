@@ -1,5 +1,6 @@
+//#region src/filters/shaders/grayscale.ts
 const fragmentSource = {
-  average: `
+	average: `
     precision highp float;
     uniform sampler2D uTexture;
     varying vec2 vTexCoord;
@@ -9,7 +10,7 @@ const fragmentSource = {
       gl_FragColor = vec4(average, average, average, color.a);
     }
     `,
-  lightness: `
+	lightness: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform int uMode;
@@ -20,7 +21,7 @@ const fragmentSource = {
       gl_FragColor = vec4(average, average, average, col.a);
     }
     `,
-  luminosity: `
+	luminosity: `
     precision highp float;
     uniform sampler2D uTexture;
     uniform int uMode;
@@ -32,6 +33,7 @@ const fragmentSource = {
     }
     `
 };
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=grayscale.mjs.map

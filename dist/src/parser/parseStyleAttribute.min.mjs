@@ -1,2 +1,2 @@
-import{parseStyleObject as t}from"./parseStyleObject.min.mjs";import{parseStyleString as r}from"./parseStyleString.min.mjs";function e(e){const i={},m=e.getAttribute("style");return m?("string"==typeof m?r(m,i):t(m,i),i):i}export{e as parseStyleAttribute};
+import{parseStyleObject as e}from"./parseStyleObject.min.mjs";import{parseStyleString as t}from"./parseStyleString.min.mjs";function n(n){let r={},i=n.getAttribute(`style`);return i&&(typeof i==`string`?t(i,r):e(i,r)),r}export{n as parseStyleAttribute};
 //# sourceMappingURL=parseStyleAttribute.min.mjs.map

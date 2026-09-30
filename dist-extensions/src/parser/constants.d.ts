@@ -34,6 +34,7 @@ export declare const svgValidTagNames: string[], svgViewBoxElements: string[], s
     'vector-effect': string;
     'image-rendering': string;
     'text-decoration-thickness': string;
+    'text-decoration-color': string;
 }, fSize = "font-size", cPath = "clip-path";
 export declare const svgValidTagNamesRegEx: RegExp;
 export declare const svgViewBoxElementsRegEx: RegExp;

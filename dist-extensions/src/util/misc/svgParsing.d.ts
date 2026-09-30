@@ -1,4 +1,4 @@
-import type { TBBox, SVGElementName } from '../../typedefs';
+import type { TBBox, SVGElementName, TFiller } from '../../typedefs';
 /**
  * Returns array of attributes for given svg that fabric parses
  * @param {SVGElementName} type Type of svg element (eg. 'circle')
@@ -35,6 +35,6 @@ export declare const parsePreserveAspectRatioAttribute: (attribute: string) => T
  * @param {boolean} inlineStyle The default is inline style, the separator used is ":", The other is "="
  * @returns
  */
-export declare const colorPropToSVG: (prop: string, value?: any, inlineStyle?: boolean) => string;
+export declare const colorPropToSVG: (prop: string, value?: string | TFiller | null, inlineStyle?: boolean) => string;
 export declare const createSVGRect: (color: string, { left, top, width, height }: TBBox, precision?: number) => string;
 //# sourceMappingURL=svgParsing.d.ts.map

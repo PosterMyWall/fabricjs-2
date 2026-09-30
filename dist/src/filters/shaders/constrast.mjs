@@ -1,3 +1,4 @@
+//#region src/filters/shaders/constrast.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -9,6 +10,7 @@ const fragmentSource = `
     color.rgb = contrastF * (color.rgb - 0.5) + 0.5;
     gl_FragColor = color;
   }`;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=constrast.mjs.map

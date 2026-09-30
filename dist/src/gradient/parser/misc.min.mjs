@@ -1,2 +1,2 @@
-function e(e){return"linearGradient"===e.nodeName||"LINEARGRADIENT"===e.nodeName?"linear":"radial"}function n(e){return"userSpaceOnUse"===e.getAttribute("gradientUnits")?"pixels":"percentage"}export{n as parseGradientUnits,e as parseType};
+function e(e){return e.nodeName===`linearGradient`||e.nodeName===`LINEARGRADIENT`?`linear`:`radial`}function t(e){return e.getAttribute(`gradientUnits`)===`userSpaceOnUse`?`pixels`:`percentage`}export{t as parseGradientUnits,e as parseType};
 //# sourceMappingURL=misc.min.mjs.map

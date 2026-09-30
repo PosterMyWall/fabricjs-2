@@ -1,3 +1,4 @@
+//#region src/filters/shaders/noise.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -14,6 +15,7 @@ const fragmentSource = `
     gl_FragColor = color;
   }
 `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=noise.mjs.map

@@ -22,6 +22,6 @@ export declare class Canvas2dFilterBackend {
      * @param {Number} sourceHeight The height of the source input.
      * @param {HTMLCanvasElement} targetCanvas The destination for filtered output to be drawn.
      */
-    applyFilters(filters: BaseFilter<string, Record<string, any>>[], sourceElement: CanvasImageSource, sourceWidth: number, sourceHeight: number, targetCanvas: HTMLCanvasElement): T2DPipelineState | void;
+    applyFilters(filters: BaseFilter<string>[], sourceElement: CanvasImageSource, sourceWidth: number, sourceHeight: number, targetCanvas: HTMLCanvasElement): T2DPipelineState | void;
 }
 //# sourceMappingURL=Canvas2dFilterBackend.d.ts.map

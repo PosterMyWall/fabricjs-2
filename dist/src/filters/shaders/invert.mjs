@@ -1,3 +1,4 @@
+//#region src/filters/shaders/invert.ts
 const fragmentSource = `
   precision highp float;
   uniform sampler2D uTexture;
@@ -17,6 +18,7 @@ const fragmentSource = `
     }
   }
 `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=invert.mjs.map

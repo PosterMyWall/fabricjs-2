@@ -1,3 +1,4 @@
+//#region src/filters/shaders/blur.ts
 const fragmentSource = `
     precision highp float;
     uniform sampler2D uTexture;
@@ -28,6 +29,7 @@ const fragmentSource = `
       gl_FragColor.a = color.a / totalA;
     }
   `;
-
+//#endregion
 export { fragmentSource };
+
 //# sourceMappingURL=blur.mjs.map

@@ -1,13 +1,14 @@
+//#region src/filters/shaders/blendColor.ts
 const blendColorFragmentSource = {
-  multiply: 'gl_FragColor.rgb *= uColor.rgb;\n',
-  screen: 'gl_FragColor.rgb = 1.0 - (1.0 - gl_FragColor.rgb) * (1.0 - uColor.rgb);\n',
-  add: 'gl_FragColor.rgb += uColor.rgb;\n',
-  difference: 'gl_FragColor.rgb = abs(gl_FragColor.rgb - uColor.rgb);\n',
-  subtract: 'gl_FragColor.rgb -= uColor.rgb;\n',
-  lighten: 'gl_FragColor.rgb = max(gl_FragColor.rgb, uColor.rgb);\n',
-  darken: 'gl_FragColor.rgb = min(gl_FragColor.rgb, uColor.rgb);\n',
-  exclusion: 'gl_FragColor.rgb += uColor.rgb - 2.0 * (uColor.rgb * gl_FragColor.rgb);\n',
-  overlay: `
+	multiply: "gl_FragColor.rgb *= uColor.rgb;\n",
+	screen: "gl_FragColor.rgb = 1.0 - (1.0 - gl_FragColor.rgb) * (1.0 - uColor.rgb);\n",
+	add: "gl_FragColor.rgb += uColor.rgb;\n",
+	difference: "gl_FragColor.rgb = abs(gl_FragColor.rgb - uColor.rgb);\n",
+	subtract: "gl_FragColor.rgb -= uColor.rgb;\n",
+	lighten: "gl_FragColor.rgb = max(gl_FragColor.rgb, uColor.rgb);\n",
+	darken: "gl_FragColor.rgb = min(gl_FragColor.rgb, uColor.rgb);\n",
+	exclusion: "gl_FragColor.rgb += uColor.rgb - 2.0 * (uColor.rgb * gl_FragColor.rgb);\n",
+	overlay: `
     if (uColor.r < 0.5) {
       gl_FragColor.r *= 2.0 * uColor.r;
     } else {
@@ -24,11 +25,12 @@ const blendColorFragmentSource = {
       gl_FragColor.b = 1.0 - 2.0 * (1.0 - gl_FragColor.b) * (1.0 - uColor.b);
     }
     `,
-  tint: `
+	tint: `
     gl_FragColor.rgb *= (1.0 - uColor.a);
     gl_FragColor.rgb += uColor.rgb;
     `
 };
-
+//#endregion
 export { blendColorFragmentSource };
+
 //# sourceMappingURL=blendColor.mjs.map

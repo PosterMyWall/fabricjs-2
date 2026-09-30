@@ -2,7 +2,6 @@ import {
   type BasicTransformEvent,
   type Canvas,
   type FabricObject,
-  type TPointerEvent,
   type Point,
   util,
 } from '@postermywall/fabricjs-2';
@@ -22,7 +21,7 @@ import type { AligningLineConfig, OriginMap } from './typedefs';
 import { getObjectsByTarget } from './util/get-objects-by-target';
 import { getContraryMap, getPointMap } from './util/basic';
 
-type TransformEvent = BasicTransformEvent<TPointerEvent> & {
+type TransformEvent = BasicTransformEvent & {
   target: FabricObject;
 };
 
@@ -172,8 +171,8 @@ export class AligningGuidelines {
     if (isCenter) {
       const p = target.group
         ? point.transform(
-          util.invertTransform(target.group.calcTransformMatrix()),
-        )
+            util.invertTransform(target.group.calcTransformMatrix()),
+          )
         : point;
       diagonalPoint = diagonalPoint.add(p).scalarDivide(2);
     }

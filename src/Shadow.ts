@@ -6,6 +6,7 @@ import { Point } from './Point';
 import type { FabricObject } from './shapes/Object/FabricObject';
 import type { TClassProperties } from './typedefs';
 import { uid } from './util/internals/uid';
+import { escapeXml } from './util/lang_string';
 import { pickBy } from './util/misc/pick';
 import { degreesToRadians } from './util/misc/radiansDegreesConversion';
 import { toFixed } from './util/misc/toFixed';
@@ -113,7 +114,7 @@ export class Shadow {
    */
   declare nonScaling: boolean;
 
-  declare id: number;
+  declare id: number | string;
 
   declare shadowOrGlowType: ShadowOrGlowType;
 
@@ -154,7 +155,11 @@ export class Shadow {
   }
 
   isShadow(): boolean {
-    return this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW || this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW;
+    return (
+      this.shadowOrGlowType === ShadowOrGlowType.STRONG_SHADOW ||
+      this.shadowOrGlowType === ShadowOrGlowType.LIGHT_SHADOW ||
+      this.shadowOrGlowType === ShadowOrGlowType.CUSTOM_SHADOW
+    );
   }
 
   isCustomShadow(): boolean {
@@ -162,7 +167,10 @@ export class Shadow {
   }
 
   isGlow(): boolean {
-    return this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW || this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW;
+    return (
+      this.shadowOrGlowType === ShadowOrGlowType.LIGHT_GLOW ||
+      this.shadowOrGlowType === ShadowOrGlowType.STRONG_GLOW
+    );
   }
 
   isLightShadow(): boolean {
@@ -193,6 +201,7 @@ export class Shadow {
         degreesToRadians(-object.angle),
       ),
       BLUR_BOX = 20,
+      NUM_FRACTION_DIGITS = config.NUM_FRACTION_DIGITS,
       color = new Color(this.color);
     let fBoxX = 40,
       fBoxY = 40;
@@ -203,14 +212,14 @@ export class Shadow {
       fBoxX =
         toFixed(
           (Math.abs(offset.x) + this.blur) / object.width,
-          config.NUM_FRACTION_DIGITS,
+          NUM_FRACTION_DIGITS,
         ) *
           100 +
         BLUR_BOX;
       fBoxY =
         toFixed(
           (Math.abs(offset.y) + this.blur) / object.height,
-          config.NUM_FRACTION_DIGITS,
+          NUM_FRACTION_DIGITS,
         ) *
           100 +
         BLUR_BOX;
@@ -222,19 +231,19 @@ export class Shadow {
       offset.y *= -1;
     }
 
-    return `<filter id="SVGID_${this.id}" y="-${fBoxY}%" height="${
+    return `<filter id="SVGID_${escapeXml(this.id)}" y="-${fBoxY}%" height="${
       100 + 2 * fBoxY
     }%" x="-${fBoxX}%" width="${
       100 + 2 * fBoxX
     }%" >\n\t<feGaussianBlur in="SourceAlpha" stdDeviation="${toFixed(
       this.blur ? this.blur / 2 : 0,
-      config.NUM_FRACTION_DIGITS,
+      NUM_FRACTION_DIGITS,
     )}"></feGaussianBlur>\n\t<feOffset dx="${toFixed(
       offset.x,
-      config.NUM_FRACTION_DIGITS,
+      NUM_FRACTION_DIGITS,
     )}" dy="${toFixed(
       offset.y,
-      config.NUM_FRACTION_DIGITS,
+      NUM_FRACTION_DIGITS,
     )}" result="oBlur" ></feOffset>\n\t<feFlood flood-color="${color.toRgb()}" flood-opacity="${color.getAlpha()}"/>\n\t<feComposite in2="oBlur" operator="in" />\n\t<feMerge>\n\t\t<feMergeNode></feMergeNode>\n\t\t<feMergeNode in="SourceGraphic"></feMergeNode>\n\t</feMerge>\n</filter>\n`;
   }
 
@@ -251,7 +260,7 @@ export class Shadow {
       affectStroke: this.affectStroke,
       nonScaling: this.nonScaling,
       type: (this.constructor as typeof Shadow).type,
-      shadowOrGlowType: this.shadowOrGlowType
+      shadowOrGlowType: this.shadowOrGlowType,
     };
     const defaults = Shadow.ownDefaults as SerializedShadowOptions;
     return !this.includeDefaultValues

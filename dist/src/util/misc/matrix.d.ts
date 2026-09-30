@@ -54,6 +54,20 @@ export declare const multiplyTransformMatrices: (a: TMat2D, b: TMat2D, is2x2?: b
 export declare const multiplyTransformMatrixArray: (matrices: (TMat2D | undefined | null | false)[], is2x2?: boolean) => TMat2D;
 export declare const calcPlaneRotation: ([a, b]: TMat2D) => TRadian;
 /**
+ * Returns the uniform scale (zoom) magnitude of a 2D affine matrix,
+ * computed as the length of the image of the unit X basis vector.
+ */
+export declare const calcPlaneZoom: ([a, b]: TMat2D) => number;
+/**
+ * Returns the Y-axis scale magnitude of a 2D affine matrix,
+ * computed as the length of the image of the unit Y basis vector.
+ * We do not support non uniform zooming on the viewport but to make things work
+ * we need to have a function that can return the value on Y axis.
+ * Bug reports and features will be planned with zoom being just a number
+ * that is the same for both axis
+ */
+export declare const calcPlaneScaleY: ([, , c, d]: TMat2D) => number;
+/**
  * Decomposes standard 2x3 matrix into transform components
  * @param  {TMat2D} a transformMatrix
  * @return {Object} Components of transform

@@ -60,7 +60,7 @@ export declare class WebGLFilterBackend {
      * @param {String|undefined} cacheKey A key used to cache resources related to the source. If
      * omitted, caching will be skipped.
      */
-    applyFilters(filters: BaseFilter<string, Record<string, any>>[], source: TexImageSource, width: number, height: number, targetCanvas: HTMLCanvasElement, cacheKey?: string): TWebGLPipelineState | undefined;
+    applyFilters(filters: BaseFilter<string>[], source: TexImageSource, width: number, height: number, targetCanvas: HTMLCanvasElement, cacheKey?: string): TWebGLPipelineState | undefined;
     /**
      * Detach event listeners, remove references, and clean up caches.
      */
