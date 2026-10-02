@@ -194,7 +194,7 @@ var Textbox = class Textbox extends IText {
 		this.isWrapping = true;
 		const data = this.getGraphemeDataForRender(lines);
 		const wrapped = [];
-		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data, this._getRealLineIndent(i)));
+		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data, this._getRealLineReservedWidth(i)));
 		this.isWrapping = false;
 		return wrapped;
 	}
@@ -276,7 +276,7 @@ var Textbox = class Textbox extends IText {
 		const additionalSpace = this._getWidthOfCharSpacing(), splitByGrapheme = this.splitByGrapheme, graphemeLines = [], infix = splitByGrapheme ? "" : " ";
 		let lineWidth = 0, line = [], offset = 0, infixWidth = 0, lineJustStarted = true;
 		desiredWidth -= reservedSpace;
-		const maxWidth = Math.max(desiredWidth, largestWordWidth, this.dynamicMinWidth);
+		const maxWidth = Math.max(desiredWidth, largestWordWidth, this.dynamicMinWidth - reservedSpace);
 		const data = wordsData[lineIndex];
 		let i;
 		for (i = 0; i < data.length; i++) {

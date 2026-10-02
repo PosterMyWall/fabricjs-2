@@ -425,7 +425,7 @@ var Cache = class {
 const cache = new Cache();
 //#endregion
 //#region src/constants.ts
-const VERSION = "7.1.0-pmw-66";
+const VERSION = "7.1.0-pmw-67";
 function noop() {}
 const halfPI = Math.PI / 2;
 const quarterPI = Math.PI / 4;
@@ -16144,7 +16144,7 @@ var FabricText = class FabricText extends StyledText {
 			accumulatedSpace = 0;
 			line = this._textLines[i];
 			currentLineWidth = this.getLineWidth(i);
-			const justifiableWidth = this.width - this._getRealLineIndent(this._getRealLineIndex(i));
+			const justifiableWidth = this.width - this._getRealLineReservedWidth(this._getRealLineIndex(i));
 			if (currentLineWidth < justifiableWidth && (spaces = this.textLines[i].match(this._reSpacesAndTabs))) {
 				numberOfSpaces = spaces.length;
 				diffSpace = (justifiableWidth - currentLineWidth) / numberOfSpaces;
@@ -16822,17 +16822,53 @@ var FabricText = class FabricText extends StyledText {
 		return true;
 	}
 	/**
-	* *PMW* A real line's left indent in text units: the explicit `leftIndent` when set, else the
-	* measured width of its list marker plus a gap, else 0. Consumed by the line offset, the
-	* Textbox wrap width, and the marker renderer.
+	* *PMW* Where a real line's text column DRAWS, in text units (the line offset and, through
+	* it, the marker renderer). A migrated legacy list row (explicit `leftIndent` AND a marker)
+	* draws at the legacy gutter — the live-measured widest marker plus the gap, exactly what the
+	* legacy renderer computed on every load — so its text lands where it always did even though
+	* the row RESERVES the migration's estimate of that gutter ({@link _getRealLineReservedWidth}).
+	* A plain explicit `leftIndent` draws at that indent; an auto list row at the shared gutter.
 	* @private
 	*/
 	_getRealLineIndent(realLineIndex) {
 		const record = this.lineStyles[realLineIndex];
 		if (!record) return 0;
+		if (typeof record.leftIndent === "number") return record.listMarker ? this._getLegacyListGutterWidth() : record.leftIndent;
+		if (record.listMarker) return this._getAutoListGutterWidth();
+		return 0;
+	}
+	/**
+	* *PMW* How much of the box width a real line RESERVES for its gutter, in text units: the
+	* explicit `leftIndent` when set (a migrated row's legacy gutter estimate — this is what keeps
+	* its wrap width `width − leftIndent` identical to the legacy text area), else the shared auto
+	* gutter of a list row, else 0. Consumed by the Textbox wrap, justify and the alignment free
+	* space; the drawn column is {@link _getRealLineIndent}.
+	* @private
+	*/
+	_getRealLineReservedWidth(realLineIndex) {
+		const record = this.lineStyles[realLineIndex];
+		if (!record) return 0;
 		if (typeof record.leftIndent === "number") return record.leftIndent;
 		if (record.listMarker) return this._getAutoListGutterWidth();
 		return 0;
+	}
+	/**
+	* *PMW* The legacy renderer's gutter for the box's migrated list rows (explicit `leftIndent`
+	* AND a marker): its single bullets textbox was as wide as the widest marker, and the text sat
+	* one gap right of it — no floor. Un-floored on purpose: a migrated "1."–"9." list keeps its
+	* narrower-than-floor column.
+	* @private
+	*/
+	_getLegacyListGutterWidth() {
+		let gutter = 0;
+		for (const key of Object.keys(this.lineStyles)) {
+			const realLineIndex = parseInt(key, 10);
+			const record = this.lineStyles[realLineIndex];
+			if (!(record === null || record === void 0 ? void 0 : record.listMarker) || typeof record.leftIndent !== "number") continue;
+			const { fontSize } = this._getListMarkerStyle(realLineIndex);
+			gutter = Math.max(gutter, this._measureListMarkerWidth(realLineIndex) + LIST_MARKER_GAP_FACTOR * fontSize);
+		}
+		return gutter;
 	}
 	/**
 	* *PMW* One shared gutter for every auto-indented list row of the textbox: the
@@ -16979,7 +17015,7 @@ var FabricText = class FabricText extends StyledText {
 	* @return {Number} Line left offset
 	*/
 	_getLineLeftOffset(lineIndex) {
-		const lineWidth = this.getLineWidth(lineIndex), textAlign = this._getEffectiveTextAlignForLine(lineIndex), direction = this.direction, isEndOfWrapping = this.isEndOfWrapping(lineIndex), indentMagnitude = this._getRealLineIndent(this._getRealLineIndex(lineIndex)), lineDiff = this.width - lineWidth - indentMagnitude, lineIndent = (direction === "rtl" ? -1 : 1) * indentMagnitude + 0;
+		const lineWidth = this.getLineWidth(lineIndex), textAlign = this._getEffectiveTextAlignForLine(lineIndex), direction = this.direction, isEndOfWrapping = this.isEndOfWrapping(lineIndex), realLineIndex = this._getRealLineIndex(lineIndex), indentMagnitude = this._getRealLineIndent(realLineIndex), lineDiff = this.width - lineWidth - this._getRealLineReservedWidth(realLineIndex), lineIndent = (direction === "rtl" ? -1 : 1) * indentMagnitude + 0;
 		let leftOffset = 0;
 		if (textAlign === "justify" || textAlign === "justify-center" && !isEndOfWrapping || textAlign === "justify-right" && !isEndOfWrapping || textAlign === "justify-left" && !isEndOfWrapping) return lineIndent;
 		if (textAlign === "center") leftOffset = lineDiff / 2;
@@ -19641,7 +19677,7 @@ var Textbox = class Textbox extends IText {
 		this.isWrapping = true;
 		const data = this.getGraphemeDataForRender(lines);
 		const wrapped = [];
-		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data, this._getRealLineIndent(i)));
+		for (let i = 0; i < data.wordsData.length; i++) wrapped.push(...this._wrapLine(i, desiredWidth, data, this._getRealLineReservedWidth(i)));
 		this.isWrapping = false;
 		return wrapped;
 	}
@@ -19723,7 +19759,7 @@ var Textbox = class Textbox extends IText {
 		const additionalSpace = this._getWidthOfCharSpacing(), splitByGrapheme = this.splitByGrapheme, graphemeLines = [], infix = splitByGrapheme ? "" : " ";
 		let lineWidth = 0, line = [], offset = 0, infixWidth = 0, lineJustStarted = true;
 		desiredWidth -= reservedSpace;
-		const maxWidth = Math.max(desiredWidth, largestWordWidth, this.dynamicMinWidth);
+		const maxWidth = Math.max(desiredWidth, largestWordWidth, this.dynamicMinWidth - reservedSpace);
 		const data = wordsData[lineIndex];
 		let i;
 		for (i = 0; i < data.length; i++) {

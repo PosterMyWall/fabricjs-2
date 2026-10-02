@@ -325,9 +325,14 @@ export class Textbox<
     const data = this.getGraphemeDataForRender(lines);
     const wrapped: string[][] = [];
     for (let i = 0; i < data.wordsData.length; i++) {
-      // *PMW* an indented line (list row) wraps within the remaining width
+      // *PMW* an indented line (list row) wraps within the width left of its reserved gutter
       wrapped.push(
-        ...this._wrapLine(i, desiredWidth, data, this._getRealLineIndent(i)),
+        ...this._wrapLine(
+          i,
+          desiredWidth,
+          data,
+          this._getRealLineReservedWidth(i),
+        ),
       );
     }
     this.isWrapping = false;
@@ -446,10 +451,12 @@ export class Textbox<
 
     desiredWidth -= reservedSpace;
 
+    // *PMW* dynamicMinWidth is a BOX width that already carries the widest row's reserved
+    // space; the cap for this row is the text area left inside that minimum box.
     const maxWidth = Math.max(
       desiredWidth,
       largestWordWidth,
-      this.dynamicMinWidth,
+      this.dynamicMinWidth - reservedSpace,
     );
     // layout words
     const data = wordsData[lineIndex];

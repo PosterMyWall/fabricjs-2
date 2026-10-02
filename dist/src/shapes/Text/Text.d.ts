@@ -663,12 +663,32 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     _isStartOfRealLine(_visualLineIndex: number): boolean;
     /**
-     * *PMW* A real line's left indent in text units: the explicit `leftIndent` when set, else the
-     * measured width of its list marker plus a gap, else 0. Consumed by the line offset, the
-     * Textbox wrap width, and the marker renderer.
+     * *PMW* Where a real line's text column DRAWS, in text units (the line offset and, through
+     * it, the marker renderer). A migrated legacy list row (explicit `leftIndent` AND a marker)
+     * draws at the legacy gutter — the live-measured widest marker plus the gap, exactly what the
+     * legacy renderer computed on every load — so its text lands where it always did even though
+     * the row RESERVES the migration's estimate of that gutter ({@link _getRealLineReservedWidth}).
+     * A plain explicit `leftIndent` draws at that indent; an auto list row at the shared gutter.
      * @private
      */
     _getRealLineIndent(realLineIndex: number): number;
+    /**
+     * *PMW* How much of the box width a real line RESERVES for its gutter, in text units: the
+     * explicit `leftIndent` when set (a migrated row's legacy gutter estimate — this is what keeps
+     * its wrap width `width − leftIndent` identical to the legacy text area), else the shared auto
+     * gutter of a list row, else 0. Consumed by the Textbox wrap, justify and the alignment free
+     * space; the drawn column is {@link _getRealLineIndent}.
+     * @private
+     */
+    _getRealLineReservedWidth(realLineIndex: number): number;
+    /**
+     * *PMW* The legacy renderer's gutter for the box's migrated list rows (explicit `leftIndent`
+     * AND a marker): its single bullets textbox was as wide as the widest marker, and the text sat
+     * one gap right of it — no floor. Un-floored on purpose: a migrated "1."–"9." list keeps its
+     * narrower-than-floor column.
+     * @private
+     */
+    _getLegacyListGutterWidth(): number;
     /**
      * *PMW* One shared gutter for every auto-indented list row of the textbox: the
      * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with

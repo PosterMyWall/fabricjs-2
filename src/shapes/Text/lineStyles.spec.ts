@@ -205,10 +205,57 @@ describe('per-line list markers', () => {
     expect(mixed[1]).toBeCloseTo(1.25 * 40, 5);
   });
 
-  it('an explicit leftIndent wins over the auto-measured marker indent', () => {
+  it('an explicit leftIndent is reserved as-is, bypassing the auto gutter and its floor', () => {
     const text = new FabricText('item one', { fontSize: 20 });
     text.set('lineStyles', { 0: { listMarker: '1.', leftIndent: 33 } });
-    expect(text._getRealLineIndent(0)).toBe(33);
+    expect(text._getRealLineReservedWidth(0)).toBe(33);
+    text.set('lineStyles', { 0: { leftIndent: 7 } });
+    expect(text._getRealLineReservedWidth(0)).toBe(7);
+    expect(text._getRealLineIndent(0)).toBe(7);
+  });
+
+  it('a migrated list row draws at the legacy measured column while reserving its explicit width', () => {
+    // migration estimates the legacy gutter (here deliberately far off: 60); the legacy
+    // renderer measured its widest marker live and put the text one gap right of it
+    const text = 'add your text now\nsecond item';
+    const fontSize = 20;
+    const reserved = 60;
+    const mk = (textAlign: string) =>
+      new Textbox(text, {
+        width: 300,
+        fontSize,
+        textAlign,
+        lineStyles: {
+          0: { listMarker: '1.', leftIndent: reserved },
+          1: { listMarker: '2.', leftIndent: reserved },
+        },
+      } as never);
+    const left = mk('left');
+    const legacyColumn =
+      Math.max(
+        left._measureListMarkerWidth(0),
+        left._measureListMarkerWidth(1),
+      ) +
+      0.25 * fontSize;
+    expect(legacyColumn).toBeLessThan(reserved);
+    expect(left._getRealLineIndent(0)).toBeCloseTo(legacyColumn, 6);
+    expect(left._getRealLineIndent(1)).toBeCloseTo(legacyColumn, 6);
+    expect(left._getRealLineReservedWidth(0)).toBe(reserved);
+    expect(left._getLineLeftOffset(0)).toBeCloseTo(legacyColumn, 6);
+    // the wrap is the legacy text area: width − reserved, not width − drawn
+    const plain = new Textbox(text, { width: 300 - reserved, fontSize });
+    expect(left.textLines).toEqual(plain.textLines);
+    // centering distributes the RESERVED free space around the drawn column
+    const centered = mk('center');
+    expect(centered._getLineLeftOffset(0)).toBeCloseTo(
+      legacyColumn + (300 - reserved - centered.getLineWidth(0)) / 2,
+      6,
+    );
+    const righted = mk('right');
+    expect(righted._getLineLeftOffset(0)).toBeCloseTo(
+      legacyColumn + (300 - reserved - righted.getLineWidth(0)),
+      6,
+    );
   });
 
   it('reserves the indent from the wrap width of list rows only', () => {
@@ -223,6 +270,27 @@ describe('per-line list markers', () => {
     const plain = mk({});
     const indented = mk({ 0: { leftIndent: 60 } });
     expect(indented).toBeGreaterThan(plain);
+  });
+
+  it('keeps reserving the indent when the widest word fills the text area', () => {
+    // A legacy list whose box width was its widest word: the minimum box width
+    // (widest word + indent) must not become the wrap cap of later rows.
+    const text =
+      'add your text\nsadasdsadadd your text\nsadasdsadadd your text';
+    const plain = new Textbox(text, { width: 245.2996, fontSize: 36.4 });
+    const textArea = plain.width;
+    const indent = 95.732;
+    const indented = new Textbox(text, {
+      width: textArea + indent,
+      fontSize: 36.4,
+      lineStyles: {
+        0: { listMarker: 'I.', leftIndent: indent },
+        1: { listMarker: 'II.', leftIndent: indent },
+        2: { listMarker: 'III.', leftIndent: indent },
+      },
+    } as never);
+    expect(indented.textLines).toEqual(plain.textLines);
+    expect(indented.width).toBeCloseTo(textArea + indent, 6);
   });
 
   it('justify enlarges spaces only up to the width left of the marker gutter', () => {
@@ -312,7 +380,11 @@ describe('per-line list markers', () => {
       ...tb.lineStyles,
       1: { listMarker: '10.', leftIndent: 77 },
     });
-    expect(tb._getRealLineIndent(1)).toBe(77);
+    expect(tb._getRealLineReservedWidth(1)).toBe(77);
+    expect(tb._getRealLineIndent(1)).toBeCloseTo(
+      tb._measureListMarkerWidth(1) + 0.25 * 20,
+      5,
+    );
     expect(tb._getRealLineIndent(0)).toBeLessThan(77);
   });
 
