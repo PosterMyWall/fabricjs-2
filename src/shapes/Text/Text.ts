@@ -141,7 +141,7 @@ const UNORDERED_MARKER_RAISE_FACTOR = 16;
  * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
  * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
  * than the floor ("10.", "VIII.") still grow the gutter past it.
- * Mirrored in PHP as MigrateToVersion79::LIST_GUTTER_EM_FACTOR — keep both in sync.
+ * Mirrored in PHP as MigrateToVersion80::LIST_GUTTER_EM_FACTOR — keep both in sync.
  */
 const LIST_GUTTER_EM_FACTOR = 1.25;
 
