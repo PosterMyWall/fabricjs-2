@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { IText } from '../IText/IText';
 import { Textbox } from '../Textbox';
 import { FabricText } from './Text';
@@ -579,5 +579,38 @@ describe('per-line list markers', () => {
     expect(text.lineStyles[1]?.listMarker).toBeUndefined();
     text.removeChars(3, 4);
     expect(text.lineStyles[1]?.listMarker).toBe('•');
+  });
+  it('measures each marker once per layout: a render of many list rows stays linear', () => {
+    const rows = 40;
+    const tb = new Textbox(
+      Array.from({ length: rows }, (_, i) => `row ${i}`).join('\n'),
+      {
+        width: 300,
+        fontSize: 20,
+        lineStyles: Object.fromEntries(
+          Array.from({ length: rows }, (_, i) => [
+            i,
+            { listMarker: `${i + 1}.` },
+          ]),
+        ),
+      } as never,
+    );
+    const measureMarker = vi.spyOn(tb, '_computeListMarkerWidth');
+    const canvas = createCanvasElement();
+    canvas.width = 400;
+    canvas.height = 2000;
+    tb.initDimensions();
+    tb.render(canvas.getContext('2d')!);
+    // one measurement per marker for layout plus render together, not one per row per visual line
+    expect(measureMarker).toHaveBeenCalledTimes(rows);
+    measureMarker.mockClear();
+
+    // the memo is per layout: a first-character style change invalidates it
+    tb.setSelectionStyles({ fontSize: 40 }, 0, 1);
+    const before = tb._getRealLineIndent(0);
+    tb.initDimensions();
+    expect(tb._getRealLineIndent(0)).toBeGreaterThan(before);
+    expect(measureMarker).toHaveBeenCalledTimes(rows);
+    measureMarker.mockRestore();
   });
 });

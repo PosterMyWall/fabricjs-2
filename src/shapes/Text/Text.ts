@@ -141,9 +141,23 @@ const UNORDERED_MARKER_RAISE_FACTOR = 16;
  * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
  * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
  * than the floor ("10.", "VIII.") still grow the gutter past it.
- * Mirrored in PHP as MigrateToVersion76::LIST_GUTTER_EM_FACTOR — keep both in sync.
+ * Mirrored in PHP as MigrateToVersion79::LIST_GUTTER_EM_FACTOR — keep both in sync.
  */
 const LIST_GUTTER_EM_FACTOR = 1.25;
+
+/**
+ * *PMW* The spell-check squiggle's geometry, in text units at this font size; every other size
+ * scales it proportionally (see Text.fillSquigglyLine). 45 is the size the fixed-pixel squiggle
+ * was tuned for, so headings look exactly as before and small text gets a proportionate wave.
+ */
+const SQUIGGLY_LINE_REFERENCE_FONT_SIZE = 45;
+const SQUIGGLY_LINE_DOT_SIZE = 2;
+const SQUIGGLY_LINE_DOT_STEP = 0.5;
+const SQUIGGLY_LINE_LEAD_IN = 2;
+const SQUIGGLY_LINE_WAVE_FREQUENCY = 0.35;
+const SQUIGGLY_LINE_WAVE_PERIOD = 6;
+/** Peak rise = (period / 2) × this factor: 6.75 text units at the reference size. */
+const SQUIGGLY_LINE_WAVE_RISE_FACTOR = 5 * 0.45;
 
 export type GraphemeBBox = {
   width: number;
@@ -541,6 +555,16 @@ export class FabricText<
   declare cursorWidth: number;
   declare __lineHeights: number[];
   declare __lineWidths: number[];
+  /**
+   * *PMW* Per-layout memo of each real line's measured list marker width, keyed by real line
+   * index. Reset by _clearCache.
+   */
+  declare __listMarkerWidths: Record<number, number>;
+  /**
+   * *PMW* Per-layout memo of the shared list gutters (auto rows, migrated legacy rows). Reset
+   * by _clearCache.
+   */
+  declare __listGutterWidths: { auto?: number; legacy?: number };
   declare initialized?: true;
 
   static cacheProperties = [...cacheProperties, ...additionalProps];
@@ -1723,6 +1747,14 @@ export class FabricText<
    * @private
    */
   _getLegacyListGutterWidth(): number {
+    this.__listGutterWidths ??= {};
+    if (this.__listGutterWidths.legacy === undefined) {
+      this.__listGutterWidths.legacy = this._computeLegacyListGutterWidth();
+    }
+    return this.__listGutterWidths.legacy;
+  }
+
+  _computeLegacyListGutterWidth(): number {
     let gutter = 0;
     for (const key of Object.keys(this.lineStyles)) {
       const realLineIndex = parseInt(key, 10);
@@ -1747,9 +1779,21 @@ export class FabricText<
    * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
    * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
    * long ordinals ("10.") from colliding with their text.
+   *
+   * Memoized per layout (see {@link _clearCache}): the alignment and wrap code asks for the
+   * gutter once per visual line per render pass, and a fresh walk over every list record each
+   * time made list rendering quadratic in the row count (601ms a frame at 120 rows).
    * @private
    */
   _getAutoListGutterWidth(): number {
+    this.__listGutterWidths ??= {};
+    if (this.__listGutterWidths.auto === undefined) {
+      this.__listGutterWidths.auto = this._computeAutoListGutterWidth();
+    }
+    return this.__listGutterWidths.auto;
+  }
+
+  _computeAutoListGutterWidth(): number {
     let gutter = 0;
     for (const key of Object.keys(this.lineStyles)) {
       const realLineIndex = parseInt(key, 10);
@@ -1797,7 +1841,8 @@ export class FabricText<
   }
 
   /**
-   * *PMW* Measured width of a real line's list marker in text units.
+   * *PMW* Measured width of a real line's list marker in text units. Memoized per layout
+   * (see {@link _clearCache}); the gutter walks and the marker render share the measurement.
    * @private
    */
   _measureListMarkerWidth(realLineIndex: number): number {
@@ -1805,13 +1850,22 @@ export class FabricText<
     if (!marker) {
       return 0;
     }
+    this.__listMarkerWidths ??= {};
+    const memoized = this.__listMarkerWidths[realLineIndex];
+    if (memoized !== undefined) {
+      return memoized;
+    }
+    const width = this._computeListMarkerWidth(realLineIndex, String(marker));
+    this.__listMarkerWidths[realLineIndex] = width;
+    return width;
+  }
+
+  _computeListMarkerWidth(realLineIndex: number, marker: string): number {
     const { fontSize, fontFamily } = this._getListMarkerStyle(realLineIndex);
     const ctx = getMeasuringContext()!;
     // measure at CACHE_FONT_SIZE like _measureChar does, then scale to the marker's font size
     ctx.font = this._getFontDeclaration({ fontSize, fontFamily }, true);
-    return (
-      (ctx.measureText(String(marker)).width * fontSize) / this.CACHE_FONT_SIZE
-    );
+    return (ctx.measureText(marker).width * fontSize) / this.CACHE_FONT_SIZE;
   }
 
   /**
@@ -2007,6 +2061,8 @@ export class FabricText<
     this.__lineWidths = [];
     this.__lineHeights = [];
     this.__charBounds = [];
+    this.__listMarkerWidths = {};
+    this.__listGutterWidths = {};
   }
 
   /**
@@ -2133,6 +2189,7 @@ export class FabricText<
             offsetY * currentSize + currentDy - offsetAligner * finalTickness,
             charBox.kernedWidth,
             finalTickness,
+            currentSize,
           );
           ctx.restore();
         } else if (
@@ -2168,6 +2225,7 @@ export class FabricText<
               top + offsetY * size + dy - offsetAligner * finalTickness,
               boxWidth,
               finalTickness,
+              size,
             );
             if (lastShadow) {
               ctx.restore();
@@ -2210,6 +2268,7 @@ export class FabricText<
           top + offsetY * size + dy - offsetAligner * finalTickness,
           boxWidth - charSpacing,
           finalTickness,
+          size,
         );
       if (currentShadow) {
         ctx.restore();
@@ -2225,7 +2284,8 @@ export class FabricText<
 
   /**
    *  *PMW*
-   * Handle squigglyline
+   * Handle squigglyline. `fontSize` is the decorated run's font size: the squiggle's wave
+   * and dots scale with it (see {@link fillSquigglyLine}), the other decorations ignore it.
    * @private
    */
   private fillTextDecorationRect(
@@ -2235,33 +2295,67 @@ export class FabricText<
     y: number,
     w: number,
     h: number,
+    fontSize: number,
   ) {
     if (type === 'squigglyline') {
-      const polyPoints = [],
-        scaleX = 0.35,
-        scaleY = 0.45,
-        funct = function (x: number): number {
-          const g = x % 6;
-          if (g <= 3) {
-            return g * 5;
-          }
-
-          return (6 - g) * 5;
-        };
-
-      for (let x = 0; x < w; x += 0.5) {
-        polyPoints.push({
-          x: x - 10,
-          y: funct(x * scaleX) * scaleY,
-        });
-      }
-
-      for (let j = 0; j < polyPoints.length; j++) {
-        ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
-      }
+      this.fillSquigglyLine(ctx, x, y, w, fontSize);
     } else {
       ctx.fillRect(x, y, w, h);
     }
+  }
+
+  /**
+   * *PMW* A dotted triangle wave under a misspelled run, in the run's proportions: the wave
+   * that used to be drawn at fixed pixel sizes (sized for ~{@link SQUIGGLY_LINE_REFERENCE_FONT_SIZE}px
+   * text) now scales with the font size, so an 11px caption gets a squiggle a quarter the size
+   * of a 45px heading's instead of one taller than its x-height. The dot never drops below one
+   * DEVICE pixel so tiny text still shows a line — measured through the context transform, not
+   * in text units: a 5px font scaled up 3.5× draws in big text units, and a one-unit floor there
+   * made the dot as tall as the whole wave.
+   * @private
+   */
+  private fillSquigglyLine(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    fontSize: number,
+  ) {
+    const scale = fontSize / SQUIGGLY_LINE_REFERENCE_FONT_SIZE;
+    const dot = Math.max(
+      SQUIGGLY_LINE_DOT_SIZE * scale,
+      this._getTextUnitsPerDevicePixel(ctx),
+    );
+    const step = SQUIGGLY_LINE_DOT_STEP * scale;
+    for (let dx = 0; dx < w; dx += step) {
+      const phase = (dx / scale) * SQUIGGLY_LINE_WAVE_FREQUENCY;
+      const period = phase % SQUIGGLY_LINE_WAVE_PERIOD;
+      const rise =
+        period <= SQUIGGLY_LINE_WAVE_PERIOD / 2
+          ? period
+          : SQUIGGLY_LINE_WAVE_PERIOD - period;
+      ctx.fillRect(
+        x + dx - SQUIGGLY_LINE_LEAD_IN * scale,
+        y + rise * SQUIGGLY_LINE_WAVE_RISE_FACTOR * scale,
+        dot,
+        dot,
+      );
+    }
+  }
+
+  /**
+   * *PMW* How many text units one device pixel spans under the context's current transform
+   * (object scale × viewport zoom × device pixel ratio, cache canvases included). 1 when the
+   * context cannot report its transform.
+   * @private
+   */
+  private _getTextUnitsPerDevicePixel(ctx: CanvasRenderingContext2D): number {
+    if (typeof ctx.getTransform !== 'function') {
+      return 1;
+    }
+    const { a, b } = ctx.getTransform();
+    const devicePixelsPerUnit = Math.sqrt(a * a + b * b);
+    return devicePixelsPerUnit > 0 ? 1 / devicePixelsPerUnit : 1;
   }
 
   /**

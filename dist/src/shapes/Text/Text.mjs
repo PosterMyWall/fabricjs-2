@@ -46,9 +46,22 @@ const UNORDERED_MARKER_RAISE_FACTOR = 16;
 * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
 * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
 * than the floor ("10.", "VIII.") still grow the gutter past it.
-* Mirrored in PHP as MigrateToVersion76::LIST_GUTTER_EM_FACTOR — keep both in sync.
+* Mirrored in PHP as MigrateToVersion79::LIST_GUTTER_EM_FACTOR — keep both in sync.
 */
 const LIST_GUTTER_EM_FACTOR = 1.25;
+/**
+* *PMW* The spell-check squiggle's geometry, in text units at this font size; every other size
+* scales it proportionally (see Text.fillSquigglyLine). 45 is the size the fixed-pixel squiggle
+* was tuned for, so headings look exactly as before and small text gets a proportionate wave.
+*/
+const SQUIGGLY_LINE_REFERENCE_FONT_SIZE = 45;
+const SQUIGGLY_LINE_DOT_SIZE = 2;
+const SQUIGGLY_LINE_DOT_STEP = .5;
+const SQUIGGLY_LINE_LEAD_IN = 2;
+const SQUIGGLY_LINE_WAVE_FREQUENCY = .35;
+const SQUIGGLY_LINE_WAVE_PERIOD = 6;
+/** Peak rise = (period / 2) × this factor: 6.75 text units at the reference size. */
+const SQUIGGLY_LINE_WAVE_RISE_FACTOR = 5 * .45;
 /**
 * Text class
 * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
@@ -861,6 +874,12 @@ var FabricText = class FabricText extends StyledText {
 	* @private
 	*/
 	_getLegacyListGutterWidth() {
+		var _this$__listGutterWid;
+		(_this$__listGutterWid = this.__listGutterWidths) !== null && _this$__listGutterWid !== void 0 || (this.__listGutterWidths = {});
+		if (this.__listGutterWidths.legacy === void 0) this.__listGutterWidths.legacy = this._computeLegacyListGutterWidth();
+		return this.__listGutterWidths.legacy;
+	}
+	_computeLegacyListGutterWidth() {
 		let gutter = 0;
 		for (const key of Object.keys(this.lineStyles)) {
 			const realLineIndex = parseInt(key, 10);
@@ -878,9 +897,19 @@ var FabricText = class FabricText extends StyledText {
 	* wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
 	* bullet and numbered rows and across separate textboxes of the same font size; the max keeps
 	* long ordinals ("10.") from colliding with their text.
+	*
+	* Memoized per layout (see {@link _clearCache}): the alignment and wrap code asks for the
+	* gutter once per visual line per render pass, and a fresh walk over every list record each
+	* time made list rendering quadratic in the row count (601ms a frame at 120 rows).
 	* @private
 	*/
 	_getAutoListGutterWidth() {
+		var _this$__listGutterWid2;
+		(_this$__listGutterWid2 = this.__listGutterWidths) !== null && _this$__listGutterWid2 !== void 0 || (this.__listGutterWidths = {});
+		if (this.__listGutterWidths.auto === void 0) this.__listGutterWidths.auto = this._computeAutoListGutterWidth();
+		return this.__listGutterWidths.auto;
+	}
+	_computeAutoListGutterWidth() {
 		let gutter = 0;
 		for (const key of Object.keys(this.lineStyles)) {
 			const realLineIndex = parseInt(key, 10);
@@ -908,20 +937,29 @@ var FabricText = class FabricText extends StyledText {
 		};
 	}
 	/**
-	* *PMW* Measured width of a real line's list marker in text units.
+	* *PMW* Measured width of a real line's list marker in text units. Memoized per layout
+	* (see {@link _clearCache}); the gutter walks and the marker render share the measurement.
 	* @private
 	*/
 	_measureListMarkerWidth(realLineIndex) {
-		var _this$lineStyles$real;
+		var _this$lineStyles$real, _this$__listMarkerWid;
 		const marker = (_this$lineStyles$real = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real === void 0 ? void 0 : _this$lineStyles$real.listMarker;
 		if (!marker) return 0;
+		(_this$__listMarkerWid = this.__listMarkerWidths) !== null && _this$__listMarkerWid !== void 0 || (this.__listMarkerWidths = {});
+		const memoized = this.__listMarkerWidths[realLineIndex];
+		if (memoized !== void 0) return memoized;
+		const width = this._computeListMarkerWidth(realLineIndex, String(marker));
+		this.__listMarkerWidths[realLineIndex] = width;
+		return width;
+	}
+	_computeListMarkerWidth(realLineIndex, marker) {
 		const { fontSize, fontFamily } = this._getListMarkerStyle(realLineIndex);
 		const ctx = getMeasuringContext();
 		ctx.font = this._getFontDeclaration({
 			fontSize,
 			fontFamily
 		}, true);
-		return ctx.measureText(String(marker)).width * fontSize / this.CACHE_FONT_SIZE;
+		return ctx.measureText(marker).width * fontSize / this.CACHE_FONT_SIZE;
 	}
 	/**
 	* *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
@@ -1038,6 +1076,8 @@ var FabricText = class FabricText extends StyledText {
 		this.__lineWidths = [];
 		this.__lineHeights = [];
 		this.__charBounds = [];
+		this.__listMarkerWidths = {};
+		this.__listGutterWidths = {};
 	}
 	/**
 	* Measure a single line given its index. Used to calculate the initial
@@ -1114,7 +1154,7 @@ var FabricText = class FabricText extends StyledText {
 					ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
 					ctx.translate(charBox.renderLeft, charBox.renderTop);
 					ctx.rotate(charBox.angle);
-					this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness);
+					this.fillTextDecorationRect(ctx, type, -charBox.kernedWidth / 2, offsetY * currentSize + currentDy - offsetAligner * finalTickness, charBox.kernedWidth, finalTickness, currentSize);
 					ctx.restore();
 				} else if ((currentDecoration !== lastDecoration || currentFill !== lastFill || currentDecorationColor !== lastDecorationColor || currentSize !== size || currentTickness !== lastTickness || !deepPlainValuesEqual(currentShadow, lastShadow) || currentDy !== dy) && boxWidth > 0) {
 					const finalTickness = this.fontSize * lastTickness / 1e3;
@@ -1126,7 +1166,7 @@ var FabricText = class FabricText extends StyledText {
 							this._setCharShadow(ctx, lastShadow);
 						}
 						ctx.fillStyle = this.getFillForTextDecoration(ctx, type, lastFill);
-						this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness);
+						this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth, finalTickness, size);
 						if (lastShadow) ctx.restore();
 					}
 					boxStart = charBox.left;
@@ -1148,29 +1188,52 @@ var FabricText = class FabricText extends StyledText {
 			}
 			ctx.fillStyle = this.getFillForTextDecoration(ctx, type, currentFill);
 			const finalTickness = this.fontSize * currentTickness / 1e3;
-			currentDecoration && currentDecorationColor && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness);
+			currentDecoration && currentDecorationColor && currentTickness && this.fillTextDecorationRect(ctx, type, drawStart, top + offsetY * size + dy - offsetAligner * finalTickness, boxWidth - charSpacing, finalTickness, size);
 			if (currentShadow) ctx.restore();
 			topOffset += heightOfLine;
 		}
 	}
 	/**
 	*  *PMW*
-	* Handle squigglyline
+	* Handle squigglyline. `fontSize` is the decorated run's font size: the squiggle's wave
+	* and dots scale with it (see {@link fillSquigglyLine}), the other decorations ignore it.
 	* @private
 	*/
-	fillTextDecorationRect(ctx, type, x, y, w, h) {
-		if (type === "squigglyline") {
-			const polyPoints = [], scaleX = .35, scaleY = .45, funct = function(x) {
-				const g = x % 6;
-				if (g <= 3) return g * 5;
-				return (6 - g) * 5;
-			};
-			for (let x = 0; x < w; x += .5) polyPoints.push({
-				x: x - 10,
-				y: funct(x * scaleX) * scaleY
-			});
-			for (let j = 0; j < polyPoints.length; j++) ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
-		} else ctx.fillRect(x, y, w, h);
+	fillTextDecorationRect(ctx, type, x, y, w, h, fontSize) {
+		if (type === "squigglyline") this.fillSquigglyLine(ctx, x, y, w, fontSize);
+		else ctx.fillRect(x, y, w, h);
+	}
+	/**
+	* *PMW* A dotted triangle wave under a misspelled run, in the run's proportions: the wave
+	* that used to be drawn at fixed pixel sizes (sized for ~{@link SQUIGGLY_LINE_REFERENCE_FONT_SIZE}px
+	* text) now scales with the font size, so an 11px caption gets a squiggle a quarter the size
+	* of a 45px heading's instead of one taller than its x-height. The dot never drops below one
+	* DEVICE pixel so tiny text still shows a line — measured through the context transform, not
+	* in text units: a 5px font scaled up 3.5× draws in big text units, and a one-unit floor there
+	* made the dot as tall as the whole wave.
+	* @private
+	*/
+	fillSquigglyLine(ctx, x, y, w, fontSize) {
+		const scale = fontSize / SQUIGGLY_LINE_REFERENCE_FONT_SIZE;
+		const dot = Math.max(SQUIGGLY_LINE_DOT_SIZE * scale, this._getTextUnitsPerDevicePixel(ctx));
+		const step = SQUIGGLY_LINE_DOT_STEP * scale;
+		for (let dx = 0; dx < w; dx += step) {
+			const period = dx / scale * SQUIGGLY_LINE_WAVE_FREQUENCY % SQUIGGLY_LINE_WAVE_PERIOD;
+			const rise = period <= SQUIGGLY_LINE_WAVE_PERIOD / 2 ? period : SQUIGGLY_LINE_WAVE_PERIOD - period;
+			ctx.fillRect(x + dx - SQUIGGLY_LINE_LEAD_IN * scale, y + rise * SQUIGGLY_LINE_WAVE_RISE_FACTOR * scale, dot, dot);
+		}
+	}
+	/**
+	* *PMW* How many text units one device pixel spans under the context's current transform
+	* (object scale × viewport zoom × device pixel ratio, cache canvases included). 1 when the
+	* context cannot report its transform.
+	* @private
+	*/
+	_getTextUnitsPerDevicePixel(ctx) {
+		if (typeof ctx.getTransform !== "function") return 1;
+		const { a, b } = ctx.getTransform();
+		const devicePixelsPerUnit = Math.sqrt(a * a + b * b);
+		return devicePixelsPerUnit > 0 ? 1 / devicePixelsPerUnit : 1;
 	}
 	/**
 	*  *PMW*

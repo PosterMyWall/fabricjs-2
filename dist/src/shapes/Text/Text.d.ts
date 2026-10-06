@@ -350,6 +350,19 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     cursorWidth: number;
     __lineHeights: number[];
     __lineWidths: number[];
+    /**
+     * *PMW* Per-layout memo of each real line's measured list marker width, keyed by real line
+     * index. Reset by _clearCache.
+     */
+    __listMarkerWidths: Record<number, number>;
+    /**
+     * *PMW* Per-layout memo of the shared list gutters (auto rows, migrated legacy rows). Reset
+     * by _clearCache.
+     */
+    __listGutterWidths: {
+        auto?: number;
+        legacy?: number;
+    };
     initialized?: true;
     static cacheProperties: string[];
     static ownDefaults: Partial<TClassProperties<FabricText<Partial<TextProps>, SerializedTextProps, ObjectEvents>>>;
@@ -689,6 +702,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @private
      */
     _getLegacyListGutterWidth(): number;
+    _computeLegacyListGutterWidth(): number;
     /**
      * *PMW* One shared gutter for every auto-indented list row of the textbox: the
      * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
@@ -696,9 +710,14 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
      * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
      * long ordinals ("10.") from colliding with their text.
+     *
+     * Memoized per layout (see {@link _clearCache}): the alignment and wrap code asks for the
+     * gutter once per visual line per render pass, and a fresh walk over every list record each
+     * time made list rendering quadratic in the row count (601ms a frame at 120 rows).
      * @private
      */
     _getAutoListGutterWidth(): number;
+    _computeAutoListGutterWidth(): number;
     /**
      * *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
      * falling back to the line's first character's effective style.
@@ -710,10 +729,12 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
         fill: string;
     };
     /**
-     * *PMW* Measured width of a real line's list marker in text units.
+     * *PMW* Measured width of a real line's list marker in text units. Memoized per layout
+     * (see {@link _clearCache}); the gutter walks and the marker render share the measurement.
      * @private
      */
     _measureListMarkerWidth(realLineIndex: number): number;
+    _computeListMarkerWidth(realLineIndex: number, marker: string): number;
     /**
      * *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
      * fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
@@ -785,10 +806,29 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     _renderTextDecoration(ctx: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline' | 'squigglyline'): void;
     /**
      *  *PMW*
-     * Handle squigglyline
+     * Handle squigglyline. `fontSize` is the decorated run's font size: the squiggle's wave
+     * and dots scale with it (see {@link fillSquigglyLine}), the other decorations ignore it.
      * @private
      */
     private fillTextDecorationRect;
+    /**
+     * *PMW* A dotted triangle wave under a misspelled run, in the run's proportions: the wave
+     * that used to be drawn at fixed pixel sizes (sized for ~{@link SQUIGGLY_LINE_REFERENCE_FONT_SIZE}px
+     * text) now scales with the font size, so an 11px caption gets a squiggle a quarter the size
+     * of a 45px heading's instead of one taller than its x-height. The dot never drops below one
+     * DEVICE pixel so tiny text still shows a line — measured through the context transform, not
+     * in text units: a 5px font scaled up 3.5× draws in big text units, and a one-unit floor there
+     * made the dot as tall as the whole wave.
+     * @private
+     */
+    private fillSquigglyLine;
+    /**
+     * *PMW* How many text units one device pixel spans under the context's current transform
+     * (object scale × viewport zoom × device pixel ratio, cache canvases included). 1 when the
+     * context cannot report its transform.
+     * @private
+     */
+    private _getTextUnitsPerDevicePixel;
     /**
      *  *PMW*
      * Handle squigglyline, gradient fill and pattern fill for text decoration
