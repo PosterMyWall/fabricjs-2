@@ -2,6 +2,7 @@
 
 ## [next]
 
+- feat(text): export list markers as SVG spans where the canvas draws them, write the gradient definitions of per-character fills, and read a right-to-left line's glyph reach by each glyph's own ink (pmw-70)
 - feat(text): measure each glyph's ink reach and size the text and group caches from it, so swashes and descenders of any font are not cut (pmw-69)
 - Upgrade 7.4.0 [#4](https://github.com/fabricjs/fabric.js/pull/4)
 

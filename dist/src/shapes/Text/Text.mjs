@@ -266,7 +266,8 @@ var FabricText = class FabricText extends StyledText {
 	/**
 	* *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
 	* right of the box edge, both after the line's alignment offset (a right-to-left line lays
-	* its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+	* its graphemes out mirrored, so it counts each glyph's reach past its own advance box
+	* instead, with no alignment credit, and reads conservatively);
 	* vertically, the first line's ink above its baseline and the last line's ink below the
 	* box bottom. A stroke paints half its width outside the outline on every side.
 	* @private
@@ -280,11 +281,11 @@ var FabricText = class FabricText extends StyledText {
 		let horizontal = 0, vertical = 0, lineTop = 0;
 		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
 			this.getLineWidth(lineIndex);
-			const bounds = this.__charBounds[lineIndex], isRtl = this.direction === "rtl", leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex), rightEdge = isRtl ? this.getLineWidth(lineIndex) : this.width - leftOffset, baselineFromTop = lineTop + this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction), roomBelowBaseline = this.height - baselineFromTop;
+			const bounds = this.__charBounds[lineIndex], isRtl = this.direction === "rtl", leftOffset = this._getLineLeftOffset(lineIndex), rightEdge = this.width - leftOffset, baselineFromTop = lineTop + this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction), roomBelowBaseline = this.height - baselineFromTop;
 			for (let charIndex = 0; bounds && charIndex < this._textLines[lineIndex].length; charIndex++) {
 				const box = bounds[charIndex], ink = box.ink;
 				if (!ink) continue;
-				horizontal = Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
+				horizontal = isRtl ? Math.max(horizontal, ink.left, ink.right - box.width) : Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
 				if (lineIndex === 0) vertical = Math.max(vertical, ink.ascent - box.deltaY - baselineFromTop);
 				if (lineIndex === lineCount - 1) vertical = Math.max(vertical, ink.descent + box.deltaY - roomBelowBaseline);
 			}
@@ -624,6 +625,7 @@ var FabricText = class FabricText extends StyledText {
 	* @param {Number} lineIndex index of line to calculate
 	* @return {Number}
 	*/
+	/** *PMW* also read by the SVG export mixin, which is a separate class */
 	getHeightOfLineImpl(lineIndex) {
 		const lh = this.__lineHeights;
 		if (lh[lineIndex]) return lh[lineIndex];
@@ -1029,25 +1031,48 @@ var FabricText = class FabricText extends StyledText {
 	* @private
 	*/
 	_renderListMarker(ctx, visualLineIndex, lineDrawLeft, lineDrawTop) {
-		var _this$lineStyles$real2, _this$lineStyles$real3;
-		if (!this._isStartOfRealLine(visualLineIndex)) return;
-		const realLineIndex = this._getRealLineIndex(visualLineIndex);
-		const marker = (_this$lineStyles$real2 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real2 === void 0 ? void 0 : _this$lineStyles$real2.listMarker;
-		if (!marker) return;
-		const { fontSize, fontFamily, fill } = this._getListMarkerStyle(realLineIndex);
-		const gap = LIST_MARKER_GAP_FACTOR * fontSize;
-		const markerLeft = this.direction === "rtl" ? lineDrawLeft + gap : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
+		const placed = this._getListMarkerPlacement(visualLineIndex, lineDrawLeft, lineDrawTop);
+		if (!placed) return;
 		ctx.save();
 		ctx.direction = "ltr";
 		ctx.textAlign = LEFT;
 		ctx.font = this._getFontDeclaration({
-			fontSize,
-			fontFamily
+			fontSize: placed.fontSize,
+			fontFamily: placed.fontFamily
 		});
-		ctx.fillStyle = fill;
-		const unorderedMarkerRaise = ((_this$lineStyles$real3 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real3 === void 0 ? void 0 : _this$lineStyles$real3.listMarkerFontFamily) ? fontSize / UNORDERED_MARKER_RAISE_FACTOR : 0;
-		ctx.fillText(String(marker), markerLeft, lineDrawTop - this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction - unorderedMarkerRaise);
+		ctx.fillStyle = placed.fill;
+		ctx.fillText(placed.marker, placed.left, placed.baseline);
 		ctx.restore();
+	}
+	/**
+	* *PMW* Where a visual row's list marker is drawn, in text units, given the row's own draw
+	* anchors (`lineDrawLeft` is the row's text start, `lineDrawTop` its bottom). Shared by the
+	* canvas render and the SVG export so both put the marker in the same place. Null when the
+	* row does not start a listed real line.
+	*
+	* LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+	* right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+	* grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+	* anchor is its right edge there. An unordered glyph is raised a little above the baseline.
+	* @private
+	*/
+	_getListMarkerPlacement(visualLineIndex, lineDrawLeft, lineDrawTop) {
+		var _this$lineStyles$real2, _this$lineStyles$real3;
+		if (!this._isStartOfRealLine(visualLineIndex)) return null;
+		const realLineIndex = this._getRealLineIndex(visualLineIndex);
+		const marker = (_this$lineStyles$real2 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real2 === void 0 ? void 0 : _this$lineStyles$real2.listMarker;
+		if (!marker) return null;
+		const { fontSize, fontFamily, fill } = this._getListMarkerStyle(realLineIndex);
+		const gap = LIST_MARKER_GAP_FACTOR * fontSize;
+		const unorderedMarkerRaise = ((_this$lineStyles$real3 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real3 === void 0 ? void 0 : _this$lineStyles$real3.listMarkerFontFamily) ? fontSize / UNORDERED_MARKER_RAISE_FACTOR : 0;
+		return {
+			marker: String(marker),
+			fontSize,
+			fontFamily,
+			fill,
+			left: this.direction === "rtl" ? lineDrawLeft + gap : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex),
+			baseline: lineDrawTop - this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction - unorderedMarkerRaise
+		};
 	}
 	/**
 	* *PMW* Sets or clears (align undefined) one real line's alignment override.

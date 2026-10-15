@@ -4,6 +4,12 @@ import { type TextStyleDeclaration } from './StyledText';
 import type { FabricText } from './Text';
 export declare class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     _toSVG(this: TextSVGExportMixin & FabricText): string[];
+    /**
+     * *PMW* The gradient definitions of per-character fills. The object-level fill is written by
+     * _createBaseSVGMarkup, but a styled character's gradient only ever appeared as a `url(#id)`
+     * reference, so the text rendered black in any SVG consumer.
+     */
+    _getStyledCharFillerMarkup(this: TextSVGExportMixin & FabricText): string[];
     toSVG(this: TextSVGExportMixin & FabricText, reviver?: TSVGReviver): string;
     private _getSVGLeftTopOffsets;
     private _wrapSVGTextAndBg;
@@ -15,6 +21,12 @@ export declare class TextSVGExportMixin extends FabricObjectSVGExportMixin {
      */
     private _getSVGTextAndBg;
     private _createTextCharSpan;
+    /**
+     * *PMW* The list marker of a visual row as its own span, placed exactly where the canvas
+     * render draws it ({@link FabricText#_getListMarkerPlacement}): the row's text start is the
+     * span's left offset and the row's bottom is its top offset plus the line height.
+     */
+    private _setSVGListMarker;
     private _setSVGTextLineText;
     private _setSVGTextLineBg;
     /**

@@ -183,6 +183,16 @@ export type TGlyphOverhang = {
   vertical: number;
 };
 
+/** *PMW* A list marker resolved to its draw position and style, in text units. */
+export type TListMarkerPlacement = {
+  marker: string;
+  fontSize: number;
+  fontFamily: string;
+  fill: string;
+  left: number;
+  baseline: number;
+};
+
 // @TODO this is not complete
 interface UniqueTextProps {
   charSpacing: number;
@@ -841,7 +851,8 @@ export class FabricText<
   /**
    * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
    * right of the box edge, both after the line's alignment offset (a right-to-left line lays
-   * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+   * its graphemes out mirrored, so it counts each glyph's reach past its own advance box
+   * instead, with no alignment credit, and reads conservatively);
    * vertically, the first line's ink above its baseline and the last line's ink below the
    * box bottom. A stroke paints half its width outside the outline on every side.
    * @private
@@ -859,10 +870,8 @@ export class FabricText<
       this.getLineWidth(lineIndex);
       const bounds = this.__charBounds[lineIndex],
         isRtl = this.direction === RTL,
-        leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex),
-        rightEdge = isRtl
-          ? this.getLineWidth(lineIndex)
-          : this.width - leftOffset,
+        leftOffset = this._getLineLeftOffset(lineIndex),
+        rightEdge = this.width - leftOffset,
         baselineFromTop =
           lineTop +
           this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction),
@@ -877,11 +886,15 @@ export class FabricText<
         if (!ink) {
           continue;
         }
-        horizontal = Math.max(
-          horizontal,
-          ink.left - box.left - leftOffset,
-          box.left + ink.right - rightEdge,
-        );
+        // *PMW* an RTL line lays its graphemes out mirrored, so the left/right terms would
+        // credit the wrong edge; count every glyph's reach past its own advance box instead
+        horizontal = isRtl
+          ? Math.max(horizontal, ink.left, ink.right - box.width)
+          : Math.max(
+              horizontal,
+              ink.left - box.left - leftOffset,
+              box.left + ink.right - rightEdge,
+            );
         if (lineIndex === 0) {
           vertical = Math.max(
             vertical,
@@ -1370,7 +1383,8 @@ export class FabricText<
    * @param {Number} lineIndex index of line to calculate
    * @return {Number}
    */
-  private getHeightOfLineImpl(lineIndex: number): number {
+  /** *PMW* also read by the SVG export mixin, which is a separate class */
+  getHeightOfLineImpl(lineIndex: number): number {
     const lh = this.__lineHeights;
     if (lh[lineIndex]) {
       return lh[lineIndex];
@@ -2000,44 +2014,74 @@ export class FabricText<
     lineDrawLeft: number,
     lineDrawTop: number,
   ) {
-    if (!this._isStartOfRealLine(visualLineIndex)) {
+    const placed = this._getListMarkerPlacement(
+      visualLineIndex,
+      lineDrawLeft,
+      lineDrawTop,
+    );
+    if (!placed) {
       return;
     }
-    const realLineIndex = this._getRealLineIndex(visualLineIndex);
-    const marker = this.lineStyles[realLineIndex]?.listMarker;
-    if (!marker) {
-      return;
-    }
-    const { fontSize, fontFamily, fill } =
-      this._getListMarkerStyle(realLineIndex);
-    // LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
-    // right edge sits a fixed gap from the text column, so ordinal periods line up and digits
-    // grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
-    // anchor is its right edge there.
-    const gap = LIST_MARKER_GAP_FACTOR * fontSize;
-    const markerLeft =
-      this.direction === RTL
-        ? lineDrawLeft + gap
-        : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
     ctx.save();
     // markers are direction-neutral ordinals/glyphs; pin the ctx so an inherited RTL canvas
     // state cannot re-anchor or reorder them
     ctx.direction = LTR;
     ctx.textAlign = LEFT;
-    ctx.font = this._getFontDeclaration({ fontSize, fontFamily });
-    ctx.fillStyle = fill;
+    ctx.font = this._getFontDeclaration({
+      fontSize: placed.fontSize,
+      fontFamily: placed.fontFamily,
+    });
+    ctx.fillStyle = placed.fill;
+    ctx.fillText(placed.marker, placed.left, placed.baseline);
+    ctx.restore();
+  }
+
+  /**
+   * *PMW* Where a visual row's list marker is drawn, in text units, given the row's own draw
+   * anchors (`lineDrawLeft` is the row's text start, `lineDrawTop` its bottom). Shared by the
+   * canvas render and the SVG export so both put the marker in the same place. Null when the
+   * row does not start a listed real line.
+   *
+   * LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+   * right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+   * grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+   * anchor is its right edge there. An unordered glyph is raised a little above the baseline.
+   * @private
+   */
+  _getListMarkerPlacement(
+    visualLineIndex: number,
+    lineDrawLeft: number,
+    lineDrawTop: number,
+  ): TListMarkerPlacement | null {
+    if (!this._isStartOfRealLine(visualLineIndex)) {
+      return null;
+    }
+    const realLineIndex = this._getRealLineIndex(visualLineIndex);
+    const marker = this.lineStyles[realLineIndex]?.listMarker;
+    if (!marker) {
+      return null;
+    }
+    const { fontSize, fontFamily, fill } =
+      this._getListMarkerStyle(realLineIndex);
+    const gap = LIST_MARKER_GAP_FACTOR * fontSize;
     const unorderedMarkerRaise = this.lineStyles[realLineIndex]
       ?.listMarkerFontFamily
       ? fontSize / UNORDERED_MARKER_RAISE_FACTOR
       : 0;
-    ctx.fillText(
-      String(marker),
-      markerLeft,
-      lineDrawTop -
+    return {
+      marker: String(marker),
+      fontSize,
+      fontFamily,
+      fill,
+      left:
+        this.direction === RTL
+          ? lineDrawLeft + gap
+          : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex),
+      baseline:
+        lineDrawTop -
         this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction -
         unorderedMarkerRaise,
-    );
-    ctx.restore();
+    };
   }
 
   /**
