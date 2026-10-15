@@ -452,7 +452,7 @@
 	const cache = new Cache();
 	//#endregion
 	//#region src/constants.ts
-	const VERSION = "7.1.0-pmw-70";
+	const VERSION = "7.4.0-pmw-70";
 	function noop() {}
 	const halfPI = Math.PI / 2;
 	const quarterPI = Math.PI / 4;
