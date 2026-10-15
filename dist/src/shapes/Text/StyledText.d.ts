@@ -4,7 +4,19 @@ import type { TOptions } from '../../typedefs';
 import { FabricObject } from '../Object/FabricObject';
 import type { StylePropertiesType } from './constants';
 import type { FabricText } from './Text';
-export type CompleteTextStyleDeclaration = Pick<FabricText, StylePropertiesType>;
+/**
+ * *PMW* A per-character shadow is a plain serializable declaration, never a Shadow instance
+ * (see Text._setCharShadow).
+ */
+export type CharShadowDeclaration = {
+    color?: string;
+    blur?: number;
+    offsetX?: number;
+    offsetY?: number;
+};
+export type CompleteTextStyleDeclaration = Omit<Pick<FabricText, StylePropertiesType>, 'shadow'> & {
+    shadow: CharShadowDeclaration | null;
+};
 export type TextStyleDeclaration = Partial<CompleteTextStyleDeclaration>;
 export type TextStyle = {
     [line: number | string]: {

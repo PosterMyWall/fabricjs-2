@@ -486,7 +486,10 @@ var ITextBehavior = class extends FabricText {
 					this.styles[lineStart][charStart + i - charEnd] = styleObj;
 				}
 			}
-			for (let i = lineStart + 1; i <= lineEnd; i++) delete this.styles[i];
+			for (let i = lineStart + 1; i <= lineEnd; i++) {
+				delete this.styles[i];
+				delete this.lineStyles[i];
+			}
 			this.shiftLineStyles(lineEnd, lineStart - lineEnd);
 		} else if (this.styles[lineStart]) {
 			const styleObj = this.styles[lineStart];
@@ -515,6 +518,12 @@ var ITextBehavior = class extends FabricText {
 				if (!clonedStyles[numericLine - offset]) delete this.styles[numericLine];
 			}
 		}
+		const shiftedLineStyles = {};
+		for (const line in this.lineStyles) {
+			const numericLine = parseInt(line, 10);
+			shiftedLineStyles[numericLine > lineIndex ? numericLine + offset : numericLine] = this.lineStyles[numericLine];
+		}
+		this.lineStyles = shiftedLineStyles;
 	}
 	/**
 	* Handle insertion of more consecutive style lines for when one or more
@@ -533,6 +542,12 @@ var ITextBehavior = class extends FabricText {
 		let someStyleIsCarryingOver = false;
 		qty || (qty = 1);
 		this.shiftLineStyles(lineIndex, qty);
+		const splitLineStyles = this.lineStyles[lineIndex];
+		if (splitLineStyles) {
+			const continuedLineStyles = { ...this.lineStyles };
+			for (let newLine = 1; newLine <= qty; newLine++) continuedLineStyles[lineIndex + newLine] = { ...splitLineStyles };
+			this.lineStyles = continuedLineStyles;
+		}
 		const currentCharStyle = this.styles[lineIndex] ? this.styles[lineIndex][charIndex === 0 ? charIndex : charIndex - 1] : void 0;
 		for (const index in this.styles[lineIndex]) {
 			const numIndex = parseInt(index, 10);

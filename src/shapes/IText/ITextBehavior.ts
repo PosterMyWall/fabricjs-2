@@ -792,6 +792,9 @@ export abstract class ITextBehavior<
       // step3 detects lines will be completely removed.
       for (let i = lineStart + 1; i <= lineEnd; i++) {
         delete this.styles[i];
+        // *PMW* the removed lines' per-line styles go with them (the surviving merged
+        // line keeps lineStart's record)
+        delete this.lineStyles[i];
       }
       // step4 shift remaining lines.
       this.shiftLineStyles(lineEnd, lineStart - lineEnd);
@@ -830,6 +833,15 @@ export abstract class ITextBehavior<
         }
       }
     }
+    // *PMW* per-line styles stay keyed to their (shifted) lines
+    const shiftedLineStyles: typeof this.lineStyles = {};
+    for (const line in this.lineStyles) {
+      const numericLine = parseInt(line, 10);
+      shiftedLineStyles[
+        numericLine > lineIndex ? numericLine + offset : numericLine
+      ] = this.lineStyles[numericLine];
+    }
+    this.lineStyles = shiftedLineStyles;
   }
 
   /**
@@ -855,6 +867,16 @@ export abstract class ITextBehavior<
     let someStyleIsCarryingOver = false;
     qty || (qty = 1);
     this.shiftLineStyles(lineIndex, qty);
+    // *PMW* Enter-continuation: each line created by the split inherits the split
+    // line's per-line styles (alignment, list markers, passengers)
+    const splitLineStyles = this.lineStyles[lineIndex];
+    if (splitLineStyles) {
+      const continuedLineStyles = { ...this.lineStyles };
+      for (let newLine = 1; newLine <= qty; newLine++) {
+        continuedLineStyles[lineIndex + newLine] = { ...splitLineStyles };
+      }
+      this.lineStyles = continuedLineStyles;
+    }
     const currentCharStyle = this.styles[lineIndex]
       ? this.styles[lineIndex][charIndex === 0 ? charIndex : charIndex - 1]
       : undefined;

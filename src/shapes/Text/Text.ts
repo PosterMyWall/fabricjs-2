@@ -1,6 +1,16 @@
 import { cache } from '../../cache';
+import type { GlyphInkBounds } from '../../cache';
 import type { NORMAL } from '../../constants';
-import { DEFAULT_SVG_FONT_SIZE, FILL, LTR, RTL, STROKE } from '../../constants';
+import {
+  DEFAULT_SVG_FONT_SIZE,
+  FILL,
+  iMatrix,
+  LTR,
+  RTL,
+  STROKE,
+} from '../../constants';
+import { config } from '../../config';
+import { deepPlainValuesEqual } from '../../util/internals/deepPlainValues';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type {
   CompleteTextStyleDeclaration,
@@ -95,6 +105,61 @@ export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
  * needs the the info of previous graphemes already filled
  * Override to customize measuring
  */
+/**
+ * *PMW* One real line's style record. Fabric consumes:
+ * - `textAlign`: overrides the object alignment for the line;
+ * - `leftIndent`: explicit extra left offset in text units (also reserved from the wrap width);
+ * - `listMarker`: a marker string (bullet glyph / ordinal) drawn in the gutter left of the
+ *   line's first visual row — when set without `leftIndent`, the indent is auto-measured from
+ *   the marker plus a gap;
+ * - `listMarkerFontFamily` / `listMarkerFill`: marker font/fill, defaulting to the line's first
+ *   character's effective style.
+ * Every other key is an opaque passenger preserved by the editing logic.
+ */
+export type LineStyleDeclaration = {
+  textAlign?: string;
+  leftIndent?: number;
+  listMarker?: string;
+  listMarkerFontFamily?: string;
+  listMarkerFill?: string;
+} & Record<string, unknown>;
+
+/** *PMW* gap between a list marker and its line, as a fraction of the marker's font size. */
+const LIST_MARKER_GAP_FACTOR = 0.25;
+
+/**
+ * *PMW* Unordered markers draw raised by fontSize / this factor: the bullets-font glyph sits low
+ * in its em box, and the legacy renderer optically centered it by shifting its bullets textbox up
+ * by the same amount (BULLETS_TOP_DISTANCE_FACTOR = 16 in the legacy webapp text item). Ordered
+ * markers sit on the row baseline.
+ */
+const UNORDERED_MARKER_RAISE_FACTOR = 16;
+
+/**
+ * *PMW* Floor for the list gutter, as a multiple of the marker's font size. Every list row at a
+ * given font size reserves at least this much, so bullet rows, numbered rows and separate
+ * textboxes all share one text column instead of each starting at its own measured width.
+ * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
+ * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
+ * than the floor ("10.", "VIII.") still grow the gutter past it.
+ * Mirrored in PHP as MigrateToVersion80::LIST_GUTTER_EM_FACTOR — keep both in sync.
+ */
+const LIST_GUTTER_EM_FACTOR = 1.25;
+
+/**
+ * *PMW* The spell-check squiggle's geometry, in text units at this font size; every other size
+ * scales it proportionally (see Text.fillSquigglyLine). 45 is the size the fixed-pixel squiggle
+ * was tuned for, so headings look exactly as before and small text gets a proportionate wave.
+ */
+const SQUIGGLY_LINE_REFERENCE_FONT_SIZE = 45;
+const SQUIGGLY_LINE_DOT_SIZE = 2;
+const SQUIGGLY_LINE_DOT_STEP = 0.5;
+const SQUIGGLY_LINE_LEAD_IN = 2;
+const SQUIGGLY_LINE_WAVE_FREQUENCY = 0.35;
+const SQUIGGLY_LINE_WAVE_PERIOD = 6;
+/** Peak rise = (period / 2) × this factor: 6.75 text units at the reference size. */
+const SQUIGGLY_LINE_WAVE_RISE_FACTOR = 5 * 0.45;
+
 export type GraphemeBBox = {
   width: number;
   height: number;
@@ -104,6 +169,18 @@ export type GraphemeBBox = {
   renderLeft?: number;
   renderTop?: number;
   angle?: number;
+  /** *PMW* ink extent of the grapheme in text units, see {@link GlyphInkBounds} */
+  ink?: GlyphInkBounds;
+};
+
+/**
+ * *PMW* How far the painted glyphs of a text object reach past its width and height, in
+ * text units: `horizontal` is the larger of the left and right reach, `vertical` the larger
+ * of the reach above the first line and below the last. 0 when every glyph fits the box.
+ */
+export type TGlyphOverhang = {
+  horizontal: number;
+  vertical: number;
 };
 
 // @TODO this is not complete
@@ -125,6 +202,7 @@ interface UniqueTextProps {
   ignoreDelegatedSet: boolean;
   squigglylineColor: string;
   isStrokeForBold: boolean;
+  pmwRunStyles?: Record<string, unknown>;
   direction: CanvasDirection;
   path?: Path;
   textDecorationThickness: number;
@@ -144,6 +222,31 @@ export interface TextProps extends FabricObjectProps, UniqueTextProps {
  * Text class
  * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
  */
+/**
+ * *PMW* Resolves a fill value to the color a list marker inherits: a string fill is itself; a
+ * Gradient contributes its lowest-offset stop's color (the marker glyph is too small to ramp).
+ * Pattern fills resolve to nothing and fall through the caller's chain.
+ */
+function getMarkerColorFromFill(fill: unknown): string | undefined {
+  if (typeof fill === 'string' && fill) {
+    return fill;
+  }
+  const colorStops =
+    fill && typeof fill === 'object'
+      ? (fill as Gradient<'linear'>).colorStops
+      : undefined;
+  if (!Array.isArray(colorStops) || colorStops.length === 0) {
+    return undefined;
+  }
+  let firstStop = colorStops[0];
+  for (const stop of colorStops) {
+    if (stop.offset < firstStop.offset) {
+      firstStop = stop;
+    }
+  }
+  return firstStop.color;
+}
+
 export class FabricText<
   Props extends TOptions<TextProps> = Partial<TextProps>,
   SProps extends SerializedTextProps = SerializedTextProps,
@@ -234,6 +337,11 @@ export class FabricText<
   /*PMW*/
   declare squigglylineColor: string;
   declare isStrokeForBold: boolean;
+  /*PMW* Opaque per-character passenger carried in `styles` declarations only.
+   * Fabric never renders or assigns it at object level (no default on purpose);
+   * it exists so the style pipeline (get/setSelectionStyles, editing shifts,
+   * serialization) preserves caller-owned data attached to characters. */
+  declare pmwRunStyles?: Record<string, unknown>;
 
   //*PMW*
   /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
@@ -297,6 +405,15 @@ export class FabricText<
   declare textBackgroundColor: string;
 
   declare styles: TextStyle;
+
+  /**
+   * *PMW* Per-line style declarations keyed by REAL (unwrapped) line index. Fabric consumes
+   * `textAlign` (overrides the object-level alignment for that line) and `leftIndent` (extra
+   * left offset in text units, e.g. for list rows); any other key is an opaque passenger that
+   * the editing logic shifts with its line (see ITextBehavior). Never mutate a record in
+   * place — writers always assign fresh objects so caches and snapshots stay coherent.
+   */
+  declare lineStyles: Record<number | string, LineStyleDeclaration>;
 
   /**
    * Path that the text should follow.
@@ -419,6 +536,9 @@ export class FabricText<
    */
   __charBounds: GraphemeBBox[][] = [];
 
+  /** *PMW* memo of {@link getGlyphOverhang}, reset with the other layout caches */
+  private __glyphOverhang: TGlyphOverhang | undefined;
+
   /**
    * use this size when measuring text. To avoid IE11 rounding errors
    * @type {Number}
@@ -451,6 +571,16 @@ export class FabricText<
   declare cursorWidth: number;
   declare __lineHeights: number[];
   declare __lineWidths: number[];
+  /**
+   * *PMW* Per-layout memo of each real line's measured list marker width, keyed by real line
+   * index. Reset by _clearCache.
+   */
+  declare __listMarkerWidths: Record<number, number>;
+  /**
+   * *PMW* Per-layout memo of the shared list gutters (auto rows, migrated legacy rows). Reset
+   * by _clearCache.
+   */
+  declare __listGutterWidths: { auto?: number; legacy?: number };
   declare initialized?: true;
 
   static cacheProperties = [...cacheProperties, ...additionalProps];
@@ -469,6 +599,9 @@ export class FabricText<
     this.setOptions(options);
     if (!this.styles) {
       this.styles = {};
+    }
+    if (!this.lineStyles) {
+      this.lineStyles = {};
     }
     this.text = text;
     this.initialized = true;
@@ -538,6 +671,10 @@ export class FabricText<
       charBound,
       spaces;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
+      // *PMW* a line whose alignment override is not a justify variant keeps natural spaces
+      if (!this._getEffectiveTextAlignForLine(i).includes(JUSTIFY)) {
+        continue;
+      }
       if (
         this.textAlign !== JUSTIFY &&
         (i === len - 1 || this.isEndOfWrapping(i))
@@ -547,12 +684,15 @@ export class FabricText<
       accumulatedSpace = 0;
       line = this._textLines[i];
       currentLineWidth = this.getLineWidth(i);
+      // *PMW* a list/indented line justifies into the space left of its reserved gutter
+      const justifiableWidth =
+        this.width - this._getRealLineReservedWidth(this._getRealLineIndex(i));
       if (
-        currentLineWidth < this.width &&
+        currentLineWidth < justifiableWidth &&
         (spaces = this.textLines[i].match(this._reSpacesAndTabs))
       ) {
         numberOfSpaces = spaces.length;
-        diffSpace = (this.width - currentLineWidth) / numberOfSpaces;
+        diffSpace = (justifiableWidth - currentLineWidth) / numberOfSpaces;
         for (let j = 0; j <= line.length; j++) {
           charBound = this.__charBounds[i][j];
           if (this._reSpaceAndTab.test(line[j])) {
@@ -639,9 +779,160 @@ export class FabricText<
   _getCacheCanvasDimensions(): TCacheCanvasDimensions {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
-    dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+    // *PMW* glyphs that reach past the box (script swashes, deep descenders) need the
+    // cache to hold their measured reach; the font size stays the floor fabric always had.
+    const overhang = this.getGlyphOverhang();
+    dims.width += Math.max(fontSize, 2 * overhang.horizontal) * dims.zoomX;
+    dims.height +=
+      Math.max(fontSize * this.cacheExpansionFactor, 2 * overhang.vertical) *
+      dims.zoomY;
+    // *PMW* per-character shadows render inside the cache canvas (unlike the object
+    // shadow, which is applied when the cache is composited), so the cache must be
+    // large enough to hold the widest shadow's blur and offset on every side.
+    const charShadowExtent = this._getMaxCharShadowExtent();
+    if (charShadowExtent > 0) {
+      dims.width += charShadowExtent * 2 * dims.zoomX;
+      dims.height += charShadowExtent * 2 * dims.zoomY;
+    }
     return dims;
+  }
+
+  /**
+   * *PMW* The largest reach (blur plus offset) of any per-character shadow declaration,
+   * in text units. 0 when no character carries a shadow.
+   * @private
+   */
+  _getMaxCharShadowExtent(): number {
+    if (!this.styles || !this.styleHas('shadow')) {
+      return 0;
+    }
+    let maxExtent = 0;
+    for (const line of Object.values(this.styles)) {
+      for (const decl of Object.values(line)) {
+        const shadow = decl.shadow;
+        if (shadow) {
+          const extent =
+            (shadow.blur || 0) +
+            Math.max(
+              Math.abs(shadow.offsetX || 0),
+              Math.abs(shadow.offsetY || 0),
+            );
+          if (extent > maxExtent) {
+            maxExtent = extent;
+          }
+        }
+      }
+    }
+    return maxExtent;
+  }
+
+  /**
+   * *PMW* How far the painted glyphs reach past the text box, in text units. Measured from
+   * the ink bounds the browser reports for every grapheme ({@link GlyphInkBounds}), so an
+   * uploaded script face is covered as well as a bundled one. Text on a path reports 0.
+   */
+  getGlyphOverhang(): TGlyphOverhang {
+    if (!this.__glyphOverhang) {
+      this.__glyphOverhang = this._computeGlyphOverhang();
+    }
+    return this.__glyphOverhang;
+  }
+
+  /**
+   * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
+   * right of the box edge, both after the line's alignment offset (a right-to-left line lays
+   * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+   * vertically, the first line's ink above its baseline and the last line's ink below the
+   * box bottom. A stroke paints half its width outside the outline on every side.
+   * @private
+   */
+  _computeGlyphOverhang(): TGlyphOverhang {
+    if (this.path) {
+      return { horizontal: 0, vertical: 0 };
+    }
+    const lineCount = this._textLines.length;
+    let horizontal = 0,
+      vertical = 0,
+      lineTop = 0;
+    for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+      // measuring the line fills __charBounds for it
+      this.getLineWidth(lineIndex);
+      const bounds = this.__charBounds[lineIndex],
+        isRtl = this.direction === RTL,
+        leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex),
+        rightEdge = isRtl
+          ? this.getLineWidth(lineIndex)
+          : this.width - leftOffset,
+        baselineFromTop =
+          lineTop +
+          this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction),
+        roomBelowBaseline = this.height - baselineFromTop;
+      for (
+        let charIndex = 0;
+        bounds && charIndex < this._textLines[lineIndex].length;
+        charIndex++
+      ) {
+        const box = bounds[charIndex],
+          ink = box.ink;
+        if (!ink) {
+          continue;
+        }
+        horizontal = Math.max(
+          horizontal,
+          ink.left - box.left - leftOffset,
+          box.left + ink.right - rightEdge,
+        );
+        if (lineIndex === 0) {
+          vertical = Math.max(
+            vertical,
+            ink.ascent - box.deltaY - baselineFromTop,
+          );
+        }
+        if (lineIndex === lineCount - 1) {
+          vertical = Math.max(
+            vertical,
+            ink.descent + box.deltaY - roomBelowBaseline,
+          );
+        }
+      }
+      lineTop += this.getHeightOfLine(lineIndex);
+    }
+    const strokeReach = this.stroke ? this.strokeWidth / 2 : 0;
+    return {
+      horizontal: Math.max(0, horizontal + strokeReach),
+      vertical: Math.max(0, vertical + strokeReach),
+    };
+  }
+
+  /**
+   * *PMW* Applies a per-character shadow declaration (a plain
+   * {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
+   * mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
+   * @private
+   */
+  _setCharShadow(
+    ctx: CanvasRenderingContext2D,
+    shadow: {
+      color?: string;
+      blur?: number;
+      offsetX?: number;
+      offsetY?: number;
+    },
+  ) {
+    const retinaScaling = this.getCanvasRetinaScaling(),
+      [sx, , , sy] = this.canvas?.viewportTransform || iMatrix,
+      multX = sx * retinaScaling,
+      multY = sy * retinaScaling,
+      scaling = this.getObjectScaling();
+    ctx.shadowColor = shadow.color || 'rgb(0,0,0)';
+    ctx.shadowBlur =
+      ((shadow.blur || 0) *
+        config.browserShadowBlurConstant *
+        (multX + multY) *
+        (scaling.x + scaling.y)) /
+      4;
+    ctx.shadowOffsetX = (shadow.offsetX || 0) * multX * scaling.x;
+    ctx.shadowOffsetY = (shadow.offsetY || 0) * multY * scaling.y;
   }
 
   /**
@@ -839,6 +1130,7 @@ export class FabricText<
     prevCharStyle: CompleteTextStyleDeclaration | Record<string, never>,
   ) {
     const fontCache = cache.getFontCache(charStyle),
+      inkCache = cache.getInkCache(charStyle),
       fontDeclaration = this._getFontDeclaration(charStyle),
       couple = previousChar ? previousChar + _char : _char,
       stylesAreEqual =
@@ -860,17 +1152,31 @@ export class FabricText<
       coupleWidth = fontCache.get(couple)!;
       kernedWidth = coupleWidth - previousWidth!;
     }
+    let ink = inkCache.get(_char);
     if (
       width === undefined ||
       previousWidth === undefined ||
-      coupleWidth === undefined
+      coupleWidth === undefined ||
+      ink === undefined
     ) {
       const ctx = getMeasuringContext()!;
       // send a TRUE to specify measuring font size CACHE_FONT_SIZE
       this._setTextStyles(ctx, charStyle, true);
-      if (width === undefined) {
-        kernedWidth = width = ctx.measureText(_char).width;
-        fontCache.set(_char, width);
+      if (width === undefined || ink === undefined) {
+        const metrics = ctx.measureText(_char);
+        if (width === undefined) {
+          kernedWidth = width = metrics.width;
+          fontCache.set(_char, width);
+        }
+        // *PMW* the same measurement carries the ink extent; environments without the
+        // bounding-box metrics (older node canvases) read as glyphs that fit their advance
+        ink = {
+          left: metrics.actualBoundingBoxLeft || 0,
+          right: metrics.actualBoundingBoxRight || 0,
+          ascent: metrics.actualBoundingBoxAscent || 0,
+          descent: metrics.actualBoundingBoxDescent || 0,
+        };
+        inkCache.set(_char, ink);
       }
       if (previousWidth === undefined && stylesAreEqual && previousChar) {
         previousWidth = ctx.measureText(previousChar).width;
@@ -887,6 +1193,12 @@ export class FabricText<
     return {
       width: width * fontMultiplier,
       kernedWidth: kernedWidth! * fontMultiplier,
+      ink: {
+        left: ink.left * fontMultiplier,
+        right: ink.right * fontMultiplier,
+        ascent: ink.ascent * fontMultiplier,
+        descent: ink.descent * fontMultiplier,
+      },
     };
   }
 
@@ -1041,6 +1353,7 @@ export class FabricText<
       height: style.fontSize,
       kernedWidth,
       deltaY: style.deltaY,
+      ink: info.ink,
     };
     if (charIndex > 0 && !skipLeft) {
       const previousBox = this.__charBounds[lineIndex][charIndex - 1];
@@ -1133,6 +1446,14 @@ export class FabricText<
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
     for (let i = 0, len = this._textLines.length; i < len; i++) {
+      if (method === 'fillText') {
+        this._renderListMarker(
+          ctx,
+          i,
+          left + this._getLineLeftOffset(i),
+          top + lineHeights + this.getHeightOfLineImpl(i),
+        );
+      }
       this._renderTextLine(
         method,
         ctx,
@@ -1426,6 +1747,11 @@ export class FabricText<
     if (decl.textBackgroundColor) {
       this._removeShadow(ctx);
     }
+    // *PMW* a per-character shadow replaces the context shadow for this glyph run;
+    // the surrounding save/restore scopes it to the run
+    if (decl.shadow) {
+      this._setCharShadow(ctx, decl.shadow);
+    }
     if (decl.deltaY) {
       top += decl.deltaY;
     }
@@ -1456,6 +1782,304 @@ export class FabricText<
    * @param {Number} start selection start
    * @param {Number} end selection end
    */
+  /**
+   * *PMW* Maps a visual (possibly soft-wrapped) line index to the real (unwrapped) line
+   * index that keys `styles`' line entries and `lineStyles`. Plain text has no wrapping,
+   * so this is the identity; Textbox overrides it through its style map.
+   * @private
+   */
+  _getRealLineIndex(visualLineIndex: number): number {
+    return visualLineIndex;
+  }
+
+  /**
+   * *PMW* The alignment a visual line renders with: its real line's `lineStyles.textAlign`
+   * override when present, the object-level `textAlign` otherwise.
+   * @private
+   */
+  _getEffectiveTextAlignForLine(visualLineIndex: number): string {
+    return (
+      this.lineStyles[this._getRealLineIndex(visualLineIndex)]?.textAlign ||
+      this.textAlign
+    );
+  }
+
+  /**
+   * *PMW* Whether a visual line is the first visual row of its real (unwrapped) line — where a
+   * list marker draws. Plain text has no wrapping, so always true; Textbox overrides.
+   * @private
+   */
+  _isStartOfRealLine(_visualLineIndex: number): boolean {
+    return true;
+  }
+
+  /**
+   * *PMW* Where a real line's text column DRAWS, in text units (the line offset and, through
+   * it, the marker renderer). A migrated legacy list row (explicit `leftIndent` AND a marker)
+   * draws at the legacy gutter — the live-measured widest marker plus the gap, exactly what the
+   * legacy renderer computed on every load — so its text lands where it always did even though
+   * the row RESERVES the migration's estimate of that gutter ({@link _getRealLineReservedWidth}).
+   * A plain explicit `leftIndent` draws at that indent; an auto list row at the shared gutter.
+   * @private
+   */
+  _getRealLineIndent(realLineIndex: number): number {
+    const record = this.lineStyles[realLineIndex];
+    if (!record) {
+      return 0;
+    }
+    if (typeof record.leftIndent === 'number') {
+      return record.listMarker
+        ? this._getLegacyListGutterWidth()
+        : record.leftIndent;
+    }
+    if (record.listMarker) {
+      return this._getAutoListGutterWidth();
+    }
+    return 0;
+  }
+
+  /**
+   * *PMW* How much of the box width a real line RESERVES for its gutter, in text units: the
+   * explicit `leftIndent` when set (a migrated row's legacy gutter estimate — this is what keeps
+   * its wrap width `width − leftIndent` identical to the legacy text area), else the shared auto
+   * gutter of a list row, else 0. Consumed by the Textbox wrap, justify and the alignment free
+   * space; the drawn column is {@link _getRealLineIndent}.
+   * @private
+   */
+  _getRealLineReservedWidth(realLineIndex: number): number {
+    const record = this.lineStyles[realLineIndex];
+    if (!record) {
+      return 0;
+    }
+    if (typeof record.leftIndent === 'number') {
+      return record.leftIndent;
+    }
+    if (record.listMarker) {
+      return this._getAutoListGutterWidth();
+    }
+    return 0;
+  }
+
+  /**
+   * *PMW* The legacy renderer's gutter for the box's migrated list rows (explicit `leftIndent`
+   * AND a marker): its single bullets textbox was as wide as the widest marker, and the text sat
+   * one gap right of it — no floor. Un-floored on purpose: a migrated "1."–"9." list keeps its
+   * narrower-than-floor column.
+   * @private
+   */
+  _getLegacyListGutterWidth(): number {
+    this.__listGutterWidths ??= {};
+    if (this.__listGutterWidths.legacy === undefined) {
+      this.__listGutterWidths.legacy = this._computeLegacyListGutterWidth();
+    }
+    return this.__listGutterWidths.legacy;
+  }
+
+  _computeLegacyListGutterWidth(): number {
+    let gutter = 0;
+    for (const key of Object.keys(this.lineStyles)) {
+      const realLineIndex = parseInt(key, 10);
+      const record = this.lineStyles[realLineIndex];
+      if (!record?.listMarker || typeof record.leftIndent !== 'number') {
+        continue;
+      }
+      const { fontSize } = this._getListMarkerStyle(realLineIndex);
+      gutter = Math.max(
+        gutter,
+        this._measureListMarkerWidth(realLineIndex) +
+          LIST_MARKER_GAP_FACTOR * fontSize,
+      );
+    }
+    return gutter;
+  }
+
+  /**
+   * *PMW* One shared gutter for every auto-indented list row of the textbox: the
+   * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
+   * an explicit leftIndent (the fork's raw-key capability) do not participate — their own indent
+   * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
+   * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
+   * long ordinals ("10.") from colliding with their text.
+   *
+   * Memoized per layout (see {@link _clearCache}): the alignment and wrap code asks for the
+   * gutter once per visual line per render pass, and a fresh walk over every list record each
+   * time made list rendering quadratic in the row count (601ms a frame at 120 rows).
+   * @private
+   */
+  _getAutoListGutterWidth(): number {
+    this.__listGutterWidths ??= {};
+    if (this.__listGutterWidths.auto === undefined) {
+      this.__listGutterWidths.auto = this._computeAutoListGutterWidth();
+    }
+    return this.__listGutterWidths.auto;
+  }
+
+  _computeAutoListGutterWidth(): number {
+    let gutter = 0;
+    for (const key of Object.keys(this.lineStyles)) {
+      const realLineIndex = parseInt(key, 10);
+      const record = this.lineStyles[realLineIndex];
+      if (!record?.listMarker || typeof record.leftIndent === 'number') {
+        continue;
+      }
+      const { fontSize } = this._getListMarkerStyle(realLineIndex);
+      gutter = Math.max(
+        gutter,
+        LIST_GUTTER_EM_FACTOR * fontSize,
+        this._measureListMarkerWidth(realLineIndex) +
+          LIST_MARKER_GAP_FACTOR * fontSize,
+      );
+    }
+    return gutter;
+  }
+
+  /**
+   * *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
+   * falling back to the line's first character's effective style.
+   * @private
+   */
+  _getListMarkerStyle(realLineIndex: number): {
+    fontSize: number;
+    fontFamily: string;
+    fill: string;
+  } {
+    const record = this.lineStyles[realLineIndex] || {};
+    const firstCharStyle = this.styles[realLineIndex]?.[0] || {};
+    const fill =
+      (typeof record.listMarkerFill === 'string' && record.listMarkerFill) ||
+      getMarkerColorFromFill(firstCharStyle.fill) ||
+      getMarkerColorFromFill(this.fill) ||
+      '#000000';
+    return {
+      fontSize: firstCharStyle.fontSize ?? this.fontSize,
+      fontFamily:
+        (typeof record.listMarkerFontFamily === 'string' &&
+          record.listMarkerFontFamily) ||
+        firstCharStyle.fontFamily ||
+        this.fontFamily,
+      fill,
+    };
+  }
+
+  /**
+   * *PMW* Measured width of a real line's list marker in text units. Memoized per layout
+   * (see {@link _clearCache}); the gutter walks and the marker render share the measurement.
+   * @private
+   */
+  _measureListMarkerWidth(realLineIndex: number): number {
+    const marker = this.lineStyles[realLineIndex]?.listMarker;
+    if (!marker) {
+      return 0;
+    }
+    this.__listMarkerWidths ??= {};
+    const memoized = this.__listMarkerWidths[realLineIndex];
+    if (memoized !== undefined) {
+      return memoized;
+    }
+    const width = this._computeListMarkerWidth(realLineIndex, String(marker));
+    this.__listMarkerWidths[realLineIndex] = width;
+    return width;
+  }
+
+  _computeListMarkerWidth(realLineIndex: number, marker: string): number {
+    const { fontSize, fontFamily } = this._getListMarkerStyle(realLineIndex);
+    const ctx = getMeasuringContext()!;
+    // measure at CACHE_FONT_SIZE like _measureChar does, then scale to the marker's font size
+    ctx.font = this._getFontDeclaration({ fontSize, fontFamily }, true);
+    return (ctx.measureText(marker).width * fontSize) / this.CACHE_FONT_SIZE;
+  }
+
+  /**
+   * *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
+   * fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
+   * @private
+   */
+  _renderListMarker(
+    ctx: CanvasRenderingContext2D,
+    visualLineIndex: number,
+    lineDrawLeft: number,
+    lineDrawTop: number,
+  ) {
+    if (!this._isStartOfRealLine(visualLineIndex)) {
+      return;
+    }
+    const realLineIndex = this._getRealLineIndex(visualLineIndex);
+    const marker = this.lineStyles[realLineIndex]?.listMarker;
+    if (!marker) {
+      return;
+    }
+    const { fontSize, fontFamily, fill } =
+      this._getListMarkerStyle(realLineIndex);
+    // LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+    // right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+    // grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+    // anchor is its right edge there.
+    const gap = LIST_MARKER_GAP_FACTOR * fontSize;
+    const markerLeft =
+      this.direction === RTL
+        ? lineDrawLeft + gap
+        : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
+    ctx.save();
+    // markers are direction-neutral ordinals/glyphs; pin the ctx so an inherited RTL canvas
+    // state cannot re-anchor or reorder them
+    ctx.direction = LTR;
+    ctx.textAlign = LEFT;
+    ctx.font = this._getFontDeclaration({ fontSize, fontFamily });
+    ctx.fillStyle = fill;
+    const unorderedMarkerRaise = this.lineStyles[realLineIndex]
+      ?.listMarkerFontFamily
+      ? fontSize / UNORDERED_MARKER_RAISE_FACTOR
+      : 0;
+    ctx.fillText(
+      String(marker),
+      markerLeft,
+      lineDrawTop -
+        this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction -
+        unorderedMarkerRaise,
+    );
+    ctx.restore();
+  }
+
+  /**
+   * *PMW* Sets or clears (align undefined) one real line's alignment override.
+   */
+  setLineAlignment(realLineIndex: number, align?: string) {
+    const { [realLineIndex]: existing, ...rest } = this.lineStyles;
+    const nextRecord = align
+      ? { ...rest, [realLineIndex]: { ...existing, textAlign: align } }
+      : existing && Object.keys(existing).length > 1
+        ? (() => {
+            const { textAlign: _cleared, ...keptKeys } = existing;
+            return { ...rest, [realLineIndex]: keptKeys };
+          })()
+        : rest;
+    this.set('lineStyles', nextRecord);
+  }
+
+  /**
+   * *PMW* The alignment the given real line renders with.
+   */
+  getLineAlignment(realLineIndex: number): string {
+    return (
+      (this.lineStyles[realLineIndex]?.textAlign as string) || this.textAlign
+    );
+  }
+
+  /**
+   * *PMW* Applies (or clears, when align is undefined) an alignment override to every real
+   * line the grapheme range [start, end) touches.
+   */
+  setSelectionAlignment(start: number, end: number, align?: string) {
+    const firstLine = this.get2DCursorLocation(start, true).lineIndex;
+    const lastLine = this.get2DCursorLocation(
+      Math.max(start, end - 1),
+      true,
+    ).lineIndex;
+    for (let line = firstLine; line <= lastLine; line++) {
+      this.setLineAlignment(line, align);
+    }
+  }
+
   setSuperscript(start: number, end: number) {
     this._setScript(start, end, this.superscript);
   }
@@ -1505,10 +2129,18 @@ export class FabricText<
    */
   _getLineLeftOffset(lineIndex: number): number {
     const lineWidth = this.getLineWidth(lineIndex),
-      lineDiff = this.width - lineWidth,
-      textAlign = this.textAlign,
+      // *PMW* a line's own alignment override wins over the object-level textAlign
+      textAlign = this._getEffectiveTextAlignForLine(lineIndex),
       direction = this.direction,
-      isEndOfWrapping = this.isEndOfWrapping(lineIndex);
+      isEndOfWrapping = this.isEndOfWrapping(lineIndex),
+      realLineIndex = this._getRealLineIndex(lineIndex),
+      indentMagnitude = this._getRealLineIndent(realLineIndex),
+      // *PMW* alignment distributes only the space left of the RESERVED gutter, so the
+      // marker+text unit centers and right-aligns inside the box instead of overflowing
+      lineDiff =
+        this.width - lineWidth - this._getRealLineReservedWidth(realLineIndex),
+      // signed so RTL lines indent inward from their right edge; 0 stays +0
+      lineIndent = (direction === RTL ? -1 : 1) * indentMagnitude + 0;
     let leftOffset = 0;
     if (
       textAlign === JUSTIFY ||
@@ -1516,7 +2148,7 @@ export class FabricText<
       (textAlign === JUSTIFY_RIGHT && !isEndOfWrapping) ||
       (textAlign === JUSTIFY_LEFT && !isEndOfWrapping)
     ) {
-      return 0;
+      return lineIndent;
     }
     if (textAlign === CENTER) {
       leftOffset = lineDiff / 2;
@@ -1539,7 +2171,7 @@ export class FabricText<
         leftOffset = -lineDiff / 2;
       }
     }
-    return leftOffset;
+    return leftOffset + lineIndent;
   }
 
   /**
@@ -1550,6 +2182,9 @@ export class FabricText<
     this.__lineWidths = [];
     this.__lineHeights = [];
     this.__charBounds = [];
+    this.__glyphOverhang = undefined;
+    this.__listMarkerWidths = {};
+    this.__listGutterWidths = {};
   }
 
   /**
@@ -1631,10 +2266,13 @@ export class FabricText<
         0,
         TEXT_DECORATION_THICKNESS,
       );
+      // *PMW* a decoration inherits its characters' per-character shadow
+      let lastShadow = this.getValueOfPropertyAt(i, 0, 'shadow');
       let currentDecoration = lastDecoration;
       let currentFill: typeof lastFill = lastFill;
       let currentDecorationColor = lastDecorationColor;
       let currentTickness = lastTickness;
+      let currentShadow = lastShadow;
       const top = topOffset + maxHeight * (1 - this._fontSizeFraction);
       let size = this.getHeightOfChar(i, 0);
       let dy = this.getValueOfPropertyAt(i, 0, 'deltaY');
@@ -1649,11 +2287,15 @@ export class FabricText<
           j,
           TEXT_DECORATION_THICKNESS,
         );
+        currentShadow = this.getValueOfPropertyAt(i, j, 'shadow');
         const currentSize = this.getHeightOfChar(i, j);
         const currentDy = this.getValueOfPropertyAt(i, j, 'deltaY');
         if (path && currentDecoration && currentFill) {
           const finalTickness = (this.fontSize * currentTickness) / 1000;
           ctx.save();
+          if (currentShadow) {
+            this._setCharShadow(ctx, currentShadow);
+          }
           // bug? verify lastFill is a valid fill here.
           ctx.fillStyle = this.getFillForTextDecoration(
             ctx,
@@ -1669,6 +2311,7 @@ export class FabricText<
             offsetY * currentSize + currentDy - offsetAligner * finalTickness,
             charBox.kernedWidth,
             finalTickness,
+            currentSize,
           );
           ctx.restore();
         } else if (
@@ -1677,6 +2320,7 @@ export class FabricText<
             currentDecorationColor !== lastDecorationColor ||
             currentSize !== size ||
             currentTickness !== lastTickness ||
+            !deepPlainValuesEqual(currentShadow, lastShadow) ||
             currentDy !== dy) &&
           boxWidth > 0
         ) {
@@ -1686,6 +2330,10 @@ export class FabricText<
             drawStart = this.width - drawStart - boxWidth;
           }
           if (lastDecoration && lastFill && lastTickness) {
+            if (lastShadow) {
+              ctx.save();
+              this._setCharShadow(ctx, lastShadow);
+            }
             // bug? verify lastFill is a valid fill here.
             ctx.fillStyle = this.getFillForTextDecoration(
               ctx,
@@ -1699,7 +2347,11 @@ export class FabricText<
               top + offsetY * size + dy - offsetAligner * finalTickness,
               boxWidth,
               finalTickness,
+              size,
             );
+            if (lastShadow) {
+              ctx.restore();
+            }
           }
           boxStart = charBox.left;
           boxWidth = charBox.width;
@@ -1707,6 +2359,7 @@ export class FabricText<
           lastDecorationColor = currentDecorationColor;
           lastTickness = currentTickness;
           lastFill = currentFill;
+          lastShadow = currentShadow;
           size = currentSize;
           dy = currentDy;
         } else {
@@ -1716,6 +2369,10 @@ export class FabricText<
       let drawStart = leftOffset + lineLeftOffset + boxStart;
       if (this.direction === RTL) {
         drawStart = this.width - drawStart - boxWidth;
+      }
+      if (currentShadow) {
+        ctx.save();
+        this._setCharShadow(ctx, currentShadow);
       }
       ctx.fillStyle = this.getFillForTextDecoration(
         ctx,
@@ -1733,7 +2390,11 @@ export class FabricText<
           top + offsetY * size + dy - offsetAligner * finalTickness,
           boxWidth - charSpacing,
           finalTickness,
+          size,
         );
+      if (currentShadow) {
+        ctx.restore();
+      }
       topOffset += heightOfLine;
     }
 
@@ -1745,7 +2406,8 @@ export class FabricText<
 
   /**
    *  *PMW*
-   * Handle squigglyline
+   * Handle squigglyline. `fontSize` is the decorated run's font size: the squiggle's wave
+   * and dots scale with it (see {@link fillSquigglyLine}), the other decorations ignore it.
    * @private
    */
   private fillTextDecorationRect(
@@ -1755,33 +2417,67 @@ export class FabricText<
     y: number,
     w: number,
     h: number,
+    fontSize: number,
   ) {
     if (type === 'squigglyline') {
-      const polyPoints = [],
-        scaleX = 0.35,
-        scaleY = 0.45,
-        funct = function (x: number): number {
-          const g = x % 6;
-          if (g <= 3) {
-            return g * 5;
-          }
-
-          return (6 - g) * 5;
-        };
-
-      for (let x = 0; x < w; x += 0.5) {
-        polyPoints.push({
-          x: x - 10,
-          y: funct(x * scaleX) * scaleY,
-        });
-      }
-
-      for (let j = 0; j < polyPoints.length; j++) {
-        ctx.fillRect(x + polyPoints[j].x + 8, y + polyPoints[j].y, 2, 2);
-      }
+      this.fillSquigglyLine(ctx, x, y, w, fontSize);
     } else {
       ctx.fillRect(x, y, w, h);
     }
+  }
+
+  /**
+   * *PMW* A dotted triangle wave under a misspelled run, in the run's proportions: the wave
+   * that used to be drawn at fixed pixel sizes (sized for ~{@link SQUIGGLY_LINE_REFERENCE_FONT_SIZE}px
+   * text) now scales with the font size, so an 11px caption gets a squiggle a quarter the size
+   * of a 45px heading's instead of one taller than its x-height. The dot never drops below one
+   * DEVICE pixel so tiny text still shows a line — measured through the context transform, not
+   * in text units: a 5px font scaled up 3.5× draws in big text units, and a one-unit floor there
+   * made the dot as tall as the whole wave.
+   * @private
+   */
+  private fillSquigglyLine(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    fontSize: number,
+  ) {
+    const scale = fontSize / SQUIGGLY_LINE_REFERENCE_FONT_SIZE;
+    const dot = Math.max(
+      SQUIGGLY_LINE_DOT_SIZE * scale,
+      this._getTextUnitsPerDevicePixel(ctx),
+    );
+    const step = SQUIGGLY_LINE_DOT_STEP * scale;
+    for (let dx = 0; dx < w; dx += step) {
+      const phase = (dx / scale) * SQUIGGLY_LINE_WAVE_FREQUENCY;
+      const period = phase % SQUIGGLY_LINE_WAVE_PERIOD;
+      const rise =
+        period <= SQUIGGLY_LINE_WAVE_PERIOD / 2
+          ? period
+          : SQUIGGLY_LINE_WAVE_PERIOD - period;
+      ctx.fillRect(
+        x + dx - SQUIGGLY_LINE_LEAD_IN * scale,
+        y + rise * SQUIGGLY_LINE_WAVE_RISE_FACTOR * scale,
+        dot,
+        dot,
+      );
+    }
+  }
+
+  /**
+   * *PMW* How many text units one device pixel spans under the context's current transform
+   * (object scale × viewport zoom × device pixel ratio, cache canvases included). 1 when the
+   * context cannot report its transform.
+   * @private
+   */
+  private _getTextUnitsPerDevicePixel(ctx: CanvasRenderingContext2D): number {
+    if (typeof ctx.getTransform !== 'function') {
+      return 1;
+    }
+    const { a, b } = ctx.getTransform();
+    const devicePixelsPerUnit = Math.sqrt(a * a + b * b);
+    return devicePixelsPerUnit > 0 ? 1 / devicePixelsPerUnit : 1;
   }
 
   /**

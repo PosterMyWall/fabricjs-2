@@ -39,6 +39,7 @@ var StyledText = class extends FabricObject {
 	* then it also is deleted.
 	*/
 	cleanStyle(property) {
+		if (property === "shadow") return false;
 		if (!this.styles) return false;
 		const obj = this.styles;
 		let stylesCount = 0, letterCount, stylePropertyValue, allStyleObjectPropertiesMatch = true, graphemeCount = 0;

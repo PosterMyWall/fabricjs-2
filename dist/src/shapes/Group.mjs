@@ -4,6 +4,7 @@ import { classRegistry } from "../ClassRegistry.mjs";
 import { createCollectionMixin } from "../Collection.mjs";
 import { invertTransform, multiplyTransformMatrices } from "../util/misc/matrix.mjs";
 import { enlivenObjectEnlivables, enlivenObjects } from "../util/misc/objectEnlive.mjs";
+import { isTextObject } from "../util/typeAssertions.mjs";
 import { escapeXml } from "../util/lang_string.mjs";
 import { applyTransformToObject } from "../util/misc/objectTransforms.mjs";
 import { FabricObject } from "./Object/FabricObject.mjs";
@@ -79,35 +80,35 @@ var Group = class Group extends createCollectionMixin(FabricObject) {
 	_getCacheCanvasDimensions() {
 		if (this.caterCacheForTextChildren) {
 			const dims = super._getCacheCanvasDimensions();
-			let widthToAdd = 0;
-			let heightToAdd = 0;
-			const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
-			if (maxFontSize > 0) {
-				widthToAdd = maxFontSize * dims.zoomX;
-				heightToAdd = maxFontSize * dims.zoomY;
-			}
-			dims.width += widthToAdd;
-			dims.height += heightToAdd;
+			const expansion = this._getTextChildrenCacheExpansion();
+			dims.width += expansion.width * dims.zoomX;
+			dims.height += expansion.height * dims.zoomY;
 			return dims;
 		}
 		return super._getCacheCanvasDimensions();
 	}
 	/**
 	* *PMW funtion added*
-	* Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+	* Scans itself for children text objects and returns the room the cache must add in each
+	* dimension so none of their glyphs is cut: the larger of the font size times the text's
+	* expansion factor and twice the glyph overhang the text measured. 0 when there is no text.
 	* @private
 	*/
-	_getMaxExpandedFontSizeFromTextChildren() {
-		const groupObjects = this.getObjects();
-		let maxFontSize = 0;
-		for (const groupObject of groupObjects) if ("fontSize" in groupObject) {
-			const fontSize = groupObject.fontSize;
-			if (fontSize > maxFontSize) maxFontSize = fontSize * groupObject.cacheExpansionFactor;
+	_getTextChildrenCacheExpansion() {
+		const expansion = {
+			width: 0,
+			height: 0
+		};
+		for (const groupObject of this.getObjects()) if (isTextObject(groupObject)) {
+			const factored = groupObject.fontSize * groupObject.cacheExpansionFactor, overhang = groupObject.getGlyphOverhang();
+			expansion.width = Math.max(expansion.width, factored, 2 * overhang.horizontal);
+			expansion.height = Math.max(expansion.height, factored, 2 * overhang.vertical);
 		} else if (groupObject instanceof Group) {
-			const maxFontSizeInGroup = groupObject._getMaxExpandedFontSizeFromTextChildren();
-			if (maxFontSizeInGroup > maxFontSize) maxFontSize = maxFontSizeInGroup;
+			const nested = groupObject._getTextChildrenCacheExpansion();
+			expansion.width = Math.max(expansion.width, nested.width);
+			expansion.height = Math.max(expansion.height, nested.height);
 		}
-		return maxFontSize;
+		return expansion;
 	}
 	/**
 	* Shared code between group and active selection

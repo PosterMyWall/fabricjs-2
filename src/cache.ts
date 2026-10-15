@@ -5,14 +5,37 @@ type TextCouplesCache = Map</** char */ string, /** width */ number>;
 
 type FamilyCache = Map</** fontStyleCacheKey */ string, TextCouplesCache>;
 
+/**
+ * *PMW* The ink extent of one grapheme as the browser measures it at CACHE_FONT_SIZE:
+ * how far its painted outline reaches left of the text origin, right of the origin
+ * (so past the advance width once that is subtracted), above and below the alphabetic
+ * baseline — the four `actualBoundingBox*` metrics.
+ */
+export type GlyphInkBounds = {
+  left: number;
+  right: number;
+  ascent: number;
+  descent: number;
+};
+
+type TextInkCache = Map</** char */ string, GlyphInkBounds>;
+
+type FamilyInkCache = Map</** fontStyleCacheKey */ string, TextInkCache>;
+
 export class Cache {
   /**
    * Cache of widths of chars in text rendering.
    */
   declare charWidthsCache: Map</** fontFamily */ string, FamilyCache>;
 
+  /**
+   * *PMW* Cache of the ink bounds of chars, filled alongside charWidthsCache.
+   */
+  declare charInkCache: Map</** fontFamily */ string, FamilyInkCache>;
+
   constructor() {
     this.charWidthsCache = new Map();
+    this.charInkCache = new Map();
   }
 
   /**
@@ -27,17 +50,55 @@ export class Cache {
     fontStyle: string;
     fontWeight: string | number;
   }): TextCouplesCache {
+    return this.getStyleCache(this.charWidthsCache, {
+      fontFamily,
+      fontStyle,
+      fontWeight,
+    });
+  }
+
+  /**
+   * *PMW*
+   * @return {Object} reference to the ink bounds cache of the given font style
+   */
+  getInkCache({
+    fontFamily,
+    fontStyle,
+    fontWeight,
+  }: {
+    fontFamily: string;
+    fontStyle: string;
+    fontWeight: string | number;
+  }): TextInkCache {
+    return this.getStyleCache(this.charInkCache, {
+      fontFamily,
+      fontStyle,
+      fontWeight,
+    });
+  }
+
+  private getStyleCache<T>(
+    cache: Map<string, Map<string, Map<string, T>>>,
+    {
+      fontFamily,
+      fontStyle,
+      fontWeight,
+    }: {
+      fontFamily: string;
+      fontStyle: string;
+      fontWeight: string | number;
+    },
+  ): Map<string, T> {
     fontFamily = fontFamily.toLowerCase();
-    const cache = this.charWidthsCache;
     if (!cache.has(fontFamily)) {
-      cache.set(fontFamily, new Map<string, TextCouplesCache>());
+      cache.set(fontFamily, new Map<string, Map<string, T>>());
     }
     const fontCache = cache.get(fontFamily)!;
     const cacheKey = `${fontStyle.toLowerCase()}_${(
       fontWeight + ''
     ).toLowerCase()}`;
     if (!fontCache.has(cacheKey)) {
-      fontCache.set(cacheKey, new Map<string, number>());
+      fontCache.set(cacheKey, new Map<string, T>());
     }
     return fontCache.get(cacheKey)!;
   }
@@ -56,8 +117,10 @@ export class Cache {
   clearFontCache(fontFamily?: string) {
     if (!fontFamily) {
       this.charWidthsCache = new Map();
+      this.charInkCache = new Map();
     } else {
       this.charWidthsCache.delete((fontFamily || '').toLowerCase());
+      this.charInkCache.delete((fontFamily || '').toLowerCase());
     }
   }
 

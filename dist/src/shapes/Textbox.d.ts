@@ -213,6 +213,17 @@ export declare class Textbox<Props extends TOptions<TextboxProps> = Partial<Text
     getMinWidth(): number;
     _removeExtraneousStyles(): void;
     /**
+     * *PMW* A visual line starts its real line when its style-map offset is 0.
+     * @private
+     */
+    _isStartOfRealLine(visualLineIndex: number): boolean;
+    /**
+     * *PMW* Maps a visual (soft-wrapped) line index to the real (unwrapped) line index through
+     * the style map, mirroring the styleHas/_getStyleDeclaration wrapping guard.
+     * @private
+     */
+    _getRealLineIndex(visualLineIndex: number): number;
+    /**
      * Returns object representation of an instance
      * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {Object} object representation of an instance

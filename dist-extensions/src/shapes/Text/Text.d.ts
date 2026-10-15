@@ -1,3 +1,4 @@
+import type { GlyphInkBounds } from '../../cache';
 import type { NORMAL } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type { CompleteTextStyleDeclaration, TextStyle, TextStyleDeclaration } from './StyledText';
@@ -25,6 +26,24 @@ export type FontStyle = '' | typeof NORMAL | 'italic' | 'oblique';
  * needs the the info of previous graphemes already filled
  * Override to customize measuring
  */
+/**
+ * *PMW* One real line's style record. Fabric consumes:
+ * - `textAlign`: overrides the object alignment for the line;
+ * - `leftIndent`: explicit extra left offset in text units (also reserved from the wrap width);
+ * - `listMarker`: a marker string (bullet glyph / ordinal) drawn in the gutter left of the
+ *   line's first visual row — when set without `leftIndent`, the indent is auto-measured from
+ *   the marker plus a gap;
+ * - `listMarkerFontFamily` / `listMarkerFill`: marker font/fill, defaulting to the line's first
+ *   character's effective style.
+ * Every other key is an opaque passenger preserved by the editing logic.
+ */
+export type LineStyleDeclaration = {
+    textAlign?: string;
+    leftIndent?: number;
+    listMarker?: string;
+    listMarkerFontFamily?: string;
+    listMarkerFill?: string;
+} & Record<string, unknown>;
 export type GraphemeBBox = {
     width: number;
     height: number;
@@ -34,6 +53,17 @@ export type GraphemeBBox = {
     renderLeft?: number;
     renderTop?: number;
     angle?: number;
+    /** *PMW* ink extent of the grapheme in text units, see {@link GlyphInkBounds} */
+    ink?: GlyphInkBounds;
+};
+/**
+ * *PMW* How far the painted glyphs of a text object reach past its width and height, in
+ * text units: `horizontal` is the larger of the left and right reach, `vertical` the larger
+ * of the reach above the first line and below the last. 0 when every glyph fits the box.
+ */
+export type TGlyphOverhang = {
+    horizontal: number;
+    vertical: number;
 };
 interface UniqueTextProps {
     charSpacing: number;
@@ -53,6 +83,7 @@ interface UniqueTextProps {
     ignoreDelegatedSet: boolean;
     squigglylineColor: string;
     isStrokeForBold: boolean;
+    pmwRunStyles?: Record<string, unknown>;
     direction: CanvasDirection;
     path?: Path;
     textDecorationThickness: number;
@@ -64,10 +95,6 @@ export interface SerializedTextProps extends SerializedObjectProps, UniqueTextPr
 export interface TextProps extends FabricObjectProps, UniqueTextProps {
     styles: TextStyle;
 }
-/**
- * Text class
- * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
- */
 export declare class FabricText<Props extends TOptions<TextProps> = Partial<TextProps>, SProps extends SerializedTextProps = SerializedTextProps, EventSpec extends ObjectEvents = ObjectEvents> extends StyledText<Props, SProps, EventSpec> implements UniqueTextProps {
     /**
      * Properties that requires a text layout recalculation when changed
@@ -136,6 +163,7 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     squigglyline: boolean;
     squigglylineColor: string;
     isStrokeForBold: boolean;
+    pmwRunStyles?: Record<string, unknown>;
     /******These are just custom properties later used by our webapp code. They are added here for ts support*************/
     ignoreDelegatedSet: boolean;
     /**
@@ -190,6 +218,14 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     textBackgroundColor: string;
     styles: TextStyle;
+    /**
+     * *PMW* Per-line style declarations keyed by REAL (unwrapped) line index. Fabric consumes
+     * `textAlign` (overrides the object-level alignment for that line) and `leftIndent` (extra
+     * left offset in text units, e.g. for list rows); any other key is an opaque passenger that
+     * the editing logic shifts with its line (see ITextBehavior). Never mutate a record in
+     * place — writers always assign fresh objects so caches and snapshots stay coherent.
+     */
+    lineStyles: Record<number | string, LineStyleDeclaration>;
     /**
      * Path that the text should follow.
      * since 4.6.0 the path will be drawn automatically.
@@ -298,6 +334,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @protected
      */
     __charBounds: GraphemeBBox[][];
+    /** *PMW* memo of {@link getGlyphOverhang}, reset with the other layout caches */
+    private __glyphOverhang;
     /**
      * use this size when measuring text. To avoid IE11 rounding errors
      * @type {Number}
@@ -326,6 +364,19 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     cursorWidth: number;
     __lineHeights: number[];
     __lineWidths: number[];
+    /**
+     * *PMW* Per-layout memo of each real line's measured list marker width, keyed by real line
+     * index. Reset by _clearCache.
+     */
+    __listMarkerWidths: Record<number, number>;
+    /**
+     * *PMW* Per-layout memo of the shared list gutters (auto rows, migrated legacy rows). Reset
+     * by _clearCache.
+     */
+    __listGutterWidths: {
+        auto?: number;
+        legacy?: number;
+    };
     initialized?: true;
     static cacheProperties: string[];
     static ownDefaults: Partial<TClassProperties<FabricText<Partial<TextProps>, SerializedTextProps, ObjectEvents>>>;
@@ -392,6 +443,39 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
     /**
+     * *PMW* The largest reach (blur plus offset) of any per-character shadow declaration,
+     * in text units. 0 when no character carries a shadow.
+     * @private
+     */
+    _getMaxCharShadowExtent(): number;
+    /**
+     * *PMW* How far the painted glyphs reach past the text box, in text units. Measured from
+     * the ink bounds the browser reports for every grapheme ({@link GlyphInkBounds}), so an
+     * uploaded script face is covered as well as a bundled one. Text on a path reports 0.
+     */
+    getGlyphOverhang(): TGlyphOverhang;
+    /**
+     * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
+     * right of the box edge, both after the line's alignment offset (a right-to-left line lays
+     * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+     * vertically, the first line's ink above its baseline and the last line's ink below the
+     * box bottom. A stroke paints half its width outside the outline on every side.
+     * @private
+     */
+    _computeGlyphOverhang(): TGlyphOverhang;
+    /**
+     * *PMW* Applies a per-character shadow declaration (a plain
+     * {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
+     * mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
+     * @private
+     */
+    _setCharShadow(ctx: CanvasRenderingContext2D, shadow: {
+        color?: string;
+        blur?: number;
+        offsetX?: number;
+        offsetY?: number;
+    }): void;
+    /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
@@ -448,6 +532,12 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     _measureChar(_char: string, charStyle: CompleteTextStyleDeclaration, previousChar: string | undefined, prevCharStyle: CompleteTextStyleDeclaration | Record<string, never>): {
         width: number;
         kernedWidth: number;
+        ink: {
+            left: number;
+            right: number;
+            ascent: number;
+            descent: number;
+        };
     };
     /**
      * Computes height of character at given position
@@ -601,6 +691,104 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {Number} start selection start
      * @param {Number} end selection end
      */
+    /**
+     * *PMW* Maps a visual (possibly soft-wrapped) line index to the real (unwrapped) line
+     * index that keys `styles`' line entries and `lineStyles`. Plain text has no wrapping,
+     * so this is the identity; Textbox overrides it through its style map.
+     * @private
+     */
+    _getRealLineIndex(visualLineIndex: number): number;
+    /**
+     * *PMW* The alignment a visual line renders with: its real line's `lineStyles.textAlign`
+     * override when present, the object-level `textAlign` otherwise.
+     * @private
+     */
+    _getEffectiveTextAlignForLine(visualLineIndex: number): string;
+    /**
+     * *PMW* Whether a visual line is the first visual row of its real (unwrapped) line — where a
+     * list marker draws. Plain text has no wrapping, so always true; Textbox overrides.
+     * @private
+     */
+    _isStartOfRealLine(_visualLineIndex: number): boolean;
+    /**
+     * *PMW* Where a real line's text column DRAWS, in text units (the line offset and, through
+     * it, the marker renderer). A migrated legacy list row (explicit `leftIndent` AND a marker)
+     * draws at the legacy gutter — the live-measured widest marker plus the gap, exactly what the
+     * legacy renderer computed on every load — so its text lands where it always did even though
+     * the row RESERVES the migration's estimate of that gutter ({@link _getRealLineReservedWidth}).
+     * A plain explicit `leftIndent` draws at that indent; an auto list row at the shared gutter.
+     * @private
+     */
+    _getRealLineIndent(realLineIndex: number): number;
+    /**
+     * *PMW* How much of the box width a real line RESERVES for its gutter, in text units: the
+     * explicit `leftIndent` when set (a migrated row's legacy gutter estimate — this is what keeps
+     * its wrap width `width − leftIndent` identical to the legacy text area), else the shared auto
+     * gutter of a list row, else 0. Consumed by the Textbox wrap, justify and the alignment free
+     * space; the drawn column is {@link _getRealLineIndent}.
+     * @private
+     */
+    _getRealLineReservedWidth(realLineIndex: number): number;
+    /**
+     * *PMW* The legacy renderer's gutter for the box's migrated list rows (explicit `leftIndent`
+     * AND a marker): its single bullets textbox was as wide as the widest marker, and the text sat
+     * one gap right of it — no floor. Un-floored on purpose: a migrated "1."–"9." list keeps its
+     * narrower-than-floor column.
+     * @private
+     */
+    _getLegacyListGutterWidth(): number;
+    _computeLegacyListGutterWidth(): number;
+    /**
+     * *PMW* One shared gutter for every auto-indented list row of the textbox: the
+     * {@link LIST_GUTTER_EM_FACTOR} floor, widened only by a marker that does not fit it. Rows with
+     * an explicit leftIndent (the fork's raw-key capability) do not participate — their own indent
+     * wins in {@link _getRealLineIndent}. The floor is what makes the text column identical across
+     * bullet and numbered rows and across separate textboxes of the same font size; the max keeps
+     * long ordinals ("10.") from colliding with their text.
+     *
+     * Memoized per layout (see {@link _clearCache}): the alignment and wrap code asks for the
+     * gutter once per visual line per render pass, and a fresh walk over every list record each
+     * time made list rendering quadratic in the row count (601ms a frame at 120 rows).
+     * @private
+     */
+    _getAutoListGutterWidth(): number;
+    _computeAutoListGutterWidth(): number;
+    /**
+     * *PMW* The font/fill a real line's list marker renders with: the record's own marker keys,
+     * falling back to the line's first character's effective style.
+     * @private
+     */
+    _getListMarkerStyle(realLineIndex: number): {
+        fontSize: number;
+        fontFamily: string;
+        fill: string;
+    };
+    /**
+     * *PMW* Measured width of a real line's list marker in text units. Memoized per layout
+     * (see {@link _clearCache}); the gutter walks and the marker render share the measurement.
+     * @private
+     */
+    _measureListMarkerWidth(realLineIndex: number): number;
+    _computeListMarkerWidth(realLineIndex: number, marker: string): number;
+    /**
+     * *PMW* Draws a real line's list marker in the gutter left of its first visual row, on the
+     * fill pass. `lineDrawLeft`/`lineDrawTop` are the row's own draw anchors.
+     * @private
+     */
+    _renderListMarker(ctx: CanvasRenderingContext2D, visualLineIndex: number, lineDrawLeft: number, lineDrawTop: number): void;
+    /**
+     * *PMW* Sets or clears (align undefined) one real line's alignment override.
+     */
+    setLineAlignment(realLineIndex: number, align?: string): void;
+    /**
+     * *PMW* The alignment the given real line renders with.
+     */
+    getLineAlignment(realLineIndex: number): string;
+    /**
+     * *PMW* Applies (or clears, when align is undefined) an alignment override to every real
+     * line the grapheme range [start, end) touches.
+     */
+    setSelectionAlignment(start: number, end: number, align?: string): void;
     setSuperscript(start: number, end: number): void;
     /**
      * Turns the character into an 'inferior figure' (i.e. 'subscript')
@@ -653,10 +841,29 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     _renderTextDecoration(ctx: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline' | 'squigglyline'): void;
     /**
      *  *PMW*
-     * Handle squigglyline
+     * Handle squigglyline. `fontSize` is the decorated run's font size: the squiggle's wave
+     * and dots scale with it (see {@link fillSquigglyLine}), the other decorations ignore it.
      * @private
      */
     private fillTextDecorationRect;
+    /**
+     * *PMW* A dotted triangle wave under a misspelled run, in the run's proportions: the wave
+     * that used to be drawn at fixed pixel sizes (sized for ~{@link SQUIGGLY_LINE_REFERENCE_FONT_SIZE}px
+     * text) now scales with the font size, so an 11px caption gets a squiggle a quarter the size
+     * of a 45px heading's instead of one taller than its x-height. The dot never drops below one
+     * DEVICE pixel so tiny text still shows a line — measured through the context transform, not
+     * in text units: a 5px font scaled up 3.5× draws in big text units, and a one-unit floor there
+     * made the dot as tall as the whole wave.
+     * @private
+     */
+    private fillSquigglyLine;
+    /**
+     * *PMW* How many text units one device pixel spans under the context's current transform
+     * (object scale × viewport zoom × device pixel ratio, cache canvases included). 1 when the
+     * context cannot report its transform.
+     * @private
+     */
+    private _getTextUnitsPerDevicePixel;
     /**
      *  *PMW*
      * Handle squigglyline, gradient fill and pattern fill for text decoration
