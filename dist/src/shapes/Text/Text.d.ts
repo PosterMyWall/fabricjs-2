@@ -1,3 +1,4 @@
+import type { GlyphInkBounds } from '../../cache';
 import type { NORMAL } from '../../constants';
 import type { ObjectEvents } from '../../EventTypeDefs';
 import type { CompleteTextStyleDeclaration, TextStyle, TextStyleDeclaration } from './StyledText';
@@ -52,6 +53,17 @@ export type GraphemeBBox = {
     renderLeft?: number;
     renderTop?: number;
     angle?: number;
+    /** *PMW* ink extent of the grapheme in text units, see {@link GlyphInkBounds} */
+    ink?: GlyphInkBounds;
+};
+/**
+ * *PMW* How far the painted glyphs of a text object reach past its width and height, in
+ * text units: `horizontal` is the larger of the left and right reach, `vertical` the larger
+ * of the reach above the first line and below the last. 0 when every glyph fits the box.
+ */
+export type TGlyphOverhang = {
+    horizontal: number;
+    vertical: number;
 };
 interface UniqueTextProps {
     charSpacing: number;
@@ -322,6 +334,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @protected
      */
     __charBounds: GraphemeBBox[][];
+    /** *PMW* memo of {@link getGlyphOverhang}, reset with the other layout caches */
+    private __glyphOverhang;
     /**
      * use this size when measuring text. To avoid IE11 rounding errors
      * @type {Number}
@@ -435,6 +449,21 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     _getMaxCharShadowExtent(): number;
     /**
+     * *PMW* How far the painted glyphs reach past the text box, in text units. Measured from
+     * the ink bounds the browser reports for every grapheme ({@link GlyphInkBounds}), so an
+     * uploaded script face is covered as well as a bundled one. Text on a path reports 0.
+     */
+    getGlyphOverhang(): TGlyphOverhang;
+    /**
+     * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
+     * right of the box edge, both after the line's alignment offset (a right-to-left line lays
+     * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+     * vertically, the first line's ink above its baseline and the last line's ink below the
+     * box bottom. A stroke paints half its width outside the outline on every side.
+     * @private
+     */
+    _computeGlyphOverhang(): TGlyphOverhang;
+    /**
      * *PMW* Applies a per-character shadow declaration (a plain
      * {color, blur, offsetX, offsetY} object, never a Shadow instance) to the context,
      * mirroring Object._setShadow's scaling math. Callers scope it with save/restore.
@@ -503,6 +532,12 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     _measureChar(_char: string, charStyle: CompleteTextStyleDeclaration, previousChar: string | undefined, prevCharStyle: CompleteTextStyleDeclaration | Record<string, never>): {
         width: number;
         kernedWidth: number;
+        ink: {
+            left: number;
+            right: number;
+            ascent: number;
+            descent: number;
+        };
     };
     /**
      * Computes height of character at given position

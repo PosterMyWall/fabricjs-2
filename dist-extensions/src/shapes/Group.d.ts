@@ -155,10 +155,15 @@ export declare class Group extends Group_base implements GroupProps {
     _getCacheCanvasDimensions(): TCacheCanvasDimensions;
     /**
      * *PMW funtion added*
-     * Scans itself for children text items and returns the max font size from them. Multiplies the expansion factor with the fontsize if it exists for the font family. If there's no text, returns 0.
+     * Scans itself for children text objects and returns the room the cache must add in each
+     * dimension so none of their glyphs is cut: the larger of the font size times the text's
+     * expansion factor and twice the glyph overhang the text measured. 0 when there is no text.
      * @private
      */
-    _getMaxExpandedFontSizeFromTextChildren(): number;
+    _getTextChildrenCacheExpansion(): {
+        width: number;
+        height: number;
+    };
     /**
      * Shared code between group and active selection
      * Meant to be used by the constructor.

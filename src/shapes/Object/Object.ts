@@ -1393,9 +1393,9 @@ export class FabricObject<
     if (options.expandBoundingBoxByFont && this.isGroup()) {
       let maxWidthToAdd = 0,
         maxHeightToAdd = 0;
-      const maxFontSize = this._getMaxExpandedFontSizeFromTextChildren();
+      const textExpansion = this._getTextChildrenCacheExpansion();
 
-      if (maxFontSize > 0) {
+      if (textExpansion.width > 0 || textExpansion.height > 0) {
         maxWidthToAdd = boundingRect.width * 0.75;
         maxHeightToAdd = boundingRect.height * 0.75;
       }

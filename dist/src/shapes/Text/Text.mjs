@@ -46,7 +46,7 @@ const UNORDERED_MARKER_RAISE_FACTOR = 16;
 * 1.25 = the widest unordered marker (every glyph of PMW's `bullets` font is exactly 1.0em)
 * plus LIST_MARKER_GAP_FACTOR, so unordered lists sit exactly on the floor and ordinals wider
 * than the floor ("10.", "VIII.") still grow the gutter past it.
-* Mirrored in PHP as MigrateToVersion79::LIST_GUTTER_EM_FACTOR — keep both in sync.
+* Mirrored in PHP as MigrateToVersion80::LIST_GUTTER_EM_FACTOR — keep both in sync.
 */
 const LIST_GUTTER_EM_FACTOR = 1.25;
 /**
@@ -99,6 +99,7 @@ var FabricText = class FabricText extends StyledText {
 			"__charBounds",
 			[]
 		);
+		_defineProperty(this, "__glyphOverhang", void 0);
 		Object.assign(this, FabricText.ownDefaults);
 		this.setOptions(options);
 		if (!this.styles) this.styles = {};
@@ -226,8 +227,9 @@ var FabricText = class FabricText extends StyledText {
 	_getCacheCanvasDimensions() {
 		const dims = super._getCacheCanvasDimensions();
 		const fontSize = this.fontSize;
-		dims.width += fontSize * dims.zoomX;
-		dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+		const overhang = this.getGlyphOverhang();
+		dims.width += Math.max(fontSize, 2 * overhang.horizontal) * dims.zoomX;
+		dims.height += Math.max(fontSize * this.cacheExpansionFactor, 2 * overhang.vertical) * dims.zoomY;
 		const charShadowExtent = this._getMaxCharShadowExtent();
 		if (charShadowExtent > 0) {
 			dims.width += charShadowExtent * 2 * dims.zoomX;
@@ -251,6 +253,48 @@ var FabricText = class FabricText extends StyledText {
 			}
 		}
 		return maxExtent;
+	}
+	/**
+	* *PMW* How far the painted glyphs reach past the text box, in text units. Measured from
+	* the ink bounds the browser reports for every grapheme ({@link GlyphInkBounds}), so an
+	* uploaded script face is covered as well as a bundled one. Text on a path reports 0.
+	*/
+	getGlyphOverhang() {
+		if (!this.__glyphOverhang) this.__glyphOverhang = this._computeGlyphOverhang();
+		return this.__glyphOverhang;
+	}
+	/**
+	* *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
+	* right of the box edge, both after the line's alignment offset (a right-to-left line lays
+	* its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+	* vertically, the first line's ink above its baseline and the last line's ink below the
+	* box bottom. A stroke paints half its width outside the outline on every side.
+	* @private
+	*/
+	_computeGlyphOverhang() {
+		if (this.path) return {
+			horizontal: 0,
+			vertical: 0
+		};
+		const lineCount = this._textLines.length;
+		let horizontal = 0, vertical = 0, lineTop = 0;
+		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			this.getLineWidth(lineIndex);
+			const bounds = this.__charBounds[lineIndex], isRtl = this.direction === "rtl", leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex), rightEdge = isRtl ? this.getLineWidth(lineIndex) : this.width - leftOffset, baselineFromTop = lineTop + this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction), roomBelowBaseline = this.height - baselineFromTop;
+			for (let charIndex = 0; bounds && charIndex < this._textLines[lineIndex].length; charIndex++) {
+				const box = bounds[charIndex], ink = box.ink;
+				if (!ink) continue;
+				horizontal = Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
+				if (lineIndex === 0) vertical = Math.max(vertical, ink.ascent - box.deltaY - baselineFromTop);
+				if (lineIndex === lineCount - 1) vertical = Math.max(vertical, ink.descent + box.deltaY - roomBelowBaseline);
+			}
+			lineTop += this.getHeightOfLine(lineIndex);
+		}
+		const strokeReach = this.stroke ? this.strokeWidth / 2 : 0;
+		return {
+			horizontal: Math.max(0, horizontal + strokeReach),
+			vertical: Math.max(0, vertical + strokeReach)
+		};
 	}
 	/**
 	* *PMW* Applies a per-character shadow declaration (a plain
@@ -410,7 +454,7 @@ var FabricText = class FabricText extends StyledText {
 	* @param {Object} [prevCharStyle] style of previous char
 	*/
 	_measureChar(_char, charStyle, previousChar, prevCharStyle) {
-		const fontCache = cache.getFontCache(charStyle), fontDeclaration = this._getFontDeclaration(charStyle), couple = previousChar ? previousChar + _char : _char, stylesAreEqual = previousChar && fontDeclaration === this._getFontDeclaration(prevCharStyle), fontMultiplier = charStyle.fontSize / this.CACHE_FONT_SIZE;
+		const fontCache = cache.getFontCache(charStyle), inkCache = cache.getInkCache(charStyle), fontDeclaration = this._getFontDeclaration(charStyle), couple = previousChar ? previousChar + _char : _char, stylesAreEqual = previousChar && fontDeclaration === this._getFontDeclaration(prevCharStyle), fontMultiplier = charStyle.fontSize / this.CACHE_FONT_SIZE;
 		let width, coupleWidth, previousWidth, kernedWidth;
 		if (previousChar && fontCache.has(previousChar)) previousWidth = fontCache.get(previousChar);
 		if (fontCache.has(_char)) kernedWidth = width = fontCache.get(_char);
@@ -418,12 +462,23 @@ var FabricText = class FabricText extends StyledText {
 			coupleWidth = fontCache.get(couple);
 			kernedWidth = coupleWidth - previousWidth;
 		}
-		if (width === void 0 || previousWidth === void 0 || coupleWidth === void 0) {
+		let ink = inkCache.get(_char);
+		if (width === void 0 || previousWidth === void 0 || coupleWidth === void 0 || ink === void 0) {
 			const ctx = getMeasuringContext();
 			this._setTextStyles(ctx, charStyle, true);
-			if (width === void 0) {
-				kernedWidth = width = ctx.measureText(_char).width;
-				fontCache.set(_char, width);
+			if (width === void 0 || ink === void 0) {
+				const metrics = ctx.measureText(_char);
+				if (width === void 0) {
+					kernedWidth = width = metrics.width;
+					fontCache.set(_char, width);
+				}
+				ink = {
+					left: metrics.actualBoundingBoxLeft || 0,
+					right: metrics.actualBoundingBoxRight || 0,
+					ascent: metrics.actualBoundingBoxAscent || 0,
+					descent: metrics.actualBoundingBoxDescent || 0
+				};
+				inkCache.set(_char, ink);
 			}
 			if (previousWidth === void 0 && stylesAreEqual && previousChar) {
 				previousWidth = ctx.measureText(previousChar).width;
@@ -437,7 +492,13 @@ var FabricText = class FabricText extends StyledText {
 		}
 		return {
 			width: width * fontMultiplier,
-			kernedWidth: kernedWidth * fontMultiplier
+			kernedWidth: kernedWidth * fontMultiplier,
+			ink: {
+				left: ink.left * fontMultiplier,
+				right: ink.right * fontMultiplier,
+				ascent: ink.ascent * fontMultiplier,
+				descent: ink.descent * fontMultiplier
+			}
 		};
 	}
 	/**
@@ -547,7 +608,8 @@ var FabricText = class FabricText extends StyledText {
 			left: 0,
 			height: style.fontSize,
 			kernedWidth,
-			deltaY: style.deltaY
+			deltaY: style.deltaY,
+			ink: info.ink
 		};
 		if (charIndex > 0 && !skipLeft) {
 			const previousBox = this.__charBounds[lineIndex][charIndex - 1];
@@ -1076,6 +1138,7 @@ var FabricText = class FabricText extends StyledText {
 		this.__lineWidths = [];
 		this.__lineHeights = [];
 		this.__charBounds = [];
+		this.__glyphOverhang = void 0;
 		this.__listMarkerWidths = {};
 		this.__listGutterWidths = {};
 	}

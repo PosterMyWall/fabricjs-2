@@ -1,4 +1,5 @@
 import { cache } from '../../cache';
+import type { GlyphInkBounds } from '../../cache';
 import type { NORMAL } from '../../constants';
 import {
   DEFAULT_SVG_FONT_SIZE,
@@ -168,6 +169,18 @@ export type GraphemeBBox = {
   renderLeft?: number;
   renderTop?: number;
   angle?: number;
+  /** *PMW* ink extent of the grapheme in text units, see {@link GlyphInkBounds} */
+  ink?: GlyphInkBounds;
+};
+
+/**
+ * *PMW* How far the painted glyphs of a text object reach past its width and height, in
+ * text units: `horizontal` is the larger of the left and right reach, `vertical` the larger
+ * of the reach above the first line and below the last. 0 when every glyph fits the box.
+ */
+export type TGlyphOverhang = {
+  horizontal: number;
+  vertical: number;
 };
 
 // @TODO this is not complete
@@ -523,6 +536,9 @@ export class FabricText<
    */
   __charBounds: GraphemeBBox[][] = [];
 
+  /** *PMW* memo of {@link getGlyphOverhang}, reset with the other layout caches */
+  private __glyphOverhang: TGlyphOverhang | undefined;
+
   /**
    * use this size when measuring text. To avoid IE11 rounding errors
    * @type {Number}
@@ -763,8 +779,13 @@ export class FabricText<
   _getCacheCanvasDimensions(): TCacheCanvasDimensions {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
-    dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY * this.cacheExpansionFactor;
+    // *PMW* glyphs that reach past the box (script swashes, deep descenders) need the
+    // cache to hold their measured reach; the font size stays the floor fabric always had.
+    const overhang = this.getGlyphOverhang();
+    dims.width += Math.max(fontSize, 2 * overhang.horizontal) * dims.zoomX;
+    dims.height +=
+      Math.max(fontSize * this.cacheExpansionFactor, 2 * overhang.vertical) *
+      dims.zoomY;
     // *PMW* per-character shadows render inside the cache canvas (unlike the object
     // shadow, which is applied when the cache is composited), so the cache must be
     // large enough to hold the widest shadow's blur and offset on every side.
@@ -803,6 +824,84 @@ export class FabricText<
       }
     }
     return maxExtent;
+  }
+
+  /**
+   * *PMW* How far the painted glyphs reach past the text box, in text units. Measured from
+   * the ink bounds the browser reports for every grapheme ({@link GlyphInkBounds}), so an
+   * uploaded script face is covered as well as a bundled one. Text on a path reports 0.
+   */
+  getGlyphOverhang(): TGlyphOverhang {
+    if (!this.__glyphOverhang) {
+      this.__glyphOverhang = this._computeGlyphOverhang();
+    }
+    return this.__glyphOverhang;
+  }
+
+  /**
+   * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
+   * right of the box edge, both after the line's alignment offset (a right-to-left line lays
+   * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+   * vertically, the first line's ink above its baseline and the last line's ink below the
+   * box bottom. A stroke paints half its width outside the outline on every side.
+   * @private
+   */
+  _computeGlyphOverhang(): TGlyphOverhang {
+    if (this.path) {
+      return { horizontal: 0, vertical: 0 };
+    }
+    const lineCount = this._textLines.length;
+    let horizontal = 0,
+      vertical = 0,
+      lineTop = 0;
+    for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+      // measuring the line fills __charBounds for it
+      this.getLineWidth(lineIndex);
+      const bounds = this.__charBounds[lineIndex],
+        isRtl = this.direction === RTL,
+        leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex),
+        rightEdge = isRtl
+          ? this.getLineWidth(lineIndex)
+          : this.width - leftOffset,
+        baselineFromTop =
+          lineTop +
+          this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction),
+        roomBelowBaseline = this.height - baselineFromTop;
+      for (
+        let charIndex = 0;
+        bounds && charIndex < this._textLines[lineIndex].length;
+        charIndex++
+      ) {
+        const box = bounds[charIndex],
+          ink = box.ink;
+        if (!ink) {
+          continue;
+        }
+        horizontal = Math.max(
+          horizontal,
+          ink.left - box.left - leftOffset,
+          box.left + ink.right - rightEdge,
+        );
+        if (lineIndex === 0) {
+          vertical = Math.max(
+            vertical,
+            ink.ascent - box.deltaY - baselineFromTop,
+          );
+        }
+        if (lineIndex === lineCount - 1) {
+          vertical = Math.max(
+            vertical,
+            ink.descent + box.deltaY - roomBelowBaseline,
+          );
+        }
+      }
+      lineTop += this.getHeightOfLine(lineIndex);
+    }
+    const strokeReach = this.stroke ? this.strokeWidth / 2 : 0;
+    return {
+      horizontal: Math.max(0, horizontal + strokeReach),
+      vertical: Math.max(0, vertical + strokeReach),
+    };
   }
 
   /**
@@ -1031,6 +1130,7 @@ export class FabricText<
     prevCharStyle: CompleteTextStyleDeclaration | Record<string, never>,
   ) {
     const fontCache = cache.getFontCache(charStyle),
+      inkCache = cache.getInkCache(charStyle),
       fontDeclaration = this._getFontDeclaration(charStyle),
       couple = previousChar ? previousChar + _char : _char,
       stylesAreEqual =
@@ -1052,17 +1152,31 @@ export class FabricText<
       coupleWidth = fontCache.get(couple)!;
       kernedWidth = coupleWidth - previousWidth!;
     }
+    let ink = inkCache.get(_char);
     if (
       width === undefined ||
       previousWidth === undefined ||
-      coupleWidth === undefined
+      coupleWidth === undefined ||
+      ink === undefined
     ) {
       const ctx = getMeasuringContext()!;
       // send a TRUE to specify measuring font size CACHE_FONT_SIZE
       this._setTextStyles(ctx, charStyle, true);
-      if (width === undefined) {
-        kernedWidth = width = ctx.measureText(_char).width;
-        fontCache.set(_char, width);
+      if (width === undefined || ink === undefined) {
+        const metrics = ctx.measureText(_char);
+        if (width === undefined) {
+          kernedWidth = width = metrics.width;
+          fontCache.set(_char, width);
+        }
+        // *PMW* the same measurement carries the ink extent; environments without the
+        // bounding-box metrics (older node canvases) read as glyphs that fit their advance
+        ink = {
+          left: metrics.actualBoundingBoxLeft || 0,
+          right: metrics.actualBoundingBoxRight || 0,
+          ascent: metrics.actualBoundingBoxAscent || 0,
+          descent: metrics.actualBoundingBoxDescent || 0,
+        };
+        inkCache.set(_char, ink);
       }
       if (previousWidth === undefined && stylesAreEqual && previousChar) {
         previousWidth = ctx.measureText(previousChar).width;
@@ -1079,6 +1193,12 @@ export class FabricText<
     return {
       width: width * fontMultiplier,
       kernedWidth: kernedWidth! * fontMultiplier,
+      ink: {
+        left: ink.left * fontMultiplier,
+        right: ink.right * fontMultiplier,
+        ascent: ink.ascent * fontMultiplier,
+        descent: ink.descent * fontMultiplier,
+      },
     };
   }
 
@@ -1233,6 +1353,7 @@ export class FabricText<
       height: style.fontSize,
       kernedWidth,
       deltaY: style.deltaY,
+      ink: info.ink,
     };
     if (charIndex > 0 && !skipLeft) {
       const previousBox = this.__charBounds[lineIndex][charIndex - 1];
@@ -2061,6 +2182,7 @@ export class FabricText<
     this.__lineWidths = [];
     this.__lineHeights = [];
     this.__charBounds = [];
+    this.__glyphOverhang = undefined;
     this.__listMarkerWidths = {};
     this.__listGutterWidths = {};
   }

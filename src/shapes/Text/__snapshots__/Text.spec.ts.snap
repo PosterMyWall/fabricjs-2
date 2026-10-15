@@ -2,6 +2,12 @@
 
 exports[`FabricText > measuring, splitting > measuring 1`] = `
 {
+  "ink": {
+    "ascent": 18,
+    "descent": 0,
+    "left": 1,
+    "right": 18,
+  },
   "kernedWidth": 18,
   "width": 18,
 }

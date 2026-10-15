@@ -1,11 +1,29 @@
 import type { TRectBounds } from './typedefs';
 type TextCouplesCache = Map</** char */ string, /** width */ number>;
 type FamilyCache = Map</** fontStyleCacheKey */ string, TextCouplesCache>;
+/**
+ * *PMW* The ink extent of one grapheme as the browser measures it at CACHE_FONT_SIZE:
+ * how far its painted outline reaches left of the text origin, right of the origin
+ * (so past the advance width once that is subtracted), above and below the alphabetic
+ * baseline — the four `actualBoundingBox*` metrics.
+ */
+export type GlyphInkBounds = {
+    left: number;
+    right: number;
+    ascent: number;
+    descent: number;
+};
+type TextInkCache = Map</** char */ string, GlyphInkBounds>;
+type FamilyInkCache = Map</** fontStyleCacheKey */ string, TextInkCache>;
 export declare class Cache {
     /**
      * Cache of widths of chars in text rendering.
      */
     charWidthsCache: Map</** fontFamily */ string, FamilyCache>;
+    /**
+     * *PMW* Cache of the ink bounds of chars, filled alongside charWidthsCache.
+     */
+    charInkCache: Map</** fontFamily */ string, FamilyInkCache>;
     constructor();
     /**
      * @return {Object} reference to cache
@@ -15,6 +33,16 @@ export declare class Cache {
         fontStyle: string;
         fontWeight: string | number;
     }): TextCouplesCache;
+    /**
+     * *PMW*
+     * @return {Object} reference to the ink bounds cache of the given font style
+     */
+    getInkCache({ fontFamily, fontStyle, fontWeight, }: {
+        fontFamily: string;
+        fontStyle: string;
+        fontWeight: string | number;
+    }): TextInkCache;
+    private getStyleCache;
     /**
      * Clear char widths cache for the given font family or all the cache if no
      * fontFamily is specified.

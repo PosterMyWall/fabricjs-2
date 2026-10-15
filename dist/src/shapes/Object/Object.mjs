@@ -743,7 +743,8 @@ var FabricObject = class FabricObject extends ObjectGeometry {
 		const el = createCanvasElement(), boundingRect = this.getBoundingRect(), shadow = this.shadow, shadowOffset = new Point();
 		if (options.expandBoundingBoxByFont && this.isGroup()) {
 			let maxWidthToAdd = 0, maxHeightToAdd = 0;
-			if (this._getMaxExpandedFontSizeFromTextChildren() > 0) {
+			const textExpansion = this._getTextChildrenCacheExpansion();
+			if (textExpansion.width > 0 || textExpansion.height > 0) {
 				maxWidthToAdd = boundingRect.width * .75;
 				maxHeightToAdd = boundingRect.height * .75;
 			}

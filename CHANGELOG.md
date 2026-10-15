@@ -2,6 +2,7 @@
 
 ## [next]
 
+- feat(text): measure each glyph's ink reach and size the text and group caches from it, so swashes and descenders of any font are not cut (pmw-69)
 - Upgrade 7.4.0 [#4](https://github.com/fabricjs/fabric.js/pull/4)
 
 ## [7.4.0]

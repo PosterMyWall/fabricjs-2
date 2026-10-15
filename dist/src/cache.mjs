@@ -17,13 +17,31 @@ var Cache = class {
 			{}
 		);
 		this.charWidthsCache = /* @__PURE__ */ new Map();
+		this.charInkCache = /* @__PURE__ */ new Map();
 	}
 	/**
 	* @return {Object} reference to cache
 	*/
 	getFontCache({ fontFamily, fontStyle, fontWeight }) {
+		return this.getStyleCache(this.charWidthsCache, {
+			fontFamily,
+			fontStyle,
+			fontWeight
+		});
+	}
+	/**
+	* *PMW*
+	* @return {Object} reference to the ink bounds cache of the given font style
+	*/
+	getInkCache({ fontFamily, fontStyle, fontWeight }) {
+		return this.getStyleCache(this.charInkCache, {
+			fontFamily,
+			fontStyle,
+			fontWeight
+		});
+	}
+	getStyleCache(cache, { fontFamily, fontStyle, fontWeight }) {
 		fontFamily = fontFamily.toLowerCase();
-		const cache = this.charWidthsCache;
 		if (!cache.has(fontFamily)) cache.set(fontFamily, /* @__PURE__ */ new Map());
 		const fontCache = cache.get(fontFamily);
 		const cacheKey = `${fontStyle.toLowerCase()}_${(fontWeight + "").toLowerCase()}`;
@@ -42,8 +60,13 @@ var Cache = class {
 	* @param {String} [fontFamily] font family to clear
 	*/
 	clearFontCache(fontFamily) {
-		if (!fontFamily) this.charWidthsCache = /* @__PURE__ */ new Map();
-		else this.charWidthsCache.delete((fontFamily || "").toLowerCase());
+		if (!fontFamily) {
+			this.charWidthsCache = /* @__PURE__ */ new Map();
+			this.charInkCache = /* @__PURE__ */ new Map();
+		} else {
+			this.charWidthsCache.delete((fontFamily || "").toLowerCase());
+			this.charInkCache.delete((fontFamily || "").toLowerCase());
+		}
 	}
 	/**
 	* Given current aspect ratio, determines the max width and height that can
