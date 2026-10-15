@@ -65,6 +65,15 @@ export type TGlyphOverhang = {
     horizontal: number;
     vertical: number;
 };
+/** *PMW* A list marker resolved to its draw position and style, in text units. */
+export type TListMarkerPlacement = {
+    marker: string;
+    fontSize: number;
+    fontFamily: string;
+    fill: string;
+    left: number;
+    baseline: number;
+};
 interface UniqueTextProps {
     charSpacing: number;
     lineHeight: number;
@@ -457,7 +466,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
     /**
      * *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
      * right of the box edge, both after the line's alignment offset (a right-to-left line lays
-     * its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+     * its graphemes out mirrored, so it counts each glyph's reach past its own advance box
+     * instead, with no alignment credit, and reads conservatively);
      * vertically, the first line's ink above its baseline and the last line's ink below the
      * box bottom. A stroke paints half its width outside the outline on every side.
      * @private
@@ -589,7 +599,8 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {Number} lineIndex index of line to calculate
      * @return {Number}
      */
-    private getHeightOfLineImpl;
+    /** *PMW* also read by the SVG export mixin, which is a separate class */
+    getHeightOfLineImpl(lineIndex: number): number;
     /**
      * Calculate height of line at 'lineIndex'
      * @param {Number} lineIndex index of line to calculate
@@ -776,6 +787,19 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @private
      */
     _renderListMarker(ctx: CanvasRenderingContext2D, visualLineIndex: number, lineDrawLeft: number, lineDrawTop: number): void;
+    /**
+     * *PMW* Where a visual row's list marker is drawn, in text units, given the row's own draw
+     * anchors (`lineDrawLeft` is the row's text start, `lineDrawTop` its bottom). Shared by the
+     * canvas render and the SVG export so both put the marker in the same place. Null when the
+     * row does not start a listed real line.
+     *
+     * LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+     * right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+     * grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+     * anchor is its right edge there. An unordered glyph is raised a little above the baseline.
+     * @private
+     */
+    _getListMarkerPlacement(visualLineIndex: number, lineDrawLeft: number, lineDrawTop: number): TListMarkerPlacement | null;
     /**
      * *PMW* Sets or clears (align undefined) one real line's alignment override.
      */

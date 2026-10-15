@@ -448,7 +448,7 @@ var Cache = class {
 const cache = new Cache();
 //#endregion
 //#region src/constants.ts
-const VERSION = "7.1.0-pmw-69";
+const VERSION = "7.4.0-pmw-70";
 function noop() {}
 const halfPI = Math.PI / 2;
 const quarterPI = Math.PI / 4;
@@ -15858,7 +15858,26 @@ function createSVGInlineRect(color, left, top, width, height) {
 var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 	_toSVG() {
 		const offsets = this._getSVGLeftTopOffsets(), textAndBg = this._getSVGTextAndBg(offsets.textTop, offsets.textLeft);
-		return this._wrapSVGTextAndBg(textAndBg);
+		return [...this._getStyledCharFillerMarkup(), ...this._wrapSVGTextAndBg(textAndBg)];
+	}
+	/**
+	* *PMW* The gradient definitions of per-character fills. The object-level fill is written by
+	* _createBaseSVGMarkup, but a styled character's gradient only ever appeared as a `url(#id)`
+	* reference, so the text rendered black in any SVG consumer.
+	*/
+	_getStyledCharFillerMarkup() {
+		const seen = /* @__PURE__ */ new Set(), markup = [];
+		Object.values(this.styles).forEach((line) => {
+			Object.values(line).forEach((declaration) => {
+				var _declaration$fill;
+				const fill = (_declaration$fill = declaration.fill) !== null && _declaration$fill !== void 0 ? _declaration$fill : null;
+				if (isFiller(fill) && !seen.has(String(fill.id))) {
+					seen.add(String(fill.id));
+					markup.push(fill.toSVG(this));
+				}
+			});
+		});
+		return markup;
 	}
 	toSVG(reviver) {
 		const textSvg = this._createBaseSVGMarkup(this._toSVG(), {
@@ -15914,6 +15933,7 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 			lineOffset = this._getLineLeftOffset(i);
 			if (this.direction === "rtl") lineOffset += this.width;
 			if (this.textBackgroundColor || this.styleHas("textBackgroundColor", i)) this._setSVGTextLineBg(textBgRects, i, textLeftOffset + lineOffset, height);
+			this._setSVGListMarker(textSpans, i, textLeftOffset + lineOffset, height);
 			this._setSVGTextLineText(textSpans, i, textLeftOffset + lineOffset, height);
 			height += this.getHeightOfLine(i);
 		}
@@ -15937,6 +15957,21 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 			top = renderPoint.y;
 		}
 		return `<tspan x="${toFixed(left, numFractionDigit)}" y="${toFixed(top, numFractionDigit)}" ${dySpan}${angleAttr}${fillStyles}>${escapeXml(char)}</tspan>`;
+	}
+	/**
+	* *PMW* The list marker of a visual row as its own span, placed exactly where the canvas
+	* render draws it ({@link FabricText#_getListMarkerPlacement}): the row's text start is the
+	* span's left offset and the row's bottom is its top offset plus the line height.
+	*/
+	_setSVGListMarker(textSpans, lineIndex, textLeftOffset, textTopOffset) {
+		const placed = this._getListMarkerPlacement(lineIndex, textLeftOffset, textTopOffset + this.getHeightOfLineImpl(lineIndex));
+		if (!placed) return;
+		const styleProps = this.getSvgSpanStyles({
+			fontFamily: placed.fontFamily,
+			fontSize: placed.fontSize,
+			fill: placed.fill
+		}, true);
+		textSpans.push(`<tspan x="${toFixed(placed.left, config.NUM_FRACTION_DIGITS)}" y="${toFixed(placed.baseline, config.NUM_FRACTION_DIGITS)}" style="${styleProps}">${escapeXml(placed.marker)}</tspan>`);
 	}
 	_setSVGTextLineText(textSpans, lineIndex, textLeftOffset, textTopOffset) {
 		const lineHeight = this.getHeightOfLine(lineIndex), isJustify = this.textAlign.includes(JUSTIFY), line = this._textLines[lineIndex];
@@ -16289,7 +16324,8 @@ var FabricText = class FabricText extends StyledText {
 	/**
 	* *PMW* Walks every measured grapheme: horizontally, its ink left of the line start and
 	* right of the box edge, both after the line's alignment offset (a right-to-left line lays
-	* its graphemes out mirrored, so it takes no offset credit and reads conservatively);
+	* its graphemes out mirrored, so it counts each glyph's reach past its own advance box
+	* instead, with no alignment credit, and reads conservatively);
 	* vertically, the first line's ink above its baseline and the last line's ink below the
 	* box bottom. A stroke paints half its width outside the outline on every side.
 	* @private
@@ -16303,11 +16339,11 @@ var FabricText = class FabricText extends StyledText {
 		let horizontal = 0, vertical = 0, lineTop = 0;
 		for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
 			this.getLineWidth(lineIndex);
-			const bounds = this.__charBounds[lineIndex], isRtl = this.direction === "rtl", leftOffset = isRtl ? 0 : this._getLineLeftOffset(lineIndex), rightEdge = isRtl ? this.getLineWidth(lineIndex) : this.width - leftOffset, baselineFromTop = lineTop + this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction), roomBelowBaseline = this.height - baselineFromTop;
+			const bounds = this.__charBounds[lineIndex], isRtl = this.direction === "rtl", leftOffset = this._getLineLeftOffset(lineIndex), rightEdge = this.width - leftOffset, baselineFromTop = lineTop + this.getHeightOfLineImpl(lineIndex) * (1 - this._fontSizeFraction), roomBelowBaseline = this.height - baselineFromTop;
 			for (let charIndex = 0; bounds && charIndex < this._textLines[lineIndex].length; charIndex++) {
 				const box = bounds[charIndex], ink = box.ink;
 				if (!ink) continue;
-				horizontal = Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
+				horizontal = isRtl ? Math.max(horizontal, ink.left, ink.right - box.width) : Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
 				if (lineIndex === 0) vertical = Math.max(vertical, ink.ascent - box.deltaY - baselineFromTop);
 				if (lineIndex === lineCount - 1) vertical = Math.max(vertical, ink.descent + box.deltaY - roomBelowBaseline);
 			}
@@ -16647,6 +16683,7 @@ var FabricText = class FabricText extends StyledText {
 	* @param {Number} lineIndex index of line to calculate
 	* @return {Number}
 	*/
+	/** *PMW* also read by the SVG export mixin, which is a separate class */
 	getHeightOfLineImpl(lineIndex) {
 		const lh = this.__lineHeights;
 		if (lh[lineIndex]) return lh[lineIndex];
@@ -17052,25 +17089,48 @@ var FabricText = class FabricText extends StyledText {
 	* @private
 	*/
 	_renderListMarker(ctx, visualLineIndex, lineDrawLeft, lineDrawTop) {
-		var _this$lineStyles$real2, _this$lineStyles$real3;
-		if (!this._isStartOfRealLine(visualLineIndex)) return;
-		const realLineIndex = this._getRealLineIndex(visualLineIndex);
-		const marker = (_this$lineStyles$real2 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real2 === void 0 ? void 0 : _this$lineStyles$real2.listMarker;
-		if (!marker) return;
-		const { fontSize, fontFamily, fill } = this._getListMarkerStyle(realLineIndex);
-		const gap = LIST_MARKER_GAP_FACTOR * fontSize;
-		const markerLeft = this.direction === "rtl" ? lineDrawLeft + gap : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex);
+		const placed = this._getListMarkerPlacement(visualLineIndex, lineDrawLeft, lineDrawTop);
+		if (!placed) return;
 		ctx.save();
 		ctx.direction = "ltr";
 		ctx.textAlign = LEFT;
 		ctx.font = this._getFontDeclaration({
-			fontSize,
-			fontFamily
+			fontSize: placed.fontSize,
+			fontFamily: placed.fontFamily
 		});
-		ctx.fillStyle = fill;
-		const unorderedMarkerRaise = ((_this$lineStyles$real3 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real3 === void 0 ? void 0 : _this$lineStyles$real3.listMarkerFontFamily) ? fontSize / UNORDERED_MARKER_RAISE_FACTOR : 0;
-		ctx.fillText(String(marker), markerLeft, lineDrawTop - this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction - unorderedMarkerRaise);
+		ctx.fillStyle = placed.fill;
+		ctx.fillText(placed.marker, placed.left, placed.baseline);
 		ctx.restore();
+	}
+	/**
+	* *PMW* Where a visual row's list marker is drawn, in text units, given the row's own draw
+	* anchors (`lineDrawLeft` is the row's text start, `lineDrawTop` its bottom). Shared by the
+	* canvas render and the SVG export so both put the marker in the same place. Null when the
+	* row does not start a listed real line.
+	*
+	* LTR: right-aligned in the LEFT gutter (like the legacy bullets textbox) — the marker's
+	* right edge sits a fixed gap from the text column, so ordinal periods line up and digits
+	* grow left. RTL mirrors: the gutter (and the marker) sit RIGHT of the text, whose draw
+	* anchor is its right edge there. An unordered glyph is raised a little above the baseline.
+	* @private
+	*/
+	_getListMarkerPlacement(visualLineIndex, lineDrawLeft, lineDrawTop) {
+		var _this$lineStyles$real2, _this$lineStyles$real3;
+		if (!this._isStartOfRealLine(visualLineIndex)) return null;
+		const realLineIndex = this._getRealLineIndex(visualLineIndex);
+		const marker = (_this$lineStyles$real2 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real2 === void 0 ? void 0 : _this$lineStyles$real2.listMarker;
+		if (!marker) return null;
+		const { fontSize, fontFamily, fill } = this._getListMarkerStyle(realLineIndex);
+		const gap = LIST_MARKER_GAP_FACTOR * fontSize;
+		const unorderedMarkerRaise = ((_this$lineStyles$real3 = this.lineStyles[realLineIndex]) === null || _this$lineStyles$real3 === void 0 ? void 0 : _this$lineStyles$real3.listMarkerFontFamily) ? fontSize / UNORDERED_MARKER_RAISE_FACTOR : 0;
+		return {
+			marker: String(marker),
+			fontSize,
+			fontFamily,
+			fill,
+			left: this.direction === "rtl" ? lineDrawLeft + gap : lineDrawLeft - gap - this._measureListMarkerWidth(realLineIndex),
+			baseline: lineDrawTop - this.getHeightOfLineImpl(visualLineIndex) * this._fontSizeFraction - unorderedMarkerRaise
+		};
 	}
 	/**
 	* *PMW* Sets or clears (align undefined) one real line's alignment override.

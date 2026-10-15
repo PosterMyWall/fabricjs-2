@@ -5,6 +5,7 @@ import { radiansToDegrees } from "../../util/misc/radiansDegreesConversion.mjs";
 import { createRotateMatrix } from "../../util/misc/matrix.mjs";
 import { toFixed } from "../../util/misc/toFixed.mjs";
 import { matrixToSVG } from "../../util/misc/svgExport.mjs";
+import { isFiller } from "../../util/typeAssertions.mjs";
 import { escapeXml } from "../../util/lang_string.mjs";
 import { getSafeSvgStyleNumber, getSafeSvgStyleToken, isSafeSvgStyleValue } from "../../util/internals/svgExportCheck.mjs";
 import { colorPropToSVG, createSVGRect } from "../../util/misc/svgParsing.mjs";
@@ -25,7 +26,26 @@ function createSVGInlineRect(color, left, top, width, height) {
 var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 	_toSVG() {
 		const offsets = this._getSVGLeftTopOffsets(), textAndBg = this._getSVGTextAndBg(offsets.textTop, offsets.textLeft);
-		return this._wrapSVGTextAndBg(textAndBg);
+		return [...this._getStyledCharFillerMarkup(), ...this._wrapSVGTextAndBg(textAndBg)];
+	}
+	/**
+	* *PMW* The gradient definitions of per-character fills. The object-level fill is written by
+	* _createBaseSVGMarkup, but a styled character's gradient only ever appeared as a `url(#id)`
+	* reference, so the text rendered black in any SVG consumer.
+	*/
+	_getStyledCharFillerMarkup() {
+		const seen = /* @__PURE__ */ new Set(), markup = [];
+		Object.values(this.styles).forEach((line) => {
+			Object.values(line).forEach((declaration) => {
+				var _declaration$fill;
+				const fill = (_declaration$fill = declaration.fill) !== null && _declaration$fill !== void 0 ? _declaration$fill : null;
+				if (isFiller(fill) && !seen.has(String(fill.id))) {
+					seen.add(String(fill.id));
+					markup.push(fill.toSVG(this));
+				}
+			});
+		});
+		return markup;
 	}
 	toSVG(reviver) {
 		const textSvg = this._createBaseSVGMarkup(this._toSVG(), {
@@ -81,6 +101,7 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 			lineOffset = this._getLineLeftOffset(i);
 			if (this.direction === "rtl") lineOffset += this.width;
 			if (this.textBackgroundColor || this.styleHas("textBackgroundColor", i)) this._setSVGTextLineBg(textBgRects, i, textLeftOffset + lineOffset, height);
+			this._setSVGListMarker(textSpans, i, textLeftOffset + lineOffset, height);
 			this._setSVGTextLineText(textSpans, i, textLeftOffset + lineOffset, height);
 			height += this.getHeightOfLine(i);
 		}
@@ -104,6 +125,21 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 			top = renderPoint.y;
 		}
 		return `<tspan x="${toFixed(left, numFractionDigit)}" y="${toFixed(top, numFractionDigit)}" ${dySpan}${angleAttr}${fillStyles}>${escapeXml(char)}</tspan>`;
+	}
+	/**
+	* *PMW* The list marker of a visual row as its own span, placed exactly where the canvas
+	* render draws it ({@link FabricText#_getListMarkerPlacement}): the row's text start is the
+	* span's left offset and the row's bottom is its top offset plus the line height.
+	*/
+	_setSVGListMarker(textSpans, lineIndex, textLeftOffset, textTopOffset) {
+		const placed = this._getListMarkerPlacement(lineIndex, textLeftOffset, textTopOffset + this.getHeightOfLineImpl(lineIndex));
+		if (!placed) return;
+		const styleProps = this.getSvgSpanStyles({
+			fontFamily: placed.fontFamily,
+			fontSize: placed.fontSize,
+			fill: placed.fill
+		}, true);
+		textSpans.push(`<tspan x="${toFixed(placed.left, config.NUM_FRACTION_DIGITS)}" y="${toFixed(placed.baseline, config.NUM_FRACTION_DIGITS)}" style="${styleProps}">${escapeXml(placed.marker)}</tspan>`);
 	}
 	_setSVGTextLineText(textSpans, lineIndex, textLeftOffset, textTopOffset) {
 		const lineHeight = this.getHeightOfLine(lineIndex), isJustify = this.textAlign.includes(JUSTIFY), line = this._textLines[lineIndex];

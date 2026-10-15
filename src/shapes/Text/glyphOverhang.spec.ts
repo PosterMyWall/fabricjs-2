@@ -121,6 +121,20 @@ describe('glyph overhang', () => {
     );
   });
 
+  it("reads a right-to-left line by each glyph's own reach, so its first (rightmost) glyph's swash counts", () => {
+    // visual order mirrors the logical one: 'T' sits at the RIGHT edge, crossbar reaching past it
+    const text = new FabricText('To', {
+      fontFamily: FAMILY,
+      fontSize: FONT_SIZE,
+      direction: 'rtl',
+    });
+    const overhang = text.getGlyphOverhang();
+    expect(overhang.horizontal).toBeCloseTo(
+      (INK.T.right - INK.T.width) * SCALE,
+      5,
+    );
+  });
+
   it('adds half the stroke width to every side', () => {
     const plain = makeText('Lo');
     const stroked = makeText('Lo', { stroke: 'red', strokeWidth: 6 });
