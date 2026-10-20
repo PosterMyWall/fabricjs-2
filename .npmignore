@@ -12,3 +12,5 @@ src/benchmarks
 .DS_Store
 .codesandbox/
 .devcontainer/
+.idea/
+*.tgz

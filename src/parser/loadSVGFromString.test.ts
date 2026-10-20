@@ -4,6 +4,7 @@ import { loadSVGFromString } from './loadSVGFromString';
 
 import { describe, expect, it } from 'vitest';
 import { Polygon } from '../../fabric';
+import { FabricText } from '../shapes/Text/Text';
 
 const SVG_DOC_AS_STRING =
   '<?xml version="1.0"?>\
@@ -71,5 +72,30 @@ describe('loadSVGFromString', () => {
     );
     expect(objects[0]).toBeInstanceOf(Polygon);
     expect(objects[0]!.fill).toBe('red');
+  });
+
+  /**
+   * *PMW* Office exports write `letter-spacing: normal` on their `<text>`. The CSS keyword
+   * has no unit, so it must read as no extra spacing (0) rather than survive as the raw
+   * string, which poisons every character position with NaN and, through the glyph
+   * overhang, sizes the text's cache canvas to 0 (`drawImage` then throws on render).
+   */
+  it('reads a letter-spacing of "normal" as no extra spacing', async () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+      <text font-size="30" letter-spacing="normal" transform="translate(10 40)">From attribute</text>
+      <text font-size="30" style="letter-spacing: normal" transform="translate(10 80)">From style</text>
+      </svg>`;
+
+    const { objects } = await loadSVGFromString(svg);
+    expect(objects).toHaveLength(2);
+    for (const object of objects) {
+      const text = object as FabricText;
+      expect(text).toBeInstanceOf(FabricText);
+      expect(text.charSpacing).toBe(0);
+      expect(Number.isFinite(text.getLineWidth(0))).toBe(true);
+      const { width, height } = text._getCacheCanvasDimensions();
+      expect(Number.isFinite(width)).toBe(true);
+      expect(Number.isFinite(height)).toBe(true);
+    }
   });
 });

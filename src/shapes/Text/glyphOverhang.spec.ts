@@ -171,6 +171,24 @@ describe('glyph overhang', () => {
     expect(extra).toBeCloseTo(60 - FONT_SIZE, 6);
   });
 
+  it('ignores character bounds that are not finite so a bad measurement cannot zero the cache canvas', () => {
+    const text = makeText('Lo');
+    // a corrupt spacing value (an unparsed CSS keyword reached the object) turns every
+    // character position after the first into NaN
+    text.charSpacing = 'normal' as unknown as number;
+    text.initDimensions();
+    expect(Number.isFinite(text.__charBounds[0][1].left)).toBe(false);
+
+    // the first glyph still has finite bounds, so its swash still counts; the rest do not
+    expect(text.getGlyphOverhang()).toEqual({
+      horizontal: 300 * SCALE,
+      vertical: 0,
+    });
+    const { width, height } = text._getCacheCanvasDimensions();
+    expect(Number.isFinite(width)).toBe(true);
+    expect(Number.isFinite(height)).toBe(true);
+  });
+
   it('widens a group cache that caters for text children by the same reach', () => {
     const swashGroup = new Group([makeText('Lo')], {
       caterCacheForTextChildren: true,
