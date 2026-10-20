@@ -48,6 +48,12 @@ export function normalizeValue(
   } else if (attr === 'charSpacing' || attr === TEXT_DECORATION_THICKNESS) {
     // parseUnit returns px and we convert it to em
     parsed = (parseUnit(value, fontSize) / fontSize) * 1000;
+    // *PMW* CSS keywords (`letter-spacing: normal`, as Office exports write) have no unit and
+    // mean no extra spacing; the raw string would otherwise reach the text object and turn
+    // every character position into NaN
+    if (attr === 'charSpacing' && !Number.isFinite(parsed)) {
+      parsed = 0;
+    }
   } else if (attr === 'paintFirst') {
     const fillIndex = value.indexOf(FILL);
     const strokeIndex = value.indexOf(STROKE);

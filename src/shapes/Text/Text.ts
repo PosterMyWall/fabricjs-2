@@ -183,6 +183,18 @@ export type TGlyphOverhang = {
   vertical: number;
 };
 
+/**
+ * *PMW* `Math.max` over the finite candidates only. A NaN or infinite reach (a character
+ * bound poisoned by bad input) must never size a cache canvas: `canvas.width = NaN` is 0 and
+ * the next `drawImage` of that canvas throws.
+ */
+const maxFinite = (current: number, ...candidates: number[]): number =>
+  candidates.reduce(
+    (max, candidate) =>
+      Number.isFinite(candidate) ? Math.max(max, candidate) : max,
+    current,
+  );
+
 /** *PMW* A list marker resolved to its draw position and style, in text units. */
 export type TListMarkerPlacement = {
   marker: string;
@@ -889,20 +901,20 @@ export class FabricText<
         // *PMW* an RTL line lays its graphemes out mirrored, so the left/right terms would
         // credit the wrong edge; count every glyph's reach past its own advance box instead
         horizontal = isRtl
-          ? Math.max(horizontal, ink.left, ink.right - box.width)
-          : Math.max(
+          ? maxFinite(horizontal, ink.left, ink.right - box.width)
+          : maxFinite(
               horizontal,
               ink.left - box.left - leftOffset,
               box.left + ink.right - rightEdge,
             );
         if (lineIndex === 0) {
-          vertical = Math.max(
+          vertical = maxFinite(
             vertical,
             ink.ascent - box.deltaY - baselineFromTop,
           );
         }
         if (lineIndex === lineCount - 1) {
-          vertical = Math.max(
+          vertical = maxFinite(
             vertical,
             ink.descent + box.deltaY - roomBelowBaseline,
           );
@@ -912,8 +924,8 @@ export class FabricText<
     }
     const strokeReach = this.stroke ? this.strokeWidth / 2 : 0;
     return {
-      horizontal: Math.max(0, horizontal + strokeReach),
-      vertical: Math.max(0, vertical + strokeReach),
+      horizontal: maxFinite(0, horizontal + strokeReach),
+      vertical: maxFinite(0, vertical + strokeReach),
     };
   }
 

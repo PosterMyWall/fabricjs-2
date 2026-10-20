@@ -21,8 +21,10 @@ function normalizeValue(attr, value, parentAttributes, fontSize) {
 		ouputValue = parseFloat(value);
 		if (parentAttributes && typeof parentAttributes.opacity !== "undefined") ouputValue *= parentAttributes.opacity;
 	} else if (attr === "textAnchor") ouputValue = value === "start" ? LEFT : value === "end" ? RIGHT : CENTER;
-	else if (attr === "charSpacing" || attr === "textDecorationThickness") parsed = parseUnit(value, fontSize) / fontSize * 1e3;
-	else if (attr === "paintFirst") {
+	else if (attr === "charSpacing" || attr === "textDecorationThickness") {
+		parsed = parseUnit(value, fontSize) / fontSize * 1e3;
+		if (attr === "charSpacing" && !Number.isFinite(parsed)) parsed = 0;
+	} else if (attr === "paintFirst") {
 		const fillIndex = value.indexOf(FILL);
 		const strokeIndex = value.indexOf(STROKE);
 		ouputValue = FILL;

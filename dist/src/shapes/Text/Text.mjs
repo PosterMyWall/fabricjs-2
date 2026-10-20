@@ -63,6 +63,12 @@ const SQUIGGLY_LINE_WAVE_PERIOD = 6;
 /** Peak rise = (period / 2) × this factor: 6.75 text units at the reference size. */
 const SQUIGGLY_LINE_WAVE_RISE_FACTOR = 5 * .45;
 /**
+* *PMW* `Math.max` over the finite candidates only. A NaN or infinite reach (a character
+* bound poisoned by bad input) must never size a cache canvas: `canvas.width = NaN` is 0 and
+* the next `drawImage` of that canvas throws.
+*/
+const maxFinite = (current, ...candidates) => candidates.reduce((max, candidate) => Number.isFinite(candidate) ? Math.max(max, candidate) : max, current);
+/**
 * Text class
 * @see {@link http://fabric5.fabricjs.com/fabric-intro-part-2#text}
 */
@@ -285,16 +291,16 @@ var FabricText = class FabricText extends StyledText {
 			for (let charIndex = 0; bounds && charIndex < this._textLines[lineIndex].length; charIndex++) {
 				const box = bounds[charIndex], ink = box.ink;
 				if (!ink) continue;
-				horizontal = isRtl ? Math.max(horizontal, ink.left, ink.right - box.width) : Math.max(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
-				if (lineIndex === 0) vertical = Math.max(vertical, ink.ascent - box.deltaY - baselineFromTop);
-				if (lineIndex === lineCount - 1) vertical = Math.max(vertical, ink.descent + box.deltaY - roomBelowBaseline);
+				horizontal = isRtl ? maxFinite(horizontal, ink.left, ink.right - box.width) : maxFinite(horizontal, ink.left - box.left - leftOffset, box.left + ink.right - rightEdge);
+				if (lineIndex === 0) vertical = maxFinite(vertical, ink.ascent - box.deltaY - baselineFromTop);
+				if (lineIndex === lineCount - 1) vertical = maxFinite(vertical, ink.descent + box.deltaY - roomBelowBaseline);
 			}
 			lineTop += this.getHeightOfLine(lineIndex);
 		}
 		const strokeReach = this.stroke ? this.strokeWidth / 2 : 0;
 		return {
-			horizontal: Math.max(0, horizontal + strokeReach),
-			vertical: Math.max(0, vertical + strokeReach)
+			horizontal: maxFinite(0, horizontal + strokeReach),
+			vertical: maxFinite(0, vertical + strokeReach)
 		};
 	}
 	/**

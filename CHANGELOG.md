@@ -2,6 +2,7 @@
 
 ## [next]
 
+- fix(text): an SVG `letter-spacing: normal` (Office exports) reads as no extra spacing instead of the raw string, and a non-finite glyph reach can no longer size a text cache canvas to 0 and crash the render with `drawImage ... width or height of 0` (pmw-71)
 - feat(text): export list markers as SVG spans where the canvas draws them, write the gradient definitions of per-character fills, and read a right-to-left line's glyph reach by each glyph's own ink (pmw-70)
 - feat(text): measure each glyph's ink reach and size the text and group caches from it, so swashes and descenders of any font are not cut (pmw-69)
 - Upgrade 7.4.0 [#4](https://github.com/fabricjs/fabric.js/pull/4)
