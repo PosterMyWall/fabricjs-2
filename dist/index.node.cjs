@@ -409,7 +409,7 @@ var Cache = class {
 const cache = new Cache();
 //#endregion
 //#region src/constants.ts
-const VERSION = "7.4.0-pmw-71";
+const VERSION = "7.4.0-pmw-72";
 function noop() {}
 const halfPI = Math.PI / 2;
 const quarterPI = Math.PI / 4;
@@ -4128,7 +4128,8 @@ const textLayoutProperties = [
 	"path",
 	"pathStartOffset",
 	"pathSide",
-	"pathAlign"
+	"pathAlign",
+	"waveWarp"
 ];
 const additionalProps = [
 	...textLayoutProperties,
@@ -15724,7 +15725,7 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 		const styleProps = this.getSvgSpanStyles(styleDecl, char !== char.trim() || !!char.match(multipleSpacesRegex)), fillStyles = styleProps ? `style="${styleProps}"` : "", dy = styleDecl.deltaY, dySpan = dy ? ` dy="${toFixed(dy, numFractionDigit)}" ` : "", { angle, renderLeft, renderTop, width } = charBox;
 		let angleAttr = "";
 		if (renderLeft !== void 0) {
-			const wBy2 = width / 2;
+			const wBy2 = this._getInkWidthOnPath(width) / 2;
 			angle && (angleAttr = ` rotate="${toFixed(radiansToDegrees(angle), numFractionDigit)}"`);
 			const m = createRotateMatrix({ angle: radiansToDegrees(angle) });
 			m[4] = renderLeft;
@@ -16163,6 +16164,10 @@ var FabricText = class FabricText extends StyledText {
 	*/
 	_render(ctx) {
 		const path = this.path;
+		if (path && this.waveWarp) {
+			this._renderWaveWarp(ctx, path, this.waveWarp);
+			return;
+		}
 		path && !path.isNotVisible() && path._render(ctx);
 		this._setTextStyles(ctx);
 		this._renderTextLinesBackground(ctx);
@@ -16171,6 +16176,86 @@ var FabricText = class FabricText extends StyledText {
 		this._renderTextDecoration(ctx, "overline");
 		this._renderTextDecoration(ctx, "linethrough");
 		this._renderTextDecoration(ctx, "squigglyline");
+	}
+	/**
+	* *PMW* Draws the text as one flat line bent by a sine: the line is rendered flat to an
+	* offscreen canvas at the context's scale, then copied a device column at a time, each column
+	* shifted by the wave's height where it stands, so the glyphs bend inside (fancy text's wave)
+	* instead of turning along the path. The path stays the geometry: the line starts where the
+	* path starts, its baseline at rest is the path's vertical middle, and the path draws the guide.
+	* The warped line lands on the context in one draw, so the object's shadow falls once.
+	* @private
+	*/
+	_renderWaveWarp(ctx, path, warp) {
+		!path.isNotVisible() && path._render(ctx);
+		const transform = ctx.getTransform();
+		const zoom = Math.sqrt(transform.a * transform.a + transform.b * transform.b) || 1;
+		const lineWidth = path.width;
+		const lineHeight = this.calcTextHeight();
+		const overhang = this.getGlyphOverhang();
+		const padX = overhang.horizontal + this.fontSize;
+		const padY = overhang.vertical + this.fontSize;
+		const flat = this._renderFlatLineForWarp(zoom, lineWidth, lineHeight, padX, padY);
+		if (!flat) return;
+		const amplitude = Math.abs(warp.amplitude);
+		const rise = Math.ceil(amplitude * zoom);
+		const warped = createCanvasElement();
+		warped.width = flat.width;
+		warped.height = flat.height + 2 * rise;
+		const warpedCtx = warped.getContext("2d");
+		if (!warpedCtx) return;
+		const sign = warp.startsWithTrough ? 1 : -1;
+		for (let column = 0; column < flat.width; column++) {
+			const along = Math.min(1, Math.max(0, (column / zoom - padX) / lineWidth));
+			const shift = sign * amplitude * Math.sin(2 * Math.PI * warp.periods * along);
+			warpedCtx.drawImage(flat, column, 0, 1, flat.height, column, rise + shift * zoom, 1, flat.height);
+		}
+		const baselineY = -lineHeight / 2 + this.getHeightOfLineImpl(0) * (1 - this._fontSizeFraction);
+		const left = -path.pathOffset.x - padX;
+		const top = -path.pathOffset.y - baselineY - lineHeight / 2 - padY - rise / zoom;
+		ctx.drawImage(warped, 0, 0, warped.width, warped.height, left, top, warped.width / zoom, warped.height / zoom);
+	}
+	/**
+	* *PMW* The text drawn as a single flat left-aligned line of the given width, with its glyph
+	* reach padded all round, on a canvas of `zoom` device pixels per text unit. The path comes
+	* off while it draws so fabric lays the line out plain; the box is put back after.
+	* @private
+	*/
+	_renderFlatLineForWarp(zoom, lineWidth, lineHeight, padX, padY) {
+		const width = Math.ceil((lineWidth + 2 * padX) * zoom);
+		const height = Math.ceil((lineHeight + 2 * padY) * zoom);
+		if (width <= 0 || height <= 0) return null;
+		const flat = createCanvasElement();
+		flat.width = width;
+		flat.height = height;
+		const flatCtx = flat.getContext("2d");
+		if (!flatCtx) return null;
+		flatCtx.setTransform(zoom, 0, 0, zoom, (padX + lineWidth / 2) * zoom, (padY + lineHeight / 2) * zoom);
+		const kept = {
+			path: this.path,
+			width: this.width,
+			height: this.height,
+			textAlign: this.textAlign
+		};
+		this.path = void 0;
+		this.width = lineWidth;
+		this.height = lineHeight;
+		this.textAlign = LEFT;
+		try {
+			this._setTextStyles(flatCtx);
+			this._renderTextLinesBackground(flatCtx);
+			this._renderTextDecoration(flatCtx, "underline");
+			this._renderText(flatCtx);
+			this._renderTextDecoration(flatCtx, "overline");
+			this._renderTextDecoration(flatCtx, "linethrough");
+			this._renderTextDecoration(flatCtx, "squigglyline");
+		} finally {
+			this.path = kept.path;
+			this.width = kept.width;
+			this.height = kept.height;
+			this.textAlign = kept.textAlign;
+		}
+		return flat;
 	}
 	/**
 	* @private
@@ -16428,11 +16513,23 @@ var FabricText = class FabricText extends StyledText {
 	* @param {Object} startingPoint position of the point
 	*/
 	_setGraphemeOnPath(positionInPath, graphemeInfo) {
-		const centerPosition = positionInPath + graphemeInfo.kernedWidth / 2, path = this.path;
+		const centerPosition = positionInPath + this._getInkWidthOnPath(graphemeInfo.kernedWidth) / 2, path = this.path;
 		const info = getPointOnPath(path.path, centerPosition, path.segmentsInfo);
 		graphemeInfo.renderLeft = info.x - path.pathOffset.x;
 		graphemeInfo.renderTop = info.y - path.pathOffset.y;
 		graphemeInfo.angle = info.angle + (this.pathSide === "right" ? Math.PI : 0);
+	}
+	/**
+	* *PMW* The width of a glyph's own ink in its box on a path: the box less the letter spacing
+	* after the glyph. The ink, not the box, is centred where the box's middle meets the path and
+	* drawn centred on that anchor, so a spaced letter sits on the curve; centring the box put the
+	* glyph half a spacing before the anchor along the tangent, off the curve for any real spacing
+	* and far off it round a square's corner.
+	* @param {Number} boxWidth the glyph's box width, spacing included
+	* @returns {Number} the glyph's own width
+	*/
+	_getInkWidthOnPath(boxWidth) {
+		return boxWidth - this._getWidthOfCharSpacing();
 	}
 	/**
 	*
@@ -16595,7 +16692,7 @@ var FabricText = class FabricText extends StyledText {
 					ctx.save();
 					ctx.translate(charBox.renderLeft, charBox.renderTop);
 					ctx.rotate(charBox.angle);
-					this._renderChar(method, ctx, lineIndex, i, charsToRender, -boxWidth / 2, 0);
+					this._renderChar(method, ctx, lineIndex, i, charsToRender, -this._getInkWidthOnPath(boxWidth) / 2, 0);
 					ctx.restore();
 				} else {
 					drawingLeft = left;

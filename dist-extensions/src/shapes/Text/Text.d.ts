@@ -13,6 +13,16 @@ import { CENTER, LEFT, RIGHT } from '../../constants';
 import type { CSSRules } from '../../parser/typedefs';
 export type TPathSide = 'left' | 'right';
 export type TPathAlign = 'baseline' | 'center' | 'ascender' | 'descender';
+/**
+ * *PMW* How a text on a path bends as a wave instead of turning along it: the plain line is
+ * drawn flat and every column of it shifted up or down by a sine of this many periods across
+ * the path's width, `amplitude` text units deep, starting with a peak unless `startsWithTrough`.
+ */
+export type TWaveWarp = {
+    amplitude: number;
+    periods: number;
+    startsWithTrough: boolean;
+};
 export type TextLinesInfo = {
     lines: string[];
     graphemeLines: string[][];
@@ -95,6 +105,7 @@ interface UniqueTextProps {
     pmwRunStyles?: Record<string, unknown>;
     direction: CanvasDirection;
     path?: Path;
+    waveWarp?: TWaveWarp;
     textDecorationThickness: number;
     textDecorationColor?: string;
 }
@@ -297,6 +308,12 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     pathAlign: TPathAlign;
     /**
+     * *PMW* Set with a path, bends the text as a wave (see {@link TWaveWarp}): the glyphs are not
+     * turned along the path, the flat line is warped by the sine instead, as fancy text's wave is.
+     * The path keeps the wave's extent and draws the guide. Ignored without a path.
+     */
+    waveWarp?: TWaveWarp;
+    /**
      * @private
      */
     _fontSizeFraction: number;
@@ -491,6 +508,23 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      */
     _render(ctx: CanvasRenderingContext2D): void;
     /**
+     * *PMW* Draws the text as one flat line bent by a sine: the line is rendered flat to an
+     * offscreen canvas at the context's scale, then copied a device column at a time, each column
+     * shifted by the wave's height where it stands, so the glyphs bend inside (fancy text's wave)
+     * instead of turning along the path. The path stays the geometry: the line starts where the
+     * path starts, its baseline at rest is the path's vertical middle, and the path draws the guide.
+     * The warped line lands on the context in one draw, so the object's shadow falls once.
+     * @private
+     */
+    _renderWaveWarp(ctx: CanvasRenderingContext2D, path: Path, warp: TWaveWarp): void;
+    /**
+     * *PMW* The text drawn as a single flat left-aligned line of the given width, with its glyph
+     * reach padded all round, on a canvas of `zoom` device pixels per text unit. The path comes
+     * off while it draws so fabric lays the line out plain; the box is put back after.
+     * @private
+     */
+    _renderFlatLineForWarp(zoom: number, lineWidth: number, lineHeight: number, padX: number, padY: number): HTMLCanvasElement | null;
+    /**
      * @private
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
@@ -583,6 +617,16 @@ export declare class FabricText<Props extends TOptions<TextProps> = Partial<Text
      * @param {Object} startingPoint position of the point
      */
     _setGraphemeOnPath(positionInPath: number, graphemeInfo: GraphemeBBox): void;
+    /**
+     * *PMW* The width of a glyph's own ink in its box on a path: the box less the letter spacing
+     * after the glyph. The ink, not the box, is centred where the box's middle meets the path and
+     * drawn centred on that anchor, so a spaced letter sits on the curve; centring the box put the
+     * glyph half a spacing before the anchor along the tangent, off the curve for any real spacing
+     * and far off it round a square's corner.
+     * @param {Number} boxWidth the glyph's box width, spacing included
+     * @returns {Number} the glyph's own width
+     */
+    _getInkWidthOnPath(boxWidth: number): number;
     /**
      *
      * @param {String} grapheme to be measured
