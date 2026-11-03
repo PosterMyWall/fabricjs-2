@@ -25,7 +25,8 @@ const textLayoutProperties = [
 	"path",
 	"pathStartOffset",
 	"pathSide",
-	"pathAlign"
+	"pathAlign",
+	"waveWarp"
 ];
 const additionalProps = [
 	...textLayoutProperties,

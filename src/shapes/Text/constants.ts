@@ -31,6 +31,7 @@ export const textLayoutProperties: string[] = [
   'pathStartOffset',
   'pathSide',
   'pathAlign',
+  'waveWarp',
 ];
 
 export const additionalProps = [

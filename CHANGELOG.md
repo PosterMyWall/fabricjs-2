@@ -2,6 +2,8 @@
 
 ## [next]
 
+- feat(text): `waveWarp` on a text with a path bends the flat line by a sine (every column shifted, as fancy text's wave) instead of turning the glyphs along the path; the path keeps the extent and draws the guide (pmw-72)
+- fix(text): a glyph on a path with letter spacing is anchored and drawn at the middle of its own ink, not of its box with the spacing after it, so spaced letters sit on the curve instead of floating off it along the tangent (pmw-72)
 - fix(text): an SVG `letter-spacing: normal` (Office exports) reads as no extra spacing instead of the raw string, and a non-finite glyph reach can no longer size a text cache canvas to 0 and crash the render with `drawImage ... width or height of 0` (pmw-71)
 - feat(text): export list markers as SVG spans where the canvas draws them, write the gradient definitions of per-character fills, and read a right-to-left line's glyph reach by each glyph's own ink (pmw-70)
 - feat(text): measure each glyph's ink reach and size the text and group caches from it, so swashes and descenders of any font are not cut (pmw-69)

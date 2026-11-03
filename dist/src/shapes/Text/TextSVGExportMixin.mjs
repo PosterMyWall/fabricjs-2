@@ -115,7 +115,7 @@ var TextSVGExportMixin = class extends FabricObjectSVGExportMixin {
 		const styleProps = this.getSvgSpanStyles(styleDecl, char !== char.trim() || !!char.match(multipleSpacesRegex)), fillStyles = styleProps ? `style="${styleProps}"` : "", dy = styleDecl.deltaY, dySpan = dy ? ` dy="${toFixed(dy, numFractionDigit)}" ` : "", { angle, renderLeft, renderTop, width } = charBox;
 		let angleAttr = "";
 		if (renderLeft !== void 0) {
-			const wBy2 = width / 2;
+			const wBy2 = this._getInkWidthOnPath(width) / 2;
 			angle && (angleAttr = ` rotate="${toFixed(radiansToDegrees(angle), numFractionDigit)}"`);
 			const m = createRotateMatrix({ angle: radiansToDegrees(angle) });
 			m[4] = renderLeft;
